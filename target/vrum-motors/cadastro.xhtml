@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:head>
+    <meta charset="UTF-8"/>
+    <title>Cadastro — Vrum Motors</title>
+    <h:outputStylesheet library="css" name="vrum-style.css"/>
+</h:head>
+
+<h:body>
+
+    <nav class="navbar">
+        <a href="home.xhtml" class="navbar-logo">VRUM<span>.</span>MOTORS</a>
+        <ul class="navbar-links">
+            <li><a href="home.xhtml">← Voltar</a></li>
+        </ul>
+    </nav>
+
+    <div style="max-width:680px; margin:60px auto; padding:0 20px">
+
+        <div style="display:flex; gap:0; margin-bottom:40px">
+            <div style="flex:1; text-align:center; padding:12px; font-size:0.8rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+                        background:#{cadastroBean.etapa >= 1 ? '#D62828' : '#2E2E2E'};
+                        color:#{cadastroBean.etapa >= 1 ? '#FFF' : '#9A9A9A'};
+                        border-radius:6px 0 0 6px">
+                1. Seus Dados
+            </div>
+            <div style="flex:1; text-align:center; padding:12px; font-size:0.8rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+                        background:#{cadastroBean.etapa >= 2 ? '#D62828' : '#2E2E2E'};
+                        color:#{cadastroBean.etapa >= 2 ? '#FFF' : '#9A9A9A'}">
+                2. Confirmar
+            </div>
+            <div style="flex:1; text-align:center; padding:12px; font-size:0.8rem; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+                        background:#{cadastroBean.etapa >= 3 ? '#2ECC71' : '#2E2E2E'};
+                        color:#{cadastroBean.etapa >= 3 ? '#FFF' : '#9A9A9A'};
+                        border-radius:0 6px 6px 0">
+                3. Pedido Feito!
+            </div>
+        </div>
+
+        <h:form>
+            <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success"/>
+
+            <!-- ETAPA 1 -->
+            <h:panelGroup rendered="#{cadastroBean.etapa == 1}">
+                <div class="card">
+                    <div class="card-header">Seus Dados Pessoais</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+                        <div class="form-group" style="grid-column:1/-1">
+                            <label class="form-label">Nome completo *</label>
+                            <h:inputText value="#{cadastroBean.cliente.nome}"
+                                         required="true" styleClass="form-control"
+                                         placeholder="João da Silva"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">E-mail *</label>
+                            <h:inputText value="#{cadastroBean.cliente.email}"
+                                         required="true" styleClass="form-control"
+                                         placeholder="joao@email.com"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CPF</label>
+                            <h:inputText value="#{cadastroBean.cliente.cpf}"
+                                         styleClass="form-control"
+                                         placeholder="000.000.000-00"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone / WhatsApp *</label>
+                            <h:inputText value="#{cadastroBean.cliente.telefone}"
+                                         required="true" styleClass="form-control"
+                                         placeholder="(81) 99999-9999"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Senha *</label>
+                            <h:inputSecret value="#{cadastroBean.confirmacaoSenha}"
+                                           required="true" styleClass="form-control"
+                                           redisplay="true"
+                                           placeholder="Mínimo 6 caracteres"/>
+                        </div>
+                        <div class="form-group" style="grid-column:1/-1">
+                            <label class="form-label">Sua Cidade / Concessionária *</label>
+                            <h:selectOneMenu value="#{cadastroBean.concessionariaId}"
+                                             required="true" styleClass="form-control">
+                                <f:selectItem itemLabel="Selecione sua cidade..." itemValue="#{null}"/>
+                                <f:selectItems value="#{cadastroBean.concessionarias}"
+                                               var="c"
+                                               itemLabel="#{c.cidade} - #{c.estado}"
+                                               itemValue="#{c.id}"/>
+                            </h:selectOneMenu>
+                        </div>
+                    </div>
+                    <h:commandButton value="Continuar →"
+                                     action="#{cadastroBean.avancarEtapa}"
+                                     styleClass="btn btn-primary w-100 mt-16"/>
+                </div>
+            </h:panelGroup>
+
+            <!-- ETAPA 2 -->
+            <h:panelGroup rendered="#{cadastroBean.etapa == 2}">
+                <div class="card">
+                    <div class="card-header">Confirmar Pedido</div>
+
+                    <h:panelGroup rendered="#{cadastroBean.veiculoSelecionado != null}">
+                        <div style="background:#2E2E2E; border-radius:8px; padding:20px; margin-bottom:24px; display:flex; gap:20px; align-items:center">
+                            <div style="font-size:3rem">🚗</div>
+                            <div>
+                                <div style="font-family:'Bebas Neue',cursive; font-size:1.6rem; letter-spacing:2px">#{cadastroBean.veiculoSelecionado.nome}</div>
+                                <div style="color:#D62828; font-weight:700; font-size:1.1rem">
+                                    <h:outputText value="#{cadastroBean.veiculoSelecionado.preco}">
+                                        <f:convertNumber type="currency" currencySymbol="R$ " locale="pt_BR"/>
+                                    </h:outputText>
+                                </div>
+                                <div style="color:#9A9A9A; font-size:0.85rem">#{cadastroBean.veiculoSelecionado.motor} • #{cadastroBean.veiculoSelecionado.potencia}</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cor desejada (opcional)</label>
+                            <h:inputText value="#{cadastroBean.corEscolhida}"
+                                         styleClass="form-control"
+                                         placeholder="Ex: Preto, Prata, Branco..."/>
+                        </div>
+                    </h:panelGroup>
+
+                    <h:panelGroup rendered="#{cadastroBean.veiculoSelecionado == null}">
+                        <p style="color:#9A9A9A; margin-bottom:16px">Nenhum veículo selecionado. Seu pedido entrará na fila de interesse geral.</p>
+                    </h:panelGroup>
+
+                    <div style="background:#1A1A1A; border-radius:6px; padding:16px; margin-bottom:20px">
+                        <p style="color:#9A9A9A; font-size:0.85rem; line-height:1.6">
+                            ✅ Ao confirmar, seu pedido entrará na <strong style="color:#FFF">fila de atendimento</strong>
+                            da concessionária <strong style="color:#FFF">#{cadastroBean.concessionariaSelecionada.cidade}</strong>.
+                            Um vendedor entrará em contato via WhatsApp para dar continuidade.
+                        </p>
+                    </div>
+
+                    <div style="display:flex; gap:12px">
+                        <h:commandButton value="← Voltar"
+                                         action="#{cadastroBean.voltarEtapa}"
+                                         styleClass="btn btn-ghost"
+                                         style="flex:1"/>
+                        <h:commandButton value="Confirmar Pedido ✓"
+                                         action="#{cadastroBean.finalizarPedido}"
+                                         styleClass="btn btn-primary"
+                                         style="flex:2"/>
+                    </div>
+                </div>
+            </h:panelGroup>
+
+            <!-- ETAPA 3 -->
+            <h:panelGroup rendered="#{cadastroBean.etapa == 3}">
+                <div class="card" style="text-align:center; padding:60px 40px">
+                    <div style="font-size:4rem; margin-bottom:20px">🎉</div>
+                    <div style="font-family:'Bebas Neue',cursive; font-size:2.5rem; letter-spacing:3px; color:#2ECC71; margin-bottom:12px">
+                        PEDIDO REALIZADO!
+                    </div>
+                    <p style="color:#9A9A9A; font-size:1rem; margin-bottom:8px">
+                        Seu pedido entrou na fila de atendimento.
+                    </p>
+                    <p style="color:#9A9A9A; font-size:0.9rem; margin-bottom:32px">
+                        Um vendedor da Vrum Motors entrará em contato pelo WhatsApp em breve.
+                    </p>
+                    <h:commandButton value="Acompanhar Pedido"
+                                     action="#{cadastroBean.irParaMeusPedidos}"
+                                     styleClass="btn btn-primary btn-lg"/>
+                </div>
+            </h:panelGroup>
+        </h:form>
+    </div>
+
+</h:body>
+</html>

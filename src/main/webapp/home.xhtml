@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Vrum Motors — Sinta a Velocidade</title>
+    <h:outputStylesheet library="css" name="vrum-style.css"/>
+</h:head>
+
+<h:body>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <a href="home.xhtml" class="navbar-logo">VRUM<span>.</span>MOTORS</a>
+        <ul class="navbar-links">
+            <li><a href="#veiculos">Veículos</a></li>
+            <li><a href="#lancamentos">Lançamentos</a></li>
+            <li><a href="#sobre">Sobre</a></li>
+            <h:panelGroup rendered="#{loginBean.logado}">
+                <li><a href="#{loginBean.isCliente() ? '/pages/cliente/meus-pedidos.xhtml' : '#'}">Minha Conta</a></li>
+                <li>
+                    <h:form style="display:inline">
+                        <h:commandLink action="#{loginBean.logout}" styleClass="btn btn-ghost btn-sm">Sair</h:commandLink>
+                    </h:form>
+                </li>
+            </h:panelGroup>
+            <h:panelGroup rendered="#{!loginBean.logado}">
+                <li><a href="login.xhtml" class="btn btn-ghost btn-sm">Entrar</a></li>
+                
+            </h:panelGroup>
+        </ul>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-title">
+                SINTA A<br/>
+                <span class="accent">VELOCIDADE</span>
+            </div>
+            <p class="hero-subtitle">Concessionária Oficial Vrum Motors — Desde 2010</p>
+            <a href="#veiculos" class="btn btn-primary btn-lg" style="margin-right:16px">Ver Veículos</a>
+            <a href="#lancamentos" class="btn btn-outline btn-lg">Lançamentos</a>
+        </div>
+    </section>
+
+    <!-- ===== STATS ===== -->
+    <section style="background: #1A1A1A; padding: 40px; display:flex; gap:60px; justify-content:center; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <div style="text-align:center">
+            <div style="font-family:'Bebas Neue',cursive; font-size:3rem; color:#D62828; letter-spacing:2px;">12+</div>
+            <div style="font-size:0.78rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px;">Cidades atendidas</div>
+        </div>
+        <div style="text-align:center">
+            <div style="font-family:'Bebas Neue',cursive; font-size:3rem; color:#D62828; letter-spacing:2px;">5.400+</div>
+            <div style="font-size:0.78rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px;">Veículos entregues</div>
+        </div>
+        <div style="text-align:center">
+            <div style="font-family:'Bebas Neue',cursive; font-size:3rem; color:#D62828; letter-spacing:2px;">15</div>
+            <div style="font-size:0.78rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px;">Anos de mercado</div>
+        </div>
+        <div style="text-align:center">
+            <div style="font-family:'Bebas Neue',cursive; font-size:3rem; color:#D62828; letter-spacing:2px;">98%</div>
+            <div style="font-size:0.78rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px;">Clientes satisfeitos</div>
+        </div>
+    </section>
+
+    <!-- ===== LANÇAMENTOS ===== -->
+    <section id="lancamentos" class="section launch-section">
+        <div class="section-title">LANÇA<span>MENTOS</span></div>
+        <div class="section-line"></div>
+
+        <h:form>
+            <ui:repeat value="#{homeBean.lancamentos}" var="v">
+                <div class="launch-card">
+                    <div class="launch-card-img">🚗</div>
+                    <div>
+                        <span class="launch-tag">Lançamento #{v.ano}</span>
+                        <div class="launch-title">#{v.nome}</div>
+                        <p style="color:#9A9A9A; font-size:0.9rem; margin-bottom:16px;">#{v.descricao}</p>
+                        <div class="launch-specs">
+                            <div class="launch-spec">
+                                <div class="launch-spec-val">#{v.potencia}</div>
+                                <div class="launch-spec-label">Potência</div>
+                            </div>
+                            <div class="launch-spec">
+                                <div class="launch-spec-val">#{v.aceleracao}</div>
+                                <div class="launch-spec-label">0-100 km/h</div>
+                            </div>
+                            <div class="launch-spec">
+                                <div class="launch-spec-val">#{v.motor}</div>
+                                <div class="launch-spec-label">Motor</div>
+                            </div>
+                            <div class="launch-spec">
+                                <div class="launch-spec-val">R$ #{v.preco}</div>
+                                <div class="launch-spec-label">A partir de</div>
+                            </div>
+                        </div>
+                        <h:commandButton value="Reservar Agora"
+                                         action="#{homeBean.comprar(v.id)}"
+                                         styleClass="btn btn-primary"
+                                         style="margin-right:12px"/>
+                        <h:commandButton value="Ver Detalhes"
+                                         action="#{homeBean.selecionarVeiculo(v.id)}"
+                                         styleClass="btn btn-ghost"/>
+                    </div>
+                </div>
+            </ui:repeat>
+        </h:form>
+    </section>
+
+    <!-- ===== CATÁLOGO ===== -->
+    <section id="veiculos" class="section">
+        <div class="d-flex justify-between align-center mb-24">
+            <div>
+                <div class="section-title">NOSSOS <span>VEÍCULOS</span></div>
+                <div class="section-line"></div>
+            </div>
+            <h:form>
+                <div class="d-flex gap-12 align-center">
+                    <h:inputText value="#{homeBean.termoBusca}"
+                                 placeholder="Buscar modelo..."
+                                 styleClass="form-control"
+                                 style="width:220px"/>
+                    <h:commandButton value="Buscar"
+                                     action="#{homeBean.buscar}"
+                                     styleClass="btn btn-primary btn-sm"/>
+                    <h:commandButton value="Limpar"
+                                     action="#{homeBean.limparBusca}"
+                                     styleClass="btn btn-ghost btn-sm"/>
+                </div>
+            </h:form>
+        </div>
+
+        <h:form>
+            <div class="vehicles-grid">
+                <ui:repeat value="#{homeBean.veiculosFiltrados}" var="v">
+                    <div class="vehicle-card">
+                        <div class="vehicle-card-img">🚙</div>
+                        <h:panelGroup rendered="#{v.tipo.name() == 'LANCAMENTO'}">
+                            <span class="vehicle-card-badge badge-lancamento">Lançamento</span>
+                        </h:panelGroup>
+                        <h:panelGroup rendered="#{v.tipo.name() == 'DISPONIVEL'}">
+                            <span class="vehicle-card-badge">Disponível</span>
+                        </h:panelGroup>
+                        <div class="vehicle-card-body">
+                            <div class="vehicle-card-name">#{v.nome}</div>
+                            <div class="vehicle-card-price">
+                                <h:outputText value="#{v.preco}">
+                                    <f:convertNumber type="currency" currencySymbol="R$ " groupingUsed="true" locale="pt_BR"/>
+                                </h:outputText>
+                            </div>
+                            <div class="vehicle-card-desc">#{v.descricao}</div>
+                            <div class="vehicle-card-actions">
+                                <h:commandButton value="Comprar"
+                                                 action="#{homeBean.comprar(v.id)}"
+                                                 styleClass="btn btn-primary btn-sm"/>
+                                <h:commandButton value="Detalhes"
+                                                 action="#{homeBean.selecionarVeiculo(v.id)}"
+                                                 styleClass="btn btn-ghost btn-sm"/>
+                            </div>
+                        </div>
+                    </div>
+                </ui:repeat>
+            </div>
+        </h:form>
+    </section>
+
+    <!-- ===== SOBRE ===== -->
+    <section id="sobre" class="section" style="background:#1A1A1A; border-top:1px solid rgba(255,255,255,0.06)">
+        <div class="section-title">SOBRE A <span>VRUM</span></div>
+        <div class="section-line"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center">
+            <div>
+                <p style="color:#9A9A9A; line-height:1.8; font-size:1rem;">
+                    A Vrum Motors é uma concessionária nacional com presença em mais de 12 cidades brasileiras.
+                    Nossa missão é entregar performance, conforto e inovação para cada cliente.
+                </p>
+                <p style="color:#9A9A9A; line-height:1.8; font-size:1rem; margin-top:16px">
+                    Do compacto urbano ao esportivo de alta performance, temos o veículo ideal para você.
+                    Com processo 100% digital, seu pedido é acompanhado em tempo real.
+                </p>
+                <div style="margin-top:28px">
+                    <a href="cadastro.xhtml" class="btn btn-primary">Faça seu Pedido</a>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+                <div class="stat-card"><div class="stat-number">12+</div><div class="stat-label">Concessionárias</div></div>
+                <div class="stat-card"><div class="stat-number">5k+</div><div class="stat-label">Clientes</div></div>
+                <div class="stat-card"><div class="stat-number">15</div><div class="stat-label">Anos</div></div>
+                <div class="stat-card"><div class="stat-number">5★</div><div class="stat-label">Avaliação</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="footer-logo">VRUM<span>.</span>MOTORS</div>
+        <p class="footer-text">© 2025 Vrum Motors. Todos os direitos reservados.</p>
+        <p class="footer-text" style="margin-top:8px">
+            <a href="login.xhtml" style="color:#D62828; text-decoration:none">Área Interna</a>
+        </p>
+    </footer>
+
+</h:body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head><meta charset="UTF-8"/><title>Vendedores — Vrum Motors</title>
+    <h:outputStylesheet library="css" name="vrum-style.css"/>
+</h:head>
+<h:body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <a href="/home.xhtml" class="sidebar-logo">VRUM<span>.</span>MOTORS</a>
+        <div class="sidebar-user">
+            <div class="sidebar-user-name">#{loginBean.usuarioLogado.nome}</div>
+            <div class="sidebar-user-role">Gerente</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.xhtml">📊 Dashboard</a>
+            <a href="vendedores.xhtml" class="active">👥 Vendedores</a>
+            <a href="pedidos.xhtml">📦 Pedidos</a>
+        </nav>
+        <div class="sidebar-footer">
+            <h:form><h:commandLink action="#{loginBean.logout}" styleClass="btn btn-ghost btn-sm w-100">Sair</h:commandLink></h:form>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="page-header d-flex justify-between align-center">
+            <div><h1>Vendedores</h1><p>Equipe de #{gerenteBean.concessionaria.cidade}</p></div>
+            <h:form>
+                <h:commandButton value="+ Novo Vendedor" action="#{gerenteBean.novoVendedor}" styleClass="btn btn-primary"/>
+            </h:form>
+        </div>
+        <h:form>
+            <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
+
+            <h:panelGroup rendered="#{gerenteBean.vendedorEdicao != null}">
+                <div class="card" style="border:2px solid #D62828; margin-bottom:24px">
+                    <div class="card-header">#{gerenteBean.vendedorEdicao.id == null ? 'Novo Vendedor' : 'Editar Vendedor'}</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+                        <div class="form-group">
+                            <label class="form-label">Nome *</label>
+                            <h:inputText value="#{gerenteBean.vendedorEdicao.nome}" required="true" styleClass="form-control"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">E-mail *</label>
+                            <h:inputText value="#{gerenteBean.vendedorEdicao.email}" required="true" styleClass="form-control"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone</label>
+                            <h:inputText value="#{gerenteBean.vendedorEdicao.telefone}" styleClass="form-control"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Senha *</label>
+                            <h:inputSecret value="#{gerenteBean.senhaVendedor}" required="true" styleClass="form-control"/>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-top:8px">
+                        <h:commandButton value="Salvar" action="#{gerenteBean.salvarVendedor}" styleClass="btn btn-primary"/>
+                        <h:commandButton value="Cancelar" action="#{gerenteBean.novoVendedor}" styleClass="btn btn-ghost" immediate="true"/>
+                    </div>
+                </div>
+            </h:panelGroup>
+
+            <div class="card">
+                <table class="vrum-table">
+                    <thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody>
+                        <ui:repeat value="#{gerenteBean.vendedores}" var="v">
+                            <tr>
+                                <td>#{v.nome}</td>
+                                <td style="color:#9A9A9A">#{v.email}</td>
+                                <td style="color:#9A9A9A">#{v.telefone}</td>
+                                <td><span class="badge #{v.ativo ? 'badge-pronto' : 'badge-cancelado'}">#{v.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                                <td style="display:flex; gap:8px">
+                                    <h:commandButton value="Editar" action="#{gerenteBean.editarVendedor(v)}" styleClass="btn btn-ghost btn-sm"/>
+                                    <h:panelGroup rendered="#{v.ativo}">
+                                        <h:commandButton value="Inativar" action="#{gerenteBean.inativarVendedor(v)}"
+                                                         styleClass="btn btn-sm"
+                                                         style="background:#D62828; color:#FFF; border:none; border-radius:6px; cursor:pointer; padding:8px 16px; font-size:0.8rem"/>
+                                    </h:panelGroup>
+                                </td>
+                            </tr>
+                        </ui:repeat>
+                    </tbody>
+                </table>
+            </div>
+        </h:form>
+    </main>
+</div>
+</h:body>
+</html>
