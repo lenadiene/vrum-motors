@@ -69,7 +69,7 @@
                             <div style="font-size:0.82rem; color:#9A9A9A; margin-bottom:12px">
                                 Concessionária: #{p.concessionaria.cidade} •
                                 <h:outputText value="#{p.dataPedido}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                                    <f:convertDateTime pattern="dd/MM/yyyy" type="localDateTime"/>
                                 </h:outputText>
                             </div>
                             <h:commandButton value="Atualizar Status"

@@ -9,6 +9,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Vrum Motors — Sinta a Velocidade</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <style>
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85); z-index: 1000;
+            justify-content: center; align-items: center; padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #1F2937; border: 1px solid #374151;
+            border-radius: 12px; max-width: 720px; width: 100%;
+            max-height: 90vh; overflow-y: auto; position: relative;
+            animation: fadeIn .2s ease;
+        }
+        @keyframes fadeIn { from { opacity:0; transform:scale(.97); } to { opacity:1; transform:scale(1); } }
+        .modal-header { background: #111827; padding: 24px 28px 16px; border-bottom: 1px solid #374151; border-radius: 12px 12px 0 0; }
+        .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: #9CA3AF; font-size: 1.6rem; cursor: pointer; line-height: 1; }
+        .modal-close:hover { color: #fff; }
+        .modal-body { padding: 24px 28px; }
+        .modal-emoji { font-size: 5rem; text-align: center; margin-bottom: 16px; }
+        .modal-name { font-family: 'Bebas Neue', cursive; font-size: 2rem; letter-spacing: 2px; color: #fff; }
+        .modal-price { color: #E53E3E; font-size: 1.4rem; font-weight: 700; margin: 4px 0 12px; }
+        .modal-desc { color: #9CA3AF; font-size: 0.95rem; line-height: 1.7; margin-bottom: 20px; }
+        .modal-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .modal-spec-item { background: #111827; border-radius: 8px; padding: 12px 16px; border-left: 3px solid #E53E3E; }
+        .modal-spec-label { font-size: 0.72rem; color: #9CA3AF; text-transform: uppercase; letter-spacing: 1px; }
+        .modal-spec-val { font-size: 1rem; font-weight: 700; color: #fff; margin-top: 2px; }
+        .modal-actions { display: flex; gap: 12px; }
+        .modal-tag { display: inline-block; background: #E53E3E; color: #fff; font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 4px; margin-bottom: 8px; }
+    </style>
 </h:head>
 
 <h:body>
@@ -30,18 +59,35 @@
             </h:panelGroup>
             <h:panelGroup rendered="#{!loginBean.logado}">
                 <li><a href="login.xhtml" class="btn btn-ghost btn-sm">Entrar</a></li>
-                
             </h:panelGroup>
         </ul>
     </nav>
 
+    <!-- ===== MODAL ===== -->
+    <h:form id="formModal">
+        <h:inputHidden value="#{homeBean.veiculoDetalheId}" id="veiculoDetalheId"/>
+        <div id="modalVeiculo" class="modal-overlay" onclick="if(event.target===this) fecharModal()">
+            <div class="modal-box">
+                <button type="button" class="modal-close" onclick="fecharModal()">×</button>
+                <div class="modal-header">
+                    <div id="modal-nome" class="modal-name"></div>
+                    <div id="modal-preco" class="modal-price"></div>
+                </div>
+                <div class="modal-body">
+                    <p id="modal-desc" class="modal-desc"></p>
+                    <div id="modal-specs" class="modal-specs"></div>
+                    <div class="modal-actions" style="margin-top:20px">
+                        <button type="button" onclick="fecharModal()" class="btn btn-ghost" style="width:100%">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </h:form>
+
     <!-- ===== HERO ===== -->
     <section class="hero">
         <div class="hero-content">
-            <div class="hero-title">
-                SINTA A<br/>
-                <span class="accent">VELOCIDADE</span>
-            </div>
+            <div class="hero-title">SINTA A<br/><span class="accent">VELOCIDADE</span></div>
             <p class="hero-subtitle">Concessionária Oficial Vrum Motors — Desde 2010</p>
             <a href="#veiculos" class="btn btn-primary btn-lg" style="margin-right:16px">Ver Veículos</a>
             <a href="#lancamentos" class="btn btn-outline btn-lg">Lançamentos</a>
@@ -49,7 +95,7 @@
     </section>
 
     <!-- ===== STATS ===== -->
-    <section style="background: #1A1A1A; padding: 40px; display:flex; gap:60px; justify-content:center; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.06);">
+    <section style="background:#1A1A1A; padding:40px; display:flex; gap:60px; justify-content:center; align-items:center; border-bottom:1px solid rgba(255,255,255,0.06);">
         <div style="text-align:center">
             <div style="font-family:'Bebas Neue',cursive; font-size:3rem; color:#D62828; letter-spacing:2px;">12+</div>
             <div style="font-size:0.78rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px;">Cidades atendidas</div>
@@ -72,8 +118,8 @@
     <section id="lancamentos" class="section launch-section">
         <div class="section-title">LANÇA<span>MENTOS</span></div>
         <div class="section-line"></div>
-
-        <h:form>
+        <h:form id="formLancamentos">
+            <h:inputHidden id="hiddenVeiculoId" value="#{homeBean.veiculoDetalheId}"/>
             <ui:repeat value="#{homeBean.lancamentos}" var="v">
                 <div class="launch-card">
                     <div class="launch-card-img">🚗</div>
@@ -95,7 +141,11 @@
                                 <div class="launch-spec-label">Motor</div>
                             </div>
                             <div class="launch-spec">
-                                <div class="launch-spec-val">R$ #{v.preco}</div>
+                                <div class="launch-spec-val">
+                                    <h:outputText value="#{v.preco}">
+                                        <f:convertNumber type="currency" currencySymbol="R$ " groupingUsed="true" locale="pt_BR"/>
+                                    </h:outputText>
+                                </div>
                                 <div class="launch-spec-label">A partir de</div>
                             </div>
                         </div>
@@ -103,9 +153,25 @@
                                          action="#{homeBean.comprar(v.id)}"
                                          styleClass="btn btn-primary"
                                          style="margin-right:12px"/>
-                        <h:commandButton value="Ver Detalhes"
-                                         action="#{homeBean.selecionarVeiculo(v.id)}"
-                                         styleClass="btn btn-ghost"/>
+                        <button type="button" class="btn btn-ghost"
+                                data-nome="#{v.nome}"
+                                data-marca="#{v.marca}"
+                                data-modelo="#{v.modelo}"
+                                data-ano="#{v.ano}"
+                                data-preco="#{v.preco}"
+                                data-motor="#{v.motor}"
+                                data-potencia="#{v.potencia}"
+                                data-torque="#{v.torque}"
+                                data-transmissao="#{v.transmissao}"
+                                data-combustivel="#{v.combustivel}"
+                                data-tracao="#{v.tracao}"
+                                data-consumo="#{v.consumo}"
+                                data-velocidade-max="#{v.velocidadeMax}"
+                                data-aceleracao="#{v.aceleracao}"
+                                data-cor="#{v.cor}"
+                                data-descricao="#{v.descricao}"
+                                data-tipo="#{v.tipo.descricao}"
+                                onclick="abrirDetalhes(this)">Ver Detalhes</button>
                     </div>
                 </div>
             </ui:repeat>
@@ -125,17 +191,14 @@
                                  placeholder="Buscar modelo..."
                                  styleClass="form-control"
                                  style="width:220px"/>
-                    <h:commandButton value="Buscar"
-                                     action="#{homeBean.buscar}"
-                                     styleClass="btn btn-primary btn-sm"/>
-                    <h:commandButton value="Limpar"
-                                     action="#{homeBean.limparBusca}"
-                                     styleClass="btn btn-ghost btn-sm"/>
+                    <h:commandButton value="Buscar" action="#{homeBean.buscar}" styleClass="btn btn-primary btn-sm"/>
+                    <h:commandButton value="Limpar" action="#{homeBean.limparBusca}" styleClass="btn btn-ghost btn-sm"/>
                 </div>
             </h:form>
         </div>
 
-        <h:form>
+        <h:form id="formCatalogo">
+            <h:inputHidden id="hiddenVeiculoId" value="#{homeBean.veiculoDetalheId}"/>
             <div class="vehicles-grid">
                 <ui:repeat value="#{homeBean.veiculosFiltrados}" var="v">
                     <div class="vehicle-card">
@@ -158,9 +221,25 @@
                                 <h:commandButton value="Comprar"
                                                  action="#{homeBean.comprar(v.id)}"
                                                  styleClass="btn btn-primary btn-sm"/>
-                                <h:commandButton value="Detalhes"
-                                                 action="#{homeBean.selecionarVeiculo(v.id)}"
-                                                 styleClass="btn btn-ghost btn-sm"/>
+                                <button type="button" class="btn btn-ghost btn-sm"
+                                        data-nome="#{v.nome}"
+                                        data-marca="#{v.marca}"
+                                        data-modelo="#{v.modelo}"
+                                        data-ano="#{v.ano}"
+                                        data-preco="#{v.preco}"
+                                        data-motor="#{v.motor}"
+                                        data-potencia="#{v.potencia}"
+                                        data-torque="#{v.torque}"
+                                        data-transmissao="#{v.transmissao}"
+                                        data-combustivel="#{v.combustivel}"
+                                        data-tracao="#{v.tracao}"
+                                        data-consumo="#{v.consumo}"
+                                        data-velocidade-max="#{v.velocidadeMax}"
+                                        data-aceleracao="#{v.aceleracao}"
+                                        data-cor="#{v.cor}"
+                                        data-descricao="#{v.descricao}"
+                                        data-tipo="#{v.tipo.descricao}"
+                                        onclick="abrirDetalhes(this)">Detalhes</button>
                             </div>
                         </div>
                     </div>
@@ -175,17 +254,9 @@
         <div class="section-line"></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center">
             <div>
-                <p style="color:#9A9A9A; line-height:1.8; font-size:1rem;">
-                    A Vrum Motors é uma concessionária nacional com presença em mais de 12 cidades brasileiras.
-                    Nossa missão é entregar performance, conforto e inovação para cada cliente.
-                </p>
-                <p style="color:#9A9A9A; line-height:1.8; font-size:1rem; margin-top:16px">
-                    Do compacto urbano ao esportivo de alta performance, temos o veículo ideal para você.
-                    Com processo 100% digital, seu pedido é acompanhado em tempo real.
-                </p>
-                <div style="margin-top:28px">
-                    <a href="cadastro.xhtml" class="btn btn-primary">Faça seu Pedido</a>
-                </div>
+                <p style="color:#9A9A9A; line-height:1.8; font-size:1rem;">A Vrum Motors é uma concessionária nacional com presença em mais de 12 cidades brasileiras. Nossa missão é entregar performance, conforto e inovação para cada cliente.</p>
+                <p style="color:#9A9A9A; line-height:1.8; font-size:1rem; margin-top:16px">Do compacto urbano ao esportivo de alta performance, temos o veículo ideal para você. Com processo 100% digital, seu pedido é acompanhado em tempo real.</p>
+                <div style="margin-top:28px"><a href="cadastro.xhtml" class="btn btn-primary">Faça seu Pedido</a></div>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
                 <div class="stat-card"><div class="stat-number">12+</div><div class="stat-label">Concessionárias</div></div>
@@ -204,6 +275,57 @@
             <a href="login.xhtml" style="color:#D62828; text-decoration:none">Área Interna</a>
         </p>
     </footer>
+
+    <script>//<![CDATA[
+        function abrirModal() {
+            document.getElementById('modalVeiculo').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function fecharModal() {
+            document.getElementById('modalVeiculo').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') fecharModal();
+        });
+
+        function abrirDetalhes(btn) {
+            var d = btn.dataset;
+            document.getElementById('modal-nome').textContent = d.nome || '';
+            var preco = parseFloat(d.preco);
+            document.getElementById('modal-preco').textContent = isNaN(preco) ? '' :
+                preco.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            document.getElementById('modal-desc').textContent = d.descricao || '';
+
+            var campos = [
+                ['Marca',       d.marca],
+                ['Modelo',      d.modelo],
+                ['Ano',         d.ano],
+                ['Tipo',        d.tipo],
+                ['Motor',       d.motor],
+                ['Potência',    d.potencia],
+                ['Torque',      d.torque],
+                ['0-100 km/h',  d.aceleracao],
+                ['Vel. Máxima', d.velocidadeMax],
+                ['Transmissão', d.transmissao],
+                ['Combustível', d.combustivel],
+                ['Tração',      d.tracao],
+                ['Consumo',     d.consumo],
+                ['Cor',         d.cor]
+            ];
+            var specs = '';
+            campos.forEach(function(c) {
+                if (c[1] != null && c[1] !== '' && c[1] !== 'null') {
+                    specs += '<div class="modal-spec-item">'
+                           + '<div class="modal-spec-label">' + c[0] + '</div>'
+                           + '<div class="modal-spec-val">' + c[1] + '</div>'
+                           + '</div>';
+                }
+            });
+            document.getElementById('modal-specs').innerHTML = specs;
+            abrirModal();
+        }
+    //]]></script>
 
 </h:body>
 </html>

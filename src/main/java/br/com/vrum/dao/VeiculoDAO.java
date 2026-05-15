@@ -1,10 +1,10 @@
 package br.com.vrum.dao;
 
-import br.com.vrum.model.Veiculo;
-import br.com.vrum.model.TipoVeiculo;
-
-import jakarta.persistence.EntityManager;
 import java.util.List;
+
+import br.com.vrum.model.TipoVeiculo;
+import br.com.vrum.model.Veiculo;
+import jakarta.persistence.EntityManager;
 
 public class VeiculoDAO extends GenericDAO<Veiculo, Long> {
 
@@ -12,7 +12,8 @@ public class VeiculoDAO extends GenericDAO<Veiculo, Long> {
         EntityManager em = getEM();
         try {
             return em.createQuery(
-                    "SELECT v FROM Veiculo v WHERE v.disponivel = true ORDER BY v.nome", Veiculo.class)
+                    "SELECT v FROM Veiculo v WHERE v.disponivel = true ORDER BY v.nome",
+                    Veiculo.class)
                     .getResultList();
         } finally {
             em.close();
@@ -23,9 +24,9 @@ public class VeiculoDAO extends GenericDAO<Veiculo, Long> {
         EntityManager em = getEM();
         try {
             return em.createQuery(
-                    "SELECT v FROM Veiculo v WHERE v.tipo = :tipo AND v.disponivel = true ORDER BY v.nome",
+                    "SELECT v FROM Veiculo v WHERE v.tipo = br.com.vrum.model.TipoVeiculo." + tipo.name() +
+                    " AND v.disponivel = true ORDER BY v.nome",
                     Veiculo.class)
-                    .setParameter("tipo", tipo)
                     .getResultList();
         } finally {
             em.close();
@@ -44,18 +45,18 @@ public class VeiculoDAO extends GenericDAO<Veiculo, Long> {
         }
     }
 
-public List<Veiculo> listarLancamentos() {
-    EntityManager em = getEM();
-    try {
-        // Usando query nativa SQL em vez de JPQL
-        return em.createNativeQuery(
-                "SELECT * FROM veiculos v WHERE v.tipo = 'LANCAMENTO' AND v.disponivel = 1 ORDER BY v.ano DESC",
-                Veiculo.class)
-                .getResultList();
-    } finally {
-        em.close();
+    public List<Veiculo> listarLancamentos() {
+        EntityManager em = getEM();
+        try {
+            return em.createQuery(
+                    "SELECT v FROM Veiculo v WHERE v.tipo = br.com.vrum.model.TipoVeiculo.LANCAMENTO" +
+                    " AND v.disponivel = true ORDER BY v.ano DESC",
+                    Veiculo.class)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
     }
-}
 
     public List<Veiculo> buscarPorNome(String nome) {
         EntityManager em = getEM();
@@ -65,6 +66,20 @@ public List<Veiculo> listarLancamentos() {
                     Veiculo.class)
                     .setParameter("nome", "%" + nome.toLowerCase() + "%")
                     .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public Veiculo buscarPorId(Long id) {
+        EntityManager em = getEM();
+        try {
+            return em.createQuery(
+                    "SELECT v FROM Veiculo v WHERE v.id = :id", Veiculo.class)
+                    .setParameter("id", id)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
         } finally {
             em.close();
         }

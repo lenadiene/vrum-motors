@@ -1,10 +1,10 @@
 package br.com.vrum.service;
 
-import br.com.vrum.dao.VeiculoDAO;
-import br.com.vrum.model.Veiculo;
-import br.com.vrum.model.TipoVeiculo;
-
 import java.util.List;
+
+import br.com.vrum.dao.VeiculoDAO;
+import br.com.vrum.model.TipoVeiculo;
+import br.com.vrum.model.Veiculo;
 
 public class VeiculoService {
 
@@ -20,11 +20,11 @@ public class VeiculoService {
         veiculoDAO.atualizar(veiculo);
     }
 
-    public List<Veiculo> listarTodos() { return veiculoDAO.listarTodos(); }
-    public List<Veiculo> listarDisponiveis() { return veiculoDAO.listarDisponiveis(); }
-    public List<Veiculo> listarDestaques() { return veiculoDAO.listarDestaques(); }
-    public List<Veiculo> listarLancamentos() { return veiculoDAO.listarLancamentos(); }
-    public List<Veiculo> listarPorTipo(TipoVeiculo tipo) { return veiculoDAO.listarPorTipo(tipo); }
-    public List<Veiculo> buscarPorNome(String nome) { return veiculoDAO.buscarPorNome(nome); }
-    public Veiculo buscarPorId(Long id) { return veiculoDAO.buscarPorId(id); }
+    public List<Veiculo> listarTodos()                    { return veiculoDAO.listarTodos(); }
+    public List<Veiculo> listarDisponiveis()              { return veiculoDAO.listarDisponiveis(); }
+    public List<Veiculo> listarDestaques()                { return veiculoDAO.listarDestaques(); }
+    public List<Veiculo> listarLancamentos()              { return veiculoDAO.listarLancamentos(); }
+    public List<Veiculo> listarPorTipo(TipoVeiculo tipo)  { return veiculoDAO.listarPorTipo(tipo); }
+    public List<Veiculo> buscarPorNome(String nome)       { return veiculoDAO.buscarPorNome(nome); }
+    public Veiculo buscarPorId(Long id)                   { return veiculoDAO.buscarPorId(id); }
 }

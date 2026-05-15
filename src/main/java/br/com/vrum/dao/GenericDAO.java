@@ -1,12 +1,12 @@
 package br.com.vrum.dao;
 
-import br.com.vrum.util.JPAUtil;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+
+import br.com.vrum.util.JPAUtil;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 
 public abstract class GenericDAO<T, ID extends Serializable> {
 
@@ -19,7 +19,7 @@ public abstract class GenericDAO<T, ID extends Serializable> {
     }
 
     public T salvar(T entity) {
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = getEM();
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -35,7 +35,7 @@ public abstract class GenericDAO<T, ID extends Serializable> {
     }
 
     public T atualizar(T entity) {
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = getEM();
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -51,7 +51,7 @@ public abstract class GenericDAO<T, ID extends Serializable> {
     }
 
     public void excluir(T entity) {
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = getEM();
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -67,7 +67,7 @@ public abstract class GenericDAO<T, ID extends Serializable> {
     }
 
     public T buscarPorId(ID id) {
-        EntityManager em = JPAUtil.getEntityManager();
+        EntityManager em = getEM();
         try {
             return em.find(entityClass, id);
         } finally {
@@ -76,13 +76,15 @@ public abstract class GenericDAO<T, ID extends Serializable> {
     }
 
     public List<T> listarTodos() {
-    EntityManager em = getEM();
-    try {
-        return em.createQuery("SELECT e FROM " + entityClass.getSimpleName() + " e", entityClass).getResultList();
-    } finally {
-        em.close();
+        EntityManager em = getEM();
+        try {
+            return em.createQuery(
+                    "SELECT e FROM " + entityClass.getSimpleName() + " e", entityClass)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
     }
-}
 
     protected EntityManager getEM() {
         return JPAUtil.getEntityManager();

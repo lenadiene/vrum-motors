@@ -124,7 +124,7 @@
                                 📅 Previsão:
                                 <span style="color:#F39C12">
                                     <h:outputText value="#{p.prazoEntrega}">
-                                        <f:convertDateTime pattern="dd/MM/yyyy"/>
+                                        <f:convertDateTime pattern="dd/MM/yyyy" type="localDate"/>
                                     </h:outputText>
                                 </span>
                             </div>
@@ -133,7 +133,7 @@
                             <div style="font-size:0.82rem; color:#2ECC71">
                                 ✅ Retirado em:
                                 <h:outputText value="#{p.dataRetirada}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                                    <f:convertDateTime pattern="dd/MM/yyyy" type="localDate"/>
                                 </h:outputText>
                             </div>
                         </h:panelGroup>

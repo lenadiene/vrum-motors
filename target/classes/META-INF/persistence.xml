@@ -24,6 +24,7 @@
             <property name="jakarta.persistence.jdbc.password" value="root"/>
             <property name="eclipselink.ddl-generation" value="create-or-extend-tables"/>
             <property name="eclipselink.logging.level" value="WARNING"/>
+            <property name="eclipselink.weaving" value="false"/>
         </properties>
     </persistence-unit>
 
