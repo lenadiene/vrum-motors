@@ -30,7 +30,7 @@
                 <h:commandButton value="+ Novo Vendedor" action="#{gerenteBean.novoVendedor}" styleClass="btn btn-primary"/>
             </h:form>
         </div>
-        <h:form>
+        <h:form id="vendedorForm">
             <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
 
             <h:panelGroup rendered="#{gerenteBean.vendedorEdicao != null}">
@@ -39,19 +39,23 @@
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
                         <div class="form-group">
                             <label class="form-label">Nome *</label>
-                            <h:inputText value="#{gerenteBean.vendedorEdicao.nome}" required="true" styleClass="form-control"/>
+                            <h:inputText value="#{gerenteBean.vendedorEdicao.nome}" required="true" styleClass="form-control" maxlength="100" oninput="if(this.value.length >= 100) document.getElementById('nome-max-msg').style.display='block'; else document.getElementById('nome-max-msg').style.display='none';"/>
+                            <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail *</label>
-                            <h:inputText value="#{gerenteBean.vendedorEdicao.email}" required="true" styleClass="form-control"/>
+                            <h:inputText value="#{gerenteBean.vendedorEdicao.email}" required="true" styleClass="form-control" maxlength="100" oninput="if(this.value.length >= 100) document.getElementById('email-max-msg').style.display='block'; else document.getElementById('email-max-msg').style.display='none';"/>
+                            <span id="email-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Telefone</label>
-                            <h:inputText value="#{gerenteBean.vendedorEdicao.telefone}" styleClass="form-control"/>
+                            <h:inputText value="#{gerenteBean.vendedorEdicao.telefone}" styleClass="form-control" maxlength="20" oninput="if(this.value.length >= 20) document.getElementById('telefone-max-msg').style.display='block'; else document.getElementById('telefone-max-msg').style.display='none';"/>
+                            <span id="telefone-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 20 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Senha *</label>
-                            <h:inputSecret value="#{gerenteBean.senhaVendedor}" required="true" styleClass="form-control"/>
+                            <h:inputSecret value="#{gerenteBean.senhaVendedor}" required="true" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('senha-max-msg').style.display='block'; else document.getElementById('senha-max-msg').style.display='none';"/>
+                            <span id="senha-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 50 caracteres.</span>
                         </div>
                     </div>
                     <div style="display:flex; gap:12px; margin-top:8px">

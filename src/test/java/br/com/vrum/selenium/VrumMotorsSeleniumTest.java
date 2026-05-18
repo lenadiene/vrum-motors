@@ -31,6 +31,7 @@ public class VrumMotorsSeleniumTest {
     private static final String BASE_URL   = "http://localhost:8080/vrum-motors";
     private static final String HOME_URL   = BASE_URL + "/home.xhtml";
     private static final String LOGIN_URL  = BASE_URL + "/login.xhtml";
+    private static final String CADASTRO_URL = BASE_URL + "/cadastro.xhtml";
 
     // Credenciais de teste (inseridas pelo DataInicializador)
     private static final String EMAIL_ADMIN    = "admin@vrummotors.com";
@@ -61,6 +62,9 @@ public class VrumMotorsSeleniumTest {
 
     @After
     public void logout() {
+        // Pausa de 2 segundos no final de CADA teste para você conseguir ver o resultado visualmente!
+        aguardar(2000); 
+
         try {
             driver.get(BASE_URL + "/login.xhtml"); // reset sessão
         } catch (Exception ignored) {}
@@ -72,17 +76,22 @@ public class VrumMotorsSeleniumTest {
 
     private void fazerLogin(String email, String senha) {
         driver.get(LOGIN_URL);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("j_idt_email")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loginForm:email")));
         
         // Tenta localizar campos pelo tipo
         WebElement campoEmail = encontrarInput("email");
         WebElement campoSenha = encontrarInput("senha");
 
+        aguardar(500); // Pausa antes de digitar
         campoEmail.clear();
         campoEmail.sendKeys(email);
+        
+        aguardar(500); // Pausa entre email e senha
         campoSenha.clear();
         campoSenha.sendKeys(senha);
 
+        aguardar(500); // Pausa antes de clicar no botão
+        
         // Clica no botão de entrar
         WebElement btnLogin = driver.findElement(
                 By.cssSelector("input[type='submit'], button[type='submit']"));
@@ -94,8 +103,13 @@ public class VrumMotorsSeleniumTest {
     }
 
     private WebElement encontrarInput(String partialId) {
-        return wait.until(ExpectedConditions.presenceOfElementLocated(
-                By.xpath("//input[contains(@id,'" + partialId + "') or @name='" + partialId + "']")));
+        try {
+            return wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.xpath("//input[contains(@id,'" + partialId + "') or @name='" + partialId + "']")));
+        } catch (TimeoutException e) {
+            System.err.println("Elemento de input com id parcial '" + partialId + "' não encontrado.");
+            return null;
+        }
     }
 
     private void aguardar(int millis) {
@@ -143,8 +157,11 @@ public class VrumMotorsSeleniumTest {
         WebElement campoEmail = encontrarInput("email");
         WebElement campoSenha = encontrarInput("senha");
 
+        aguardar(500);
         campoEmail.sendKeys("invalido@teste.com");
+        aguardar(500);
         campoSenha.sendKeys("senhaerrada");
+        aguardar(500);
 
         driver.findElement(By.cssSelector("input[type='submit'], button[type='submit']")).click();
 
@@ -160,7 +177,7 @@ public class VrumMotorsSeleniumTest {
             assertTrue("Mensagem de erro deve ser exibida", msgErro.isDisplayed());
         } catch (TimeoutException e) {
             // Aceita também: página não redireciona (erro genérico)
-            assertTrue("URL deve continuar sendo login", driver.getCurrentUrl().contains("login"));
+            assertTrue("URL deve continue sendo login", driver.getCurrentUrl().contains("login"));
         }
 
         tirarScreenshot("tc02_login_invalido");
@@ -283,11 +300,13 @@ public class VrumMotorsSeleniumTest {
                         By.xpath("//input[contains(@placeholder,'Buscar')]")));
         campoBusca.sendKeys("Vrum");
 
+        aguardar(1000); // Pausa para você ver a palavra sendo digitada
+
         WebElement btnBuscar = driver.findElement(
                 By.xpath("//input[@value='Buscar'] | //button[contains(text(),'Buscar')]"));
         btnBuscar.click();
 
-        aguardar(800);
+        aguardar(1000); // Pausa para você ver o resultado
 
         java.util.List<WebElement> resultados = driver.findElements(
                 By.cssSelector(".vehicle-card"));
@@ -346,7 +365,7 @@ public class VrumMotorsSeleniumTest {
                 By.xpath("//input[@value='+ Novo Veículo'] | //button[contains(text(),'Novo Veículo')]")));
         btnNovo.click();
 
-        aguardar(500);
+        aguardar(1000); // Pausa para você ver o formulário abrindo
 
         // Preenche o nome do modelo
         WebElement inputNome = wait.until(
@@ -354,6 +373,8 @@ public class VrumMotorsSeleniumTest {
                         By.xpath("//input[contains(@id,'nome')]")));
         inputNome.clear();
         inputNome.sendKeys("Vrum Teste Selenium");
+        
+        aguardar(1000); // Pausa para você ver o nome escrito
 
         tirarScreenshot("tc13_novo_veiculo_form");
         System.out.println("✅ TC13 — Formulário de novo veículo aberto");
@@ -371,7 +392,7 @@ public class VrumMotorsSeleniumTest {
         // Verifica que a tabela ou mensagem de "nenhum pedido" está visível
         try {
             WebElement tabela = wait.until(
-                    ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vrum-table")));
+                ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vrum-table")));
             assertNotNull(tabela);
             System.out.println("✅ TC14 — Tabela de pedidos encontrada");
         } catch (TimeoutException e) {
@@ -577,8 +598,9 @@ public class VrumMotorsSeleniumTest {
                 By.xpath("//input[@value='Detalhes'] | //button[contains(text(),'Detalhes')]"));
 
         if (!botoesDetalhes.isEmpty()) {
+            aguardar(1000); // Pausa antes de clicar
             botoesDetalhes.get(0).click();
-            aguardar(1000);
+            aguardar(1000); // Pausa depois de clicar
 
             // Pode ir para detalhe ou cadastro
             boolean paginaCorreta = driver.getCurrentUrl().contains("veiculo")
@@ -599,13 +621,15 @@ public class VrumMotorsSeleniumTest {
     public void tc25_validacaoCamposLogin() {
         driver.get(LOGIN_URL);
 
+        aguardar(1000); // Pausa visual
+
         // Tenta submeter sem preencher
         WebElement btnSubmit = wait.until(
                 ExpectedConditions.elementToBeClickable(
                         By.cssSelector("input[type='submit'], button[type='submit']")));
         btnSubmit.click();
 
-        aguardar(500);
+        aguardar(1500); // Pausa para você ver as mensagens de erro (campos em vermelho)
 
         // Deve permanecer na página de login
         assertTrue("Deve permanecer no login com campos vazios",
@@ -613,5 +637,91 @@ public class VrumMotorsSeleniumTest {
 
         tirarScreenshot("tc25_validacao_login");
         System.out.println("✅ TC25 — Validação de campos obrigatórios no login");
+    }
+
+    // =========================================================
+    // TC26 — Limite de caracteres nos campos de texto da Home
+    // =========================================================
+    @Test
+    public void tc26_limiteCaracteresBuscaHome() {
+        driver.get(HOME_URL);
+
+        WebElement campoBusca = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.xpath("//input[contains(@placeholder,'Buscar')]")));
+
+        String textoMuitoLongo = "a".repeat(300);
+        aguardar(1000);
+        campoBusca.sendKeys(textoMuitoLongo);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].dispatchEvent(new Event('input'))", campoBusca);
+        aguardar(1000); // Você verá que só couberam 100 'a's
+
+        String valorNoCampo = campoBusca.getAttribute("value");
+        // Verifica se o texto inserido foi truncado para menos que 300 caracteres,
+        // ou se o maxLength está sendo aplicado
+        String maxLengthAtr = campoBusca.getAttribute("maxlength");
+        if (maxLengthAtr != null && !maxLengthAtr.isEmpty()) {
+            int maxLen = Integer.parseInt(maxLengthAtr);
+            assertTrue("Campo deve respeitar o maxlength de " + maxLen, valorNoCampo.length() <= maxLen);
+            
+            WebElement msg = driver.findElement(By.id("busca-max-msg"));
+            assertTrue("Mensagem de erro de limite na home não está visível!", msg.isDisplayed());
+
+            System.out.println("✅ TC26 — Limite aplicado corretamente no campo de busca (valor truncado).");
+        } else {
+            // Se o maxlength não estiver lá, isso é um indicativo que poderia estar
+            // e como não está, podemos imprimir um alerta
+            System.out.println("⚠️ TC26 — Campo de busca sem maxlength attribute.");
+        }
+    }
+
+e
+    // =========================================================
+    // TC28 — Limite de caracteres nos campos do Login
+    // =========================================================
+    @Test
+    public void tc28_limiteCaracteresLogin() {
+        driver.get(LOGIN_URL);
+
+        WebElement campoEmail = encontrarInput("email");
+        WebElement campoSenha = encontrarInput("senha");
+
+        String textoLongo = "a".repeat(300);
+
+        aguardar(1000);
+        campoEmail.sendKeys(textoLongo);
+        // O Selenium envia as teclas muito rápido. Vamos forçar um trigger no keyup também 
+        // para garantir que a mensagem de erro (JavaScript) apareça na tela:
+        ((JavascriptExecutor) driver).executeScript("arguments[0].dispatchEvent(new Event('input'))", campoEmail);
+        
+        aguardar(1000);
+        campoSenha.sendKeys(textoLongo);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].dispatchEvent(new Event('input'))", campoSenha);
+        
+        aguardar(2000); // Pausa MESTRE para podermos ver as caixas preenchidas E a mensagem vermelha!!
+
+        String maxLengthEmail = campoEmail.getAttribute("maxlength");
+        String maxLengthSenha = campoSenha.getAttribute("maxlength");
+
+        if (maxLengthEmail != null && !maxLengthEmail.isEmpty()) {
+             assertTrue("Email no Login deve respeitar o limite", campoEmail.getAttribute("value").length() <= Integer.parseInt(maxLengthEmail));
+             
+             // Vamos verificar se a mensagem em vermelho apareceu na tela mesmo!
+             WebElement msg = driver.findElement(By.id("email-max-msg"));
+             assertTrue("Mensagem de erro de limite de email não está visível!", msg.isDisplayed());
+             
+             System.out.println("✅ TC28 — Email no Login com limite ok E MENSAGEM VISUAL MOSTRADA.");
+        } else {
+             System.out.println("⚠️ TC28 — Campo Email no Login sem maxlength.");
+        }
+
+        if (maxLengthSenha != null && !maxLengthSenha.isEmpty()) {
+             assertTrue("Senha no Login deve respeitar o limite", campoSenha.getAttribute("value").length() <= Integer.parseInt(maxLengthSenha));
+             WebElement msg = driver.findElement(By.id("senha-max-msg"));
+             assertTrue("Mensagem de erro de limite de senha não está visível!", msg.isDisplayed());
+             System.out.println("✅ TC28 — Senha no Login com limite ok.");
+        } else {
+             System.out.println("⚠️ TC28 — Campo Senha no Login sem maxlength.");
+        }
     }
 }

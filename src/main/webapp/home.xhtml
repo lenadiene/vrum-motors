@@ -187,10 +187,15 @@
             </div>
             <h:form>
                 <div class="d-flex gap-12 align-center">
-                    <h:inputText value="#{homeBean.termoBusca}"
-                                 placeholder="Buscar modelo..."
-                                 styleClass="form-control"
-                                 style="width:220px"/>
+                    <div style="display:flex; flex-direction:column">
+                        <h:inputText value="#{homeBean.termoBusca}"
+                                     placeholder="Buscar modelo..."
+                                     styleClass="form-control"
+                                     maxlength="100"
+                                     oninput="if(this.value.length >= 100) document.getElementById('busca-max-msg').style.display='block'; else document.getElementById('busca-max-msg').style.display='none';"
+                                     style="width:220px"/>
+                        <span id="busca-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
+                    </div>
                     <h:commandButton value="Buscar" action="#{homeBean.buscar}" styleClass="btn btn-primary btn-sm"/>
                     <h:commandButton value="Limpar" action="#{homeBean.limparBusca}" styleClass="btn btn-ghost btn-sm"/>
                 </div>
