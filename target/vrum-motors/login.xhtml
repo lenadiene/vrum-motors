@@ -7,6 +7,15 @@
     <meta charset="UTF-8"/>
     <title>Login — Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <script type="text/javascript">
+        function verificarLimite(campo, msgId) {
+            if(campo.value.length >= campo.maxLength) {
+                document.getElementById(msgId).style.display = 'block';
+            } else {
+                document.getElementById(msgId).style.display = 'none';
+            }
+        }
+    </script>
 </h:head>
 
 <h:body>
@@ -35,7 +44,7 @@
             <div class="login-title">Bem-vindo</div>
             <p class="login-subtitle">Entre com suas credenciais para acessar o sistema</p>
 
-            <h:form>
+            <h:form id="loginForm">
                 <h:messages globalOnly="true" styleClass="messages"
                             errorClass="msg-error" infoClass="msg-success"/>
 
@@ -45,8 +54,12 @@
                                  required="true"
                                  requiredMessage="Informe o e-mail"
                                  styleClass="form-control"
+                                 maxlength="100"
+                                 oninput="verificarLimite(this, 'email-max-msg')"
+                                 onkeyup="verificarLimite(this, 'email-max-msg')"
                                  placeholder="seu@email.com"/>
                     <h:message for="email" style="color:#FF6B6B; font-size:0.8rem"/>
+                    <span id="email-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
                 </div>
 
                 <div class="form-group">
@@ -55,8 +68,12 @@
                                    required="true"
                                    requiredMessage="Informe a senha"
                                    styleClass="form-control"
+                                   maxlength="50"
+                                   oninput="verificarLimite(this, 'senha-max-msg')"
+                                   onkeyup="verificarLimite(this, 'senha-max-msg')"
                                    placeholder="••••••••"/>
                     <h:message for="senha" style="color:#FF6B6B; font-size:0.8rem"/>
+                    <span id="senha-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 50 caracteres.</span>
                 </div>
 
                 <h:commandButton value="Entrar"

@@ -60,7 +60,7 @@
                     </div>
                     <div style="display:flex; gap:12px; margin-top:8px">
                         <h:commandButton value="Salvar" action="#{gerenteBean.salvarVendedor}" styleClass="btn btn-primary"/>
-                        <h:commandButton value="Cancelar" action="#{gerenteBean.novoVendedor}" styleClass="btn btn-ghost" immediate="true"/>
+                        <h:commandButton value="Cancelar" action="#{gerenteBean.cancelarEdicaoVendedor}" styleClass="btn btn-ghost" immediate="true"/>
                     </div>
                 </div>
             </h:panelGroup>
@@ -76,7 +76,7 @@
                                 <td style="color:#9A9A9A">#{v.telefone}</td>
                                 <td><span class="badge #{v.ativo ? 'badge-pronto' : 'badge-cancelado'}">#{v.ativo ? 'Ativo' : 'Inativo'}</span></td>
                                 <td style="display:flex; gap:8px">
-                                    <h:commandButton value="Editar" action="#{gerenteBean.editarVendedor(v)}" styleClass="btn btn-ghost btn-sm"/>
+                                    <h:commandButton value="Editar" action="#{gerenteBean.editarVendedor(v)}" styleClass="btn btn-ghost btn-sm" immediate="true"/>
                                     <h:panelGroup rendered="#{v.ativo}">
                                         <h:commandButton value="Inativar" action="#{gerenteBean.inativarVendedor(v)}"
                                                          styleClass="btn btn-sm"

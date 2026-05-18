@@ -187,10 +187,15 @@
             </div>
             <h:form>
                 <div class="d-flex gap-12 align-center">
-                    <h:inputText value="#{homeBean.termoBusca}"
-                                 placeholder="Buscar modelo..."
-                                 styleClass="form-control"
-                                 style="width:220px"/>
+                    <div style="display:flex; flex-direction:column">
+                        <h:inputText value="#{homeBean.termoBusca}"
+                                     placeholder="Buscar modelo..."
+                                     styleClass="form-control"
+                                     maxlength="100"
+                                     oninput="if(this.value.length >= 100) document.getElementById('busca-max-msg').style.display='block'; else document.getElementById('busca-max-msg').style.display='none';"
+                                     style="width:220px"/>
+                        <span id="busca-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
+                    </div>
                     <h:commandButton value="Buscar" action="#{homeBean.buscar}" styleClass="btn btn-primary btn-sm"/>
                     <h:commandButton value="Limpar" action="#{homeBean.limparBusca}" styleClass="btn btn-ghost btn-sm"/>
                 </div>
@@ -256,7 +261,6 @@
             <div>
                 <p style="color:#9A9A9A; line-height:1.8; font-size:1rem;">A Vrum Motors é uma concessionária nacional com presença em mais de 12 cidades brasileiras. Nossa missão é entregar performance, conforto e inovação para cada cliente.</p>
                 <p style="color:#9A9A9A; line-height:1.8; font-size:1rem; margin-top:16px">Do compacto urbano ao esportivo de alta performance, temos o veículo ideal para você. Com processo 100% digital, seu pedido é acompanhado em tempo real.</p>
-                <div style="margin-top:28px"><a href="cadastro.xhtml" class="btn btn-primary">Faça seu Pedido</a></div>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
                 <div class="stat-card"><div class="stat-number">12+</div><div class="stat-label">Concessionárias</div></div>

@@ -10,11 +10,14 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.faces.context.FacesContext;
 import jakarta.servlet.http.Part;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 @Named("vendedorBean")
@@ -27,6 +30,8 @@ public class VendedorBean implements Serializable {
     private List<Pedido> pedidosDisponiveis;
     private List<Pedido> meusPedidos;
     private Pedido pedidoSelecionado;
+    private List<Anexo> anexosPedidoSelecionado = Collections.emptyList();
+
     private LocalDate prazoFabricacao;
     private LocalDate prazoEntrega;
     private LocalDate dataRetirada;
@@ -63,16 +68,37 @@ public class VendedorBean implements Serializable {
 
     public void selecionarPedido(Pedido pedido) {
         this.pedidoSelecionado = service.buscarPorId(pedido.getId());
+        this.anexosPedidoSelecionado = service.listarAnexos(pedidoSelecionado);
+        this.formaPagamento = pedidoSelecionado.getFormaPagamento();
+        this.prazoFabricacao = pedidoSelecionado.getPrazoFabricacao();
+        this.arquivoAnexo = null;
     }
 
     public void enviarParaFabricacao() {
         try {
             service.enviarParaFabricacao(pedidoSelecionado, prazoFabricacao, formaPagamento);
-            addSucesso("Pedido enviado para fabricação!");
-            carregarPedidos();
         } catch (Exception e) {
             addErro(e.getMessage());
+            return;
         }
+
+        if (arquivoAnexo != null && arquivoAnexo.getSize() > 0) {
+            try {
+                processarUpload();
+                addSucesso("Pedido enviado para fabricação com contrato anexado!");
+            } catch (Exception e) {
+                addSucesso("Pedido enviado para fabricação.");
+                addErro("Não foi possível salvar o contrato: " +
+                        (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
+            }
+        } else {
+            addSucesso("Pedido enviado para fabricação!");
+        }
+
+        carregarPedidos();
+        pedidoSelecionado = service.buscarPorId(pedidoSelecionado.getId());
+        anexosPedidoSelecionado = service.listarAnexos(pedidoSelecionado);
+        arquivoAnexo = null;
     }
 
     public void marcarProntoEntrega() {
@@ -80,6 +106,7 @@ public class VendedorBean implements Serializable {
             service.marcarProntoEntrega(pedidoSelecionado);
             addSucesso("Veículo marcado como pronto para entrega!");
             carregarPedidos();
+            pedidoSelecionado = service.buscarPorId(pedidoSelecionado.getId());
         } catch (Exception e) {
             addErro(e.getMessage());
         }
@@ -90,40 +117,56 @@ public class VendedorBean implements Serializable {
             service.finalizarPedido(pedidoSelecionado, dataRetirada);
             addSucesso("Pedido finalizado com sucesso!");
             carregarPedidos();
+            pedidoSelecionado = service.buscarPorId(pedidoSelecionado.getId());
         } catch (Exception e) {
             addErro(e.getMessage());
         }
     }
 
-    public void uploadAnexo() {
-        if (pedidoSelecionado == null) {
-            addErro("Selecione um pedido antes de enviar o arquivo.");
-            return;
+    private void processarUpload() throws Exception {
+        String nomeArq = Paths.get(arquivoAnexo.getSubmittedFileName()).getFileName().toString();
+        String uploadDir = FacesContext.getCurrentInstance()
+                .getExternalContext().getRealPath("/uploads/contratos/");
+        if (uploadDir == null) {
+            uploadDir = System.getProperty("java.io.tmpdir") + File.separator + "vrum-contratos";
         }
-        if (arquivoAnexo == null || arquivoAnexo.getSize() == 0) {
-            addErro("Selecione um arquivo para enviar.");
-            return;
+        new File(uploadDir).mkdirs();
+        String caminho = uploadDir + File.separator + System.currentTimeMillis() + "_" + nomeArq;
+        try (InputStream is = arquivoAnexo.getInputStream()) {
+            Files.copy(is, Paths.get(caminho));
         }
+        service.adicionarAnexo(pedidoSelecionado.getId(), nomeArq, caminho,
+                arquivoAnexo.getContentType(), arquivoAnexo.getSize());
+    }
+
+    public void downloadAnexo(Anexo anexo) {
+        FacesContext fc = FacesContext.getCurrentInstance();
         try {
-            String nomeArq = Paths.get(arquivoAnexo.getSubmittedFileName()).getFileName().toString();
-
-            String uploadDir = FacesContext.getCurrentInstance()
-                    .getExternalContext().getRealPath("/uploads/contratos/");
-            if (uploadDir == null) {
-                uploadDir = System.getProperty("java.io.tmpdir") + File.separator + "vrum-contratos";
+            File file = new File(anexo.getCaminhoArquivo());
+            if (!file.exists()) {
+                addErro("Arquivo não encontrado no servidor: " + anexo.getNomeArquivo());
+                return;
             }
-            new File(uploadDir).mkdirs();
-
-            String caminho = uploadDir + File.separator + System.currentTimeMillis() + "_" + nomeArq;
-            try (InputStream is = arquivoAnexo.getInputStream()) {
-                Files.copy(is, Paths.get(caminho));
+            String contentType = (anexo.getTipoArquivo() != null && !anexo.getTipoArquivo().isBlank())
+                    ? anexo.getTipoArquivo() : "application/octet-stream";
+            jakarta.faces.context.ExternalContext ec = fc.getExternalContext();
+            ec.responseReset();
+            ec.setResponseContentType(contentType);
+            ec.setResponseContentLength((int) file.length());
+            ec.setResponseHeader("Content-Disposition",
+                    "attachment; filename=\"" + anexo.getNomeArquivo() + "\"");
+            try (FileInputStream in = new FileInputStream(file);
+                 OutputStream out = ec.getResponseOutputStream()) {
+                byte[] buf = new byte[8192];
+                int read;
+                while ((read = in.read(buf)) != -1) {
+                    out.write(buf, 0, read);
+                }
             }
-            service.adicionarAnexo(pedidoSelecionado.getId(), nomeArq, caminho,
-                    arquivoAnexo.getContentType(), arquivoAnexo.getSize());
-            addSucesso("Contrato enviado com sucesso!");
+            fc.responseComplete();
         } catch (Exception e) {
-            e.printStackTrace();
-            addErro("Erro ao enviar arquivo: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
+            addErro("Erro ao baixar arquivo: " +
+                    (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
         }
     }
 
@@ -157,6 +200,7 @@ public class VendedorBean implements Serializable {
     public List<Pedido> getMeusPedidos() { return meusPedidos; }
     public Pedido getPedidoSelecionado() { return pedidoSelecionado; }
     public void setPedidoSelecionado(Pedido p) { this.pedidoSelecionado = p; }
+    public List<Anexo> getAnexosPedidoSelecionado() { return anexosPedidoSelecionado; }
     public LocalDate getPrazoFabricacao() { return prazoFabricacao; }
     public void setPrazoFabricacao(LocalDate d) { this.prazoFabricacao = d; }
     public LocalDate getPrazoEntrega() { return prazoEntrega; }

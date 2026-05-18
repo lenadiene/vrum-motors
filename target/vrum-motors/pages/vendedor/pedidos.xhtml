@@ -154,14 +154,39 @@
                         <!-- Info do pedido -->
                         <div>
                             <p style="font-size:0.8rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px">Detalhes do Pedido</p>
-                            <table style="width:100%; font-size:0.87rem">
-                                <tr><td style="color:#9A9A9A; padding:4px 0">Veículo</td><td style="color:#FFF">#{vendedorBean.pedidoSelecionado.veiculo.nome}</td></tr>
+                            <table style="width:100%; font-size:0.87rem; border-collapse:collapse">
+                                <tr><td style="color:#9A9A9A; padding:4px 0; width:40%">Veículo</td><td style="color:#FFF">#{vendedorBean.pedidoSelecionado.veiculo.nome}</td></tr>
                                 <tr><td style="color:#9A9A9A; padding:4px 0">Cliente</td><td style="color:#FFF">#{vendedorBean.pedidoSelecionado.cliente.nome}</td></tr>
                                 <tr><td style="color:#9A9A9A; padding:4px 0">Telefone</td><td style="color:#FFF">#{vendedorBean.pedidoSelecionado.cliente.telefone}</td></tr>
                                 <tr><td style="color:#9A9A9A; padding:4px 0">Cor</td><td style="color:#FFF">#{vendedorBean.pedidoSelecionado.corEscolhida}</td></tr>
+                                <ui:fragment rendered="#{not empty vendedorBean.pedidoSelecionado.formaPagamento}">
+                                    <tr><td style="color:#9A9A9A; padding:4px 0">Pagamento</td><td style="color:#FFF">#{vendedorBean.pedidoSelecionado.formaPagamento}</td></tr>
+                                </ui:fragment>
+                                <ui:fragment rendered="#{vendedorBean.pedidoSelecionado.prazoFabricacao != null}">
+                                    <tr><td style="color:#9A9A9A; padding:4px 0">Prazo Fab.</td>
+                                        <td style="color:#FFF">
+                                            <h:outputText value="#{vendedorBean.pedidoSelecionado.prazoFabricacao}">
+                                                <f:convertDateTime pattern="dd/MM/yyyy" type="localDate"/>
+                                            </h:outputText>
+                                        </td>
+                                    </tr>
+                                </ui:fragment>
                                 <tr><td style="color:#9A9A9A; padding:4px 0">Status</td>
                                     <td><span class="badge badge-negociacao">#{vendedorBean.pedidoSelecionado.status.descricao}</span></td>
                                 </tr>
+                                <ui:fragment rendered="#{not empty vendedorBean.anexosPedidoSelecionado}">
+                                    <tr>
+                                        <td style="color:#9A9A9A; padding:6px 0; vertical-align:top">Contrato</td>
+                                        <td style="padding:6px 0">
+                                            <ui:repeat value="#{vendedorBean.anexosPedidoSelecionado}" var="anx">
+                                                <h:commandLink action="#{vendedorBean.downloadAnexo(anx)}"
+                                                               style="color:#3498DB; text-decoration:none; font-size:0.83rem; display:block; margin-bottom:4px; cursor:pointer; background:none; border:none; padding:0; font-family:inherit">
+                                                    📎 #{anx.nomeArquivo}
+                                                </h:commandLink>
+                                            </ui:repeat>
+                                        </td>
+                                    </tr>
+                                </ui:fragment>
                             </table>
                         </div>
 
@@ -169,7 +194,7 @@
                         <div>
                             <p style="font-size:0.8rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px">Ações</p>
 
-                            <!-- Enviar para fabricação -->
+                            <!-- Enviar para fabricação (inclui upload do contrato) -->
                             <h:panelGroup rendered="#{vendedorBean.pedidoSelecionado.status.name() == 'EM_NEGOCIACAO'}">
                                 <div style="margin-bottom:16px">
                                     <div class="form-group">
@@ -184,6 +209,11 @@
                                                      styleClass="form-control"
                                                      placeholder="dd/MM/yyyy"
                                                      converter="localDateConverter"/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Contrato (opcional)</label>
+                                        <h:inputFile value="#{vendedorBean.arquivoAnexo}"
+                                                     styleClass="form-control"/>
                                     </div>
                                     <h:commandButton value="🏭 Enviar para Fabricação"
                                                      action="#{vendedorBean.enviarParaFabricacao}"
@@ -217,14 +247,15 @@
                                 </div>
                             </h:panelGroup>
 
-                            <!-- Upload de contrato -->
-                            <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08)">
-                                <p style="font-size:0.8rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px">Anexar Contrato</p>
-                                <h:inputFile value="#{vendedorBean.arquivoAnexo}" styleClass="form-control" style="margin-bottom:8px"/>
-                                <h:commandButton value="📎 Enviar Documento"
-                                                 action="#{vendedorBean.uploadAnexo}"
-                                                 styleClass="btn btn-ghost btn-sm w-100"/>
-                            </div>
+                            <!-- Status sem ação disponível -->
+                            <h:panelGroup rendered="#{vendedorBean.pedidoSelecionado.status.name() == 'EM_FABRICACAO'
+                                                   or vendedorBean.pedidoSelecionado.status.name() == 'FABRICADO'
+                                                   or vendedorBean.pedidoSelecionado.status.name() == 'FINALIZADO'
+                                                   or vendedorBean.pedidoSelecionado.status.name() == 'CANCELADO'}">
+                                <p style="color:#9A9A9A; font-size:0.85rem">
+                                    Nenhuma ação disponível para o status atual.
+                                </p>
+                            </h:panelGroup>
                         </div>
                     </div>
                 </div>

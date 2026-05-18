@@ -1,17 +1,24 @@
 package br.com.vrum.selenium;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.junit.*;
-import org.openqa.selenium.*;
+import java.time.Duration;
+
+import org.junit.After;
+import org.junit.AfterClass;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
-import static org.junit.Assert.*;
+import io.github.bonigarcia.wdm.WebDriverManager;
 
 /**
  * Testes automatizados Selenium — Vrum Motors
@@ -675,7 +682,7 @@ public class VrumMotorsSeleniumTest {
         }
     }
 
-e
+
     // =========================================================
     // TC28 — Limite de caracteres nos campos do Login
     // =========================================================

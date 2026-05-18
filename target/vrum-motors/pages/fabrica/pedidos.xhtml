@@ -35,7 +35,7 @@
             <p>Gerencie o status de fabricação dos veículos encomendados</p>
         </div>
 
-        <h:form>
+        <h:form id="fabricaForm">
             <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
 
             <!-- Stats rápidas -->
@@ -106,7 +106,10 @@
                             <h:inputText value="#{fabricaBean.prazoEntrega}"
                                          styleClass="form-control"
                                          placeholder="dd/MM/yyyy"
+                                         maxlength="10"
+                                         oninput="if(this.value.length >= 10) document.getElementById('prazo-max-msg').style.display='block'; else document.getElementById('prazo-max-msg').style.display='none';"
                                          converter="localDateConverter"/>
+                            <span id="prazo-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 10 caracteres.</span>
                         </div>
 
                         <div class="form-group">
@@ -114,7 +117,10 @@
                             <h:inputTextarea value="#{fabricaBean.observacoes}"
                                              styleClass="form-control"
                                              rows="3"
+                                             maxlength="500"
+                                             oninput="if(this.value.length >= 500) document.getElementById('obs-max-msg').style.display='block'; else document.getElementById('obs-max-msg').style.display='none';"
                                              placeholder="Informações adicionais sobre a produção..."/>
+                            <span id="obs-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 500 caracteres.</span>
                         </div>
 
                         <h:commandButton value="✅ Atualizar Status"

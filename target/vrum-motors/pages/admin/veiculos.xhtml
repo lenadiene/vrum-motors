@@ -35,29 +35,33 @@
             </h:form>
         </div>
 
-        <h:form>
+        <h:form id="veiculoForm">
             <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
 
             <!-- Form novo/editar veículo -->
-            <h:panelGroup rendered="#{adminBean.veiculoEdicao != null and adminBean.veiculoEdicao.nome != null or adminBean.veiculoEdicao.id != null}">
+            <h:panelGroup rendered="#{adminBean.mostrarFormVeiculo}">
                 <div class="card" style="border:2px solid #D62828; margin-bottom:24px">
                     <div class="card-header">#{adminBean.veiculoEdicao.id == null ? 'Novo Veículo' : 'Editar Veículo'}</div>
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px">
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Nome do Modelo *</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.nome}" required="true" styleClass="form-control" placeholder="Ex: Vrum GT-S"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.nome}" required="true" styleClass="form-control" maxlength="100" oninput="if(this.value.length >= 100) document.getElementById('nome-max-msg').style.display='block'; else document.getElementById('nome-max-msg').style.display='none';" placeholder="Ex: Vrum GT-S"/>
+                            <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 100 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Marca</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.marca}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.marca}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('marca-max-msg').style.display='block'; else document.getElementById('marca-max-msg').style.display='none';"/>
+                            <span id="marca-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Modelo</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.modelo}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.modelo}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('modelo-max-msg').style.display='block'; else document.getElementById('modelo-max-msg').style.display='none';"/>
+                            <span id="modelo-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Ano</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.ano}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.ano}" styleClass="form-control" maxlength="4" oninput="if(this.value.length >= 4) document.getElementById('ano-max-msg').style.display='block'; else document.getElementById('ano-max-msg').style.display='none';"/>
+                            <span id="ano-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 4 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Preço (R$)</label>
@@ -65,35 +69,43 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Motor</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.motor}" styleClass="form-control" placeholder="2.0 Turbo"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.motor}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('motor-max-msg').style.display='block'; else document.getElementById('motor-max-msg').style.display='none';" placeholder="2.0 Turbo"/>
+                            <span id="motor-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Potência</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.potencia}" styleClass="form-control" placeholder="200 cv"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.potencia}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('potencia-max-msg').style.display='block'; else document.getElementById('potencia-max-msg').style.display='none';" placeholder="200 cv"/>
+                            <span id="potencia-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Torque</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.torque}" styleClass="form-control" placeholder="300 Nm"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.torque}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('torque-max-msg').style.display='block'; else document.getElementById('torque-max-msg').style.display='none';" placeholder="300 Nm"/>
+                            <span id="torque-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Transmissão</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.transmissao}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.transmissao}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('transmissao-max-msg').style.display='block'; else document.getElementById('transmissao-max-msg').style.display='none';"/>
+                            <span id="transmissao-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Combustível</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.combustivel}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.combustivel}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('combustivel-max-msg').style.display='block'; else document.getElementById('combustivel-max-msg').style.display='none';"/>
+                            <span id="combustivel-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Tração</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.tracao}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.tracao}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('tracao-max-msg').style.display='block'; else document.getElementById('tracao-max-msg').style.display='none';"/>
+                            <span id="tracao-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Vel. Máxima</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.velocidadeMax}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.velocidadeMax}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('vel-max-msg').style.display='block'; else document.getElementById('vel-max-msg').style.display='none';"/>
+                            <span id="vel-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Aceleração 0-100</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.aceleracao}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.aceleracao}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('acel-max-msg').style.display='block'; else document.getElementById('acel-max-msg').style.display='none';"/>
+                            <span id="acel-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Tipo</label>
@@ -109,7 +121,8 @@
                         </div>
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Descrição curta</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.descricao}" styleClass="form-control" placeholder="Frase de impacto do modelo"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.descricao}" styleClass="form-control" maxlength="255" oninput="if(this.value.length >= 255) document.getElementById('desc-max-msg').style.display='block'; else document.getElementById('desc-max-msg').style.display='none';" placeholder="Frase de impacto do modelo"/>
+                            <span id="desc-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 255 caracteres.</span>
                         </div>
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Descrição completa</label>
@@ -117,12 +130,13 @@
                         </div>
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">URL / Nome da imagem principal</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.imagemPrincipal}" styleClass="form-control" placeholder="modelo-principal.jpg"/>
+                            <h:inputText value="#{adminBean.veiculoEdicao.imagemPrincipal}" styleClass="form-control" maxlength="255" oninput="if(this.value.length >= 255) document.getElementById('img-max-msg').style.display='block'; else document.getElementById('img-max-msg').style.display='none';" placeholder="modelo-principal.jpg"/>
+                            <span id="img-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 255 caracteres.</span>
                         </div>
                     </div>
                     <div style="display:flex; gap:12px; margin-top:8px">
                         <h:commandButton value="Salvar Veículo" action="#{adminBean.salvarVeiculo}" styleClass="btn btn-primary"/>
-                        <h:commandButton value="Cancelar" action="#{adminBean.novoVeiculo}" styleClass="btn btn-ghost" immediate="true"/>
+                        <h:commandButton value="Cancelar" action="#{adminBean.cancelarEdicaoVeiculo}" styleClass="btn btn-ghost" immediate="true"/>
                     </div>
                 </div>
             </h:panelGroup>
@@ -154,7 +168,7 @@
                                     </h:panelGroup>
                                 </td>
                                 <td style="display:flex; gap:8px">
-                                    <h:commandButton value="Editar" action="#{adminBean.editarVeiculo(v)}" styleClass="btn btn-ghost btn-sm"/>
+                                    <h:commandButton value="Editar" action="#{adminBean.editarVeiculo(v)}" styleClass="btn btn-ghost btn-sm" immediate="true"/>
                                     <h:commandButton value="Remover" action="#{adminBean.excluirVeiculo(v)}" styleClass="btn btn-sm"
                                                      style="background:#D62828; color:#FFF; border:none; border-radius:6px; cursor:pointer; padding:8px 16px; font-size:0.8rem"/>
                                 </td>

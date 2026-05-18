@@ -63,11 +63,14 @@
 
         <!-- Pedidos recentes -->
         <div class="card">
-            <div class="card-header">Pedidos Recentes da Unidade</div>
+            <div class="card-header">
+                Pedidos Recentes da Unidade
+                <a href="pedidos.xhtml" class="btn btn-ghost btn-sm">Ver todos</a>
+            </div>
             <table class="vrum-table">
                 <thead><tr><th>Pedido</th><th>Cliente</th><th>Veículo</th><th>Vendedor</th><th>Status</th></tr></thead>
                 <tbody>
-                    <ui:repeat value="#{gerenteBean.pedidos}" var="p">
+                    <ui:repeat value="#{gerenteBean.pedidosRecentes}" var="p">
                         <tr>
                             <td style="font-family:'Bebas Neue',cursive; letter-spacing:1px">#{p.numeroPedido}</td>
                             <td>#{p.cliente.nome}</td>

@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        <h:form>
+        <h:form id="cadastroForm">
             <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success"/>
 
             <!-- ETAPA 1 -->
@@ -53,32 +53,47 @@
                             <label class="form-label">Nome completo *</label>
                             <h:inputText value="#{cadastroBean.cliente.nome}"
                                          required="true" styleClass="form-control"
+                                         maxlength="100"
+                                         oninput="if(this.value.length >= 100) document.getElementById('nome-max-msg').style.display='block'; else document.getElementById('nome-max-msg').style.display='none';"
                                          placeholder="João da Silva"/>
+                            <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail *</label>
                             <h:inputText value="#{cadastroBean.cliente.email}"
                                          required="true" styleClass="form-control"
+                                         maxlength="100"
+                                         oninput="if(this.value.length >= 100) document.getElementById('email-max-msg').style.display='block'; else document.getElementById('email-max-msg').style.display='none';"
                                          placeholder="joao@email.com"/>
+                            <span id="email-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">CPF</label>
                             <h:inputText value="#{cadastroBean.cliente.cpf}"
                                          styleClass="form-control"
+                                         maxlength="14"
+                                         oninput="if(this.value.length >= 14) document.getElementById('cpf-max-msg').style.display='block'; else document.getElementById('cpf-max-msg').style.display='none';"
                                          placeholder="000.000.000-00"/>
+                            <span id="cpf-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 14 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Telefone / WhatsApp *</label>
                             <h:inputText value="#{cadastroBean.cliente.telefone}"
                                          required="true" styleClass="form-control"
+                                         maxlength="20"
+                                         oninput="if(this.value.length >= 20) document.getElementById('telefone-max-msg').style.display='block'; else document.getElementById('telefone-max-msg').style.display='none';"
                                          placeholder="(81) 99999-9999"/>
+                            <span id="telefone-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 20 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Senha *</label>
                             <h:inputSecret value="#{cadastroBean.confirmacaoSenha}"
                                            required="true" styleClass="form-control"
                                            redisplay="true"
+                                           maxlength="50"
+                                           oninput="if(this.value.length >= 50) document.getElementById('senha-max-msg').style.display='block'; else document.getElementById('senha-max-msg').style.display='none';"
                                            placeholder="Mínimo 6 caracteres"/>
+                            <span id="senha-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 50 caracteres.</span>
                         </div>
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Sua Cidade / Concessionária *</label>
@@ -120,7 +135,10 @@
                             <label class="form-label">Cor desejada (opcional)</label>
                             <h:inputText value="#{cadastroBean.corEscolhida}"
                                          styleClass="form-control"
+                                         maxlength="30"
+                                         oninput="if(this.value.length >= 30) document.getElementById('cor-max-msg').style.display='block'; else document.getElementById('cor-max-msg').style.display='none';"
                                          placeholder="Ex: Preto, Prata, Branco..."/>
+                            <span id="cor-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 30 caracteres.</span>
                         </div>
                     </h:panelGroup>
 

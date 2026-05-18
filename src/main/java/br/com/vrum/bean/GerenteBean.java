@@ -9,6 +9,7 @@ import jakarta.inject.Named;
 import jakarta.faces.view.ViewScoped;
 import jakarta.faces.context.FacesContext;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 
 @Named("gerenteBean")
@@ -21,7 +22,7 @@ public class GerenteBean implements Serializable {
     private Concessionaria concessionaria;
     private List<Vendedor> vendedores;
     private List<Pedido> pedidos;
-    private Vendedor vendedorEdicao = new Vendedor();
+    private Vendedor vendedorEdicao;
     private String senhaVendedor;
 
     private final UsuarioService usuarioService = new UsuarioService();
@@ -50,6 +51,11 @@ public class GerenteBean implements Serializable {
         senhaVendedor = null;
     }
 
+    public void cancelarEdicaoVendedor() {
+        vendedorEdicao = null;
+        senhaVendedor = null;
+    }
+
     public void editarVendedor(Vendedor v) {
         vendedorEdicao = v;
     }
@@ -60,7 +66,7 @@ public class GerenteBean implements Serializable {
             usuarioService.salvarUsuario(vendedorEdicao, senhaVendedor);
             addSucesso("Vendedor salvo com sucesso!");
             carregarDados();
-            vendedorEdicao = new Vendedor();
+            vendedorEdicao = null;
         } catch (Exception e) {
             addErro(e.getMessage());
         }
@@ -86,6 +92,10 @@ public class GerenteBean implements Serializable {
     public Concessionaria getConcessionaria() { return concessionaria; }
     public List<Vendedor> getVendedores() { return vendedores; }
     public List<Pedido> getPedidos() { return pedidos; }
+    public List<Pedido> getPedidosRecentes() {
+        if (pedidos == null) return Collections.emptyList();
+        return pedidos.subList(0, Math.min(5, pedidos.size()));
+    }
     public Vendedor getVendedorEdicao() { return vendedorEdicao; }
     public void setVendedorEdicao(Vendedor v) { this.vendedorEdicao = v; }
     public String getSenhaVendedor() { return senhaVendedor; }

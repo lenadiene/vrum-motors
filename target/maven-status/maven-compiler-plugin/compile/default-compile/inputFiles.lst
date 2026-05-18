@@ -1,10 +1,13 @@
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\AdminBean.java
+C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\AdminPedidosBean.java
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\CadastroBean.java
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\ClientePedidoBean.java
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\FabricaBean.java
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\GerenteBean.java
+C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\GerPedidosBean.java
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\HomeBean.java
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\LoginBean.java
+C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\NovoPedidoBean.java
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\VeiculoDetalheBean.java
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\bean\VendedorBean.java
 C:\Users\lenad\OneDrive\Documentos\vrum-motors\src\main\java\br\com\vrum\dao\AnexoDAO.java

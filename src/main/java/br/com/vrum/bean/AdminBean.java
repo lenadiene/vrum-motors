@@ -22,14 +22,16 @@ public class AdminBean implements Serializable {
     private Usuario usuarioEdicao;
     private String senhaUsuario;
     private PerfilUsuario perfilFiltro;
+    private Long concessionariaIdSelecionada;
 
     // Concessionárias
     private List<Concessionaria> concessionarias;
-    private Concessionaria concessionariaEdicao = new Concessionaria();
+    private Concessionaria concessionariaEdicao;
 
     // Veículos
     private List<Veiculo> veiculos;
     private Veiculo veiculoEdicao = new Veiculo();
+    private boolean mostrarFormVeiculo = false;
 
     // Pedidos
     private List<Pedido> pedidos;
@@ -53,22 +55,82 @@ public class AdminBean implements Serializable {
 
     // ---- USUÁRIOS ----
     public void novoUsuario() {
-        usuarioEdicao = new Cliente(); // default, pode mudar via perfil
+        usuarioEdicao = new Cliente();
         senhaUsuario = null;
+        concessionariaIdSelecionada = null;
+    }
+
+    public void cancelarEdicaoUsuario() {
+        usuarioEdicao = null;
+        senhaUsuario = null;
+        concessionariaIdSelecionada = null;
     }
 
     public void editarUsuario(Usuario u) {
         usuarioEdicao = u;
+        concessionariaIdSelecionada = null;
+        if (u instanceof Vendedor) {
+            Concessionaria c = ((Vendedor) u).getConcessionaria();
+            if (c != null) concessionariaIdSelecionada = c.getId();
+        } else if (u instanceof Gerente) {
+            Concessionaria c = ((Gerente) u).getConcessionaria();
+            if (c != null) concessionariaIdSelecionada = c.getId();
+        }
     }
 
     public void salvarUsuario() {
         try {
-            usuarioService.salvarUsuario(usuarioEdicao, senhaUsuario);
+            PerfilUsuario perfil = usuarioEdicao.getPerfil();
+            if (perfil == null) {
+                addErro("Selecione um perfil.");
+                return;
+            }
+            if ((perfil == PerfilUsuario.VENDEDOR || perfil == PerfilUsuario.GERENTE)
+                    && concessionariaIdSelecionada == null) {
+                addErro("Selecione a concessionária para este perfil.");
+                return;
+            }
+
+            Usuario entidade;
+            if (usuarioEdicao.getId() == null) {
+                entidade = construirEntidade(perfil);
+                entidade.setNome(usuarioEdicao.getNome());
+                entidade.setEmail(usuarioEdicao.getEmail());
+                entidade.setTelefone(usuarioEdicao.getTelefone());
+                entidade.setCpf(usuarioEdicao.getCpf());
+            } else {
+                entidade = usuarioEdicao;
+            }
+            atribuirConcessionaria(entidade);
+            usuarioService.salvarUsuario(entidade, senhaUsuario);
             addSucesso("Usuário salvo com sucesso!");
             usuarios = usuarioService.listarTodos();
             usuarioEdicao = null;
+            concessionariaIdSelecionada = null;
         } catch (Exception e) {
             addErro(e.getMessage());
+        }
+    }
+
+    private Usuario construirEntidade(PerfilUsuario perfil) {
+        switch (perfil) {
+            case ADMIN_EMPRESA: return new AdminEmpresa();
+            case ADMIN_FABRICA: return new AdminFabrica();
+            case GERENTE:       return new Gerente();
+            case VENDEDOR:      return new Vendedor();
+            default:            return new Cliente();
+        }
+    }
+
+    private void atribuirConcessionaria(Usuario usuario) {
+        if (concessionariaIdSelecionada == null) return;
+        Concessionaria conc = concessionarias.stream()
+                .filter(c -> c.getId().equals(concessionariaIdSelecionada))
+                .findFirst().orElse(null);
+        if (usuario instanceof Vendedor) {
+            ((Vendedor) usuario).setConcessionaria(conc);
+        } else if (usuario instanceof Gerente) {
+            ((Gerente) usuario).setConcessionaria(conc);
         }
     }
 
@@ -89,6 +151,10 @@ public class AdminBean implements Serializable {
         concessionariaEdicao = new Concessionaria();
     }
 
+    public void cancelarEdicaoConcessionaria() {
+        concessionariaEdicao = null;
+    }
+
     public void editarConcessionaria(Concessionaria c) {
         concessionariaEdicao = c;
     }
@@ -98,7 +164,7 @@ public class AdminBean implements Serializable {
             concService.salvar(concessionariaEdicao);
             addSucesso("Concessionária salva!");
             concessionarias = concService.listarTodas();
-            concessionariaEdicao = new Concessionaria();
+            concessionariaEdicao = null;
         } catch (Exception e) {
             addErro(e.getMessage());
         }
@@ -107,10 +173,17 @@ public class AdminBean implements Serializable {
     // ---- VEÍCULOS ----
     public void novoVeiculo() {
         veiculoEdicao = new Veiculo();
+        mostrarFormVeiculo = true;
+    }
+
+    public void cancelarEdicaoVeiculo() {
+        veiculoEdicao = new Veiculo();
+        mostrarFormVeiculo = false;
     }
 
     public void editarVeiculo(Veiculo v) {
         veiculoEdicao = v;
+        mostrarFormVeiculo = true;
     }
 
     public void salvarVeiculo() {
@@ -119,6 +192,7 @@ public class AdminBean implements Serializable {
             addSucesso("Veículo salvo!");
             veiculos = veiculoService.listarTodos();
             veiculoEdicao = new Veiculo();
+            mostrarFormVeiculo = false;
         } catch (Exception e) {
             addErro(e.getMessage());
         }
@@ -157,5 +231,8 @@ public class AdminBean implements Serializable {
     public List<Veiculo> getVeiculos() { return veiculos; }
     public Veiculo getVeiculoEdicao() { return veiculoEdicao; }
     public void setVeiculoEdicao(Veiculo v) { this.veiculoEdicao = v; }
+    public boolean isMostrarFormVeiculo() { return mostrarFormVeiculo; }
     public List<Pedido> getPedidos() { return pedidos; }
+    public Long getConcessionariaIdSelecionada() { return concessionariaIdSelecionada; }
+    public void setConcessionariaIdSelecionada(Long id) { this.concessionariaIdSelecionada = id; }
 }

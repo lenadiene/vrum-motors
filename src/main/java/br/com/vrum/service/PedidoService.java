@@ -79,6 +79,10 @@ public class PedidoService {
         pedidoDAO.atualizar(pedido);
     }
 
+    public void atualizarPedido(Pedido pedido) {
+        pedidoDAO.atualizar(pedido);
+    }
+
     public void cancelarPedido(Pedido pedido) {
         pedido.setStatus(StatusPedido.CANCELADO);
         pedidoDAO.atualizar(pedido);

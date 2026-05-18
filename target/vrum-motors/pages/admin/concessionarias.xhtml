@@ -32,7 +32,7 @@
                 <h:commandButton value="+ Nova Concessionária" action="#{adminBean.novaConcessionaria}" styleClass="btn btn-primary"/>
             </h:form>
         </div>
-        <h:form>
+        <h:form id="concessionariaForm">
             <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
 
             <!-- Formulário -->
@@ -42,28 +42,33 @@
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
                         <div class="form-group">
                             <label class="form-label">Nome da Unidade *</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.nome}" required="true" styleClass="form-control" placeholder="Vrum Motors Recife"/>
+                            <h:inputText value="#{adminBean.concessionariaEdicao.nome}" required="true" styleClass="form-control" maxlength="200" oninput="if(this.value.length >= 200) document.getElementById('nome-max-msg').style.display='block'; else document.getElementById('nome-max-msg').style.display='none';" placeholder="Vrum Motors Recife"/>
+                            <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 200 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Cidade *</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.cidade}" required="true" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.concessionariaEdicao.cidade}" required="true" styleClass="form-control" maxlength="200" oninput="if(this.value.length >= 200) document.getElementById('cidade-max-msg').style.display='block'; else document.getElementById('cidade-max-msg').style.display='none';"/>
+                            <span id="cidade-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 200 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Estado (UF) *</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.estado}" required="true" styleClass="form-control" placeholder="PE" maxlength="2"/>
+                            <h:inputText value="#{adminBean.concessionariaEdicao.estado}" required="true" styleClass="form-control" placeholder="PE" maxlength="2" oninput="if(this.value.length >= 2) document.getElementById('estado-max-msg').style.display='block'; else document.getElementById('estado-max-msg').style.display='none';"/>
+                            <span id="estado-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 2 caracteres.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Telefone</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.telefone}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.concessionariaEdicao.telefone}" styleClass="form-control" maxlength="20" oninput="if(this.value.length >= 20) document.getElementById('telefone-max-msg').style.display='block'; else document.getElementById('telefone-max-msg').style.display='none';"/>
+                            <span id="telefone-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 20 caracteres.</span>
                         </div>
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Endereço</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.endereco}" styleClass="form-control"/>
+                            <h:inputText value="#{adminBean.concessionariaEdicao.endereco}" styleClass="form-control" maxlength="200" oninput="if(this.value.length >= 200) document.getElementById('endereco-max-msg').style.display='block'; else document.getElementById('endereco-max-msg').style.display='none';"/>
+                            <span id="endereco-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 200 caracteres.</span>
                         </div>
                     </div>
                     <div style="display:flex; gap:12px; margin-top:8px">
                         <h:commandButton value="Salvar" action="#{adminBean.salvarConcessionaria}" styleClass="btn btn-primary"/>
-                        <h:commandButton value="Cancelar" action="#{adminBean.novaConcessionaria}" styleClass="btn btn-ghost" immediate="true"/>
+                        <h:commandButton value="Cancelar" action="#{adminBean.cancelarEdicaoConcessionaria}" styleClass="btn btn-ghost" immediate="true"/>
                     </div>
                 </div>
             </h:panelGroup>
@@ -80,7 +85,7 @@
                                 <td style="color:#9A9A9A">#{c.telefone}</td>
                                 <td><span class="badge #{c.ativa ? 'badge-pronto' : 'badge-cancelado'}">#{c.ativa ? 'Ativa' : 'Inativa'}</span></td>
                                 <td>
-                                    <h:commandButton value="Editar" action="#{adminBean.editarConcessionaria(c)}" styleClass="btn btn-ghost btn-sm"/>
+                                    <h:commandButton value="Editar" action="#{adminBean.editarConcessionaria(c)}" styleClass="btn btn-ghost btn-sm" immediate="true"/>
                                 </td>
                             </tr>
                         </ui:repeat>

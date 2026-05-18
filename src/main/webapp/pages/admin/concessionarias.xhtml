@@ -68,7 +68,7 @@
                     </div>
                     <div style="display:flex; gap:12px; margin-top:8px">
                         <h:commandButton value="Salvar" action="#{adminBean.salvarConcessionaria}" styleClass="btn btn-primary"/>
-                        <h:commandButton value="Cancelar" action="#{adminBean.novaConcessionaria}" styleClass="btn btn-ghost" immediate="true"/>
+                        <h:commandButton value="Cancelar" action="#{adminBean.cancelarEdicaoConcessionaria}" styleClass="btn btn-ghost" immediate="true"/>
                     </div>
                 </div>
             </h:panelGroup>
@@ -85,7 +85,7 @@
                                 <td style="color:#9A9A9A">#{c.telefone}</td>
                                 <td><span class="badge #{c.ativa ? 'badge-pronto' : 'badge-cancelado'}">#{c.ativa ? 'Ativa' : 'Inativa'}</span></td>
                                 <td>
-                                    <h:commandButton value="Editar" action="#{adminBean.editarConcessionaria(c)}" styleClass="btn btn-ghost btn-sm"/>
+                                    <h:commandButton value="Editar" action="#{adminBean.editarConcessionaria(c)}" styleClass="btn btn-ghost btn-sm" immediate="true"/>
                                 </td>
                             </tr>
                         </ui:repeat>
