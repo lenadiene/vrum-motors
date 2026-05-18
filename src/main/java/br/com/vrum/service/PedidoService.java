@@ -89,14 +89,8 @@ public class PedidoService {
         pedidoDAO.atualizar(pedido);
     }
 
-    public Anexo adicionarAnexo(Pedido pedido, String nomeArquivo, String caminho, String tipo, Long tamanho) {
-        Anexo anexo = new Anexo();
-        anexo.setPedido(pedido);
-        anexo.setNomeArquivo(nomeArquivo);
-        anexo.setCaminhoArquivo(caminho);
-        anexo.setTipoArquivo(tipo);
-        anexo.setTamanho(tamanho);
-        return anexoDAO.salvar(anexo);
+    public Anexo adicionarAnexo(Long pedidoId, String nomeArquivo, String caminho, String tipo, Long tamanho) {
+        return anexoDAO.salvarAnexo(pedidoId, nomeArquivo, caminho, tipo, tamanho);
     }
 
     public List<Pedido> listarPorCliente(Cliente cliente) {

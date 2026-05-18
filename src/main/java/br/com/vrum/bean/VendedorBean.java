@@ -96,24 +96,34 @@ public class VendedorBean implements Serializable {
     }
 
     public void uploadAnexo() {
-        if (arquivoAnexo == null) {
+        if (pedidoSelecionado == null) {
+            addErro("Selecione um pedido antes de enviar o arquivo.");
+            return;
+        }
+        if (arquivoAnexo == null || arquivoAnexo.getSize() == 0) {
             addErro("Selecione um arquivo para enviar.");
             return;
         }
         try {
             String nomeArq = Paths.get(arquivoAnexo.getSubmittedFileName()).getFileName().toString();
+
             String uploadDir = FacesContext.getCurrentInstance()
                     .getExternalContext().getRealPath("/uploads/contratos/");
+            if (uploadDir == null) {
+                uploadDir = System.getProperty("java.io.tmpdir") + File.separator + "vrum-contratos";
+            }
             new File(uploadDir).mkdirs();
+
             String caminho = uploadDir + File.separator + System.currentTimeMillis() + "_" + nomeArq;
             try (InputStream is = arquivoAnexo.getInputStream()) {
                 Files.copy(is, Paths.get(caminho));
             }
-            service.adicionarAnexo(pedidoSelecionado, nomeArq, caminho,
+            service.adicionarAnexo(pedidoSelecionado.getId(), nomeArq, caminho,
                     arquivoAnexo.getContentType(), arquivoAnexo.getSize());
             addSucesso("Contrato enviado com sucesso!");
         } catch (Exception e) {
-            addErro("Erro ao enviar arquivo: " + e.getMessage());
+            e.printStackTrace();
+            addErro("Erro ao enviar arquivo: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
         }
     }
 
