@@ -6,6 +6,7 @@ import br.com.vrum.model.*;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
+import java.beans.Introspector;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class DataInicializador implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+        Introspector.flushCaches();
         try {
             UsuarioDAO usuarioDAO = new UsuarioDAO();
             ConcessionariaDAO concDAO = new ConcessionariaDAO();
@@ -222,5 +224,7 @@ public class DataInicializador implements ServletContextListener {
     }
 
     @Override
-    public void contextDestroyed(ServletContextEvent sce) {}
+    public void contextDestroyed(ServletContextEvent sce) {
+        JPAUtil.closeFactory();
+    }
 }

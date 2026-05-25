@@ -8,6 +8,100 @@
     <meta charset="UTF-8"/>
     <title>Cadastro — Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <script type="text/javascript">
+        /* Exibe mensagem de aviso por 3 segundos */
+        function vrumMostrarAviso(msgId) {
+            var msg = document.getElementById(msgId);
+            if (!msg) return;
+            msg.style.display = 'block';
+            clearTimeout(msg._t);
+            msg._t = setTimeout(function() { msg.style.display = 'none'; }, 3000);
+        }
+
+        function vrumLimite(campo, msgId, limite) {
+            var msg = document.getElementById(msgId);
+            if (msg) msg.style.display = campo.value.length >= limite ? 'block' : 'none';
+        }
+
+        /* ── NOME ──────────────────────────────────────────────── */
+        /* Bloqueia tecla inválida antes de entrar no campo */
+        function vrumNomeTecla(e) {
+            if (e.key.length === 1 &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey &amp;&amp; !e.altKey) {
+                if (/[^a-zA-ZÀ-ÿ\s\-'.]/.test(e.key)) {
+                    e.preventDefault();
+                    vrumMostrarAviso('nome-invalido-msg');
+                }
+            }
+        }
+        /* Limpa qualquer coisa que entre por colagem ou autocomplete */
+        function vrumNomeInput(campo) {
+            var antes = campo.value;
+            var depois = antes
+                .replace(/[^a-zA-ZÀ-ÿ\s\-'.]/g, '')
+                .replace(/^ +/, '')
+                .replace(/ {2,}/g, ' ');
+            if (depois !== antes) {
+                campo.value = depois;
+                vrumMostrarAviso('nome-invalido-msg');
+            }
+            vrumLimite(campo, 'nome-max-msg', 100);
+        }
+
+        /* ── TELEFONE ───────────────────────────────────────────── */
+        function vrumTelefoneTecla(e) {
+            if (e.key.length === 1 &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey &amp;&amp; !e.altKey) {
+                if (/[^\d\s()\-+.]/.test(e.key)) {
+                    e.preventDefault();
+                    vrumMostrarAviso('telefone-invalido-msg');
+                }
+            }
+        }
+        function vrumTelefoneInput(campo) {
+            var antes = campo.value;
+            var depois = antes.replace(/[^\d\s()\-+.]/g, '');
+            if (depois !== antes) {
+                campo.value = depois;
+                vrumMostrarAviso('telefone-invalido-msg');
+            }
+            vrumLimite(campo, 'telefone-max-msg', 20);
+        }
+
+        /* ── CPF ────────────────────────────────────────────────── */
+        function vrumCPFTecla(e) {
+            if (e.key.length === 1 &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey &amp;&amp; !e.altKey) {
+                if (/[^\d.\-]/.test(e.key)) {
+                    e.preventDefault();
+                    vrumMostrarAviso('cpf-invalido-msg');
+                }
+            }
+        }
+        function vrumCPFInput(campo) {
+            var antes = campo.value;
+            var depois = antes.replace(/[^\d.\-]/g, '');
+            if (depois !== antes) {
+                campo.value = depois;
+                vrumMostrarAviso('cpf-invalido-msg');
+            }
+            vrumLimite(campo, 'cpf-max-msg', 14);
+        }
+
+        /* ── NOME BLUR ──────────────────────────────────────────── */
+        function vrumNomeBlur(campo) {
+            var msg = document.getElementById('nome-vazio-msg');
+            if (!msg) return;
+            msg.style.display = campo.value.trim().length &lt; 2 ? 'block' : 'none';
+        }
+
+        /* ── E-MAIL BLUR ────────────────────────────────────────── */
+        var emailRegex = new RegExp('^[\\w._%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$');
+        function vrumEmailBlur(campo) {
+            var msg = document.getElementById('email-formato-msg');
+            if (!msg) return;
+            var v = campo.value.trim();
+            if (v.length === 0) { msg.style.display = 'none'; return; }
+            msg.style.display = emailRegex.test(v) ? 'none' : 'block';
+        }
+    </script>
 </h:head>
 
 <h:body>
@@ -51,49 +145,83 @@
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Nome completo *</label>
-                            <h:inputText value="#{cadastroBean.cliente.nome}"
-                                         required="true" styleClass="form-control"
+                            <h:inputText id="nome" value="#{cadastroBean.cliente.nome}"
+                                         required="true"
+                                         requiredMessage="Nome é obrigatório."
+                                         styleClass="form-control"
                                          maxlength="100"
-                                         oninput="if(this.value.length >= 100) document.getElementById('nome-max-msg').style.display='block'; else document.getElementById('nome-max-msg').style.display='none';"
-                                         placeholder="João da Silva"/>
-                            <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
+                                         onkeydown="vrumNomeTecla(event)"
+                                         oninput="vrumNomeInput(this)"
+                                         onblur="vrumNomeBlur(this)"
+                                         placeholder="João da Silva">
+                                <f:validateLength minimum="2" maximum="100"/>
+                            </h:inputText>
+                            <h:message for="nome" style="color:#FF6B6B; font-size:0.8rem; display:block; margin-top:4px;"/>
+                            <span id="nome-invalido-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Apenas letras, espaços e hífens são permitidos no nome.</span>
+                            <span id="nome-vazio-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Nome deve ter ao menos 2 caracteres e não pode ser só espaços.</span>
+                            <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Limite de 100 caracteres atingido.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail *</label>
-                            <h:inputText value="#{cadastroBean.cliente.email}"
-                                         required="true" styleClass="form-control"
-                                         maxlength="100"
-                                         oninput="if(this.value.length >= 100) document.getElementById('email-max-msg').style.display='block'; else document.getElementById('email-max-msg').style.display='none';"
-                                         placeholder="joao@email.com"/>
-                            <span id="email-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
+                            <h:inputText id="emailCad" value="#{cadastroBean.cliente.email}"
+                                         required="true"
+                                         requiredMessage="E-mail é obrigatório."
+                                         styleClass="form-control"
+                                         maxlength="150"
+                                         oninput="vrumLimite(this,'email-max-msg',150)"
+                                         onblur="vrumEmailBlur(this)"
+                                         placeholder="joao@email.com">
+                                <f:validateLength minimum="5" maximum="150"/>
+                            </h:inputText>
+                            <h:message for="emailCad" style="color:#FF6B6B; font-size:0.8rem; display:block; margin-top:4px;"/>
+                            <span id="email-formato-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Informe um e-mail válido (ex: nome@dominio.com).</span>
+                            <span id="email-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Limite de 150 caracteres atingido.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">CPF</label>
-                            <h:inputText value="#{cadastroBean.cliente.cpf}"
+                            <h:inputText id="cpf" value="#{cadastroBean.cliente.cpf}"
                                          styleClass="form-control"
                                          maxlength="14"
-                                         oninput="if(this.value.length >= 14) document.getElementById('cpf-max-msg').style.display='block'; else document.getElementById('cpf-max-msg').style.display='none';"
-                                         placeholder="000.000.000-00"/>
-                            <span id="cpf-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 14 caracteres.</span>
+                                         onkeydown="vrumCPFTecla(event)"
+                                         oninput="vrumCPFInput(this)"
+                                         placeholder="000.000.000-00">
+                                <f:validateLength maximum="14"/>
+                            </h:inputText>
+                            <h:message for="cpf" style="color:#FF6B6B; font-size:0.8rem; display:block; margin-top:4px;"/>
+                            <span id="cpf-invalido-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">CPF aceita apenas dígitos, pontos e hífen.</span>
+                            <span id="cpf-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Limite de 14 caracteres atingido.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Telefone / WhatsApp *</label>
-                            <h:inputText value="#{cadastroBean.cliente.telefone}"
-                                         required="true" styleClass="form-control"
+                            <h:inputText id="telefone" value="#{cadastroBean.cliente.telefone}"
+                                         required="true"
+                                         requiredMessage="Telefone é obrigatório."
+                                         styleClass="form-control"
                                          maxlength="20"
-                                         oninput="if(this.value.length >= 20) document.getElementById('telefone-max-msg').style.display='block'; else document.getElementById('telefone-max-msg').style.display='none';"
-                                         placeholder="(81) 99999-9999"/>
-                            <span id="telefone-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 20 caracteres.</span>
+                                         onkeydown="vrumTelefoneTecla(event)"
+                                         oninput="vrumTelefoneInput(this)"
+                                         placeholder="(81) 99999-9999">
+                                <f:validateLength minimum="8" maximum="20"/>
+                            </h:inputText>
+                            <h:message for="telefone" style="color:#FF6B6B; font-size:0.8rem; display:block; margin-top:4px;"/>
+                            <span id="telefone-invalido-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Telefone aceita apenas números e símbolos como (), - e +.</span>
+                            <span id="telefone-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Limite de 20 caracteres atingido.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Senha *</label>
-                            <h:inputSecret value="#{cadastroBean.confirmacaoSenha}"
-                                           required="true" styleClass="form-control"
+                            <h:inputSecret id="senha" value="#{cadastroBean.confirmacaoSenha}"
+                                           required="true"
+                                           requiredMessage="Senha é obrigatória."
+                                           styleClass="form-control"
                                            redisplay="true"
                                            maxlength="50"
-                                           oninput="if(this.value.length >= 50) document.getElementById('senha-max-msg').style.display='block'; else document.getElementById('senha-max-msg').style.display='none';"
-                                           placeholder="Mínimo 6 caracteres"/>
-                            <span id="senha-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 50 caracteres.</span>
+                                           oninput="vrumLimite(this,'senha-max-msg',50)"
+                                           onkeyup="vrumLimite(this,'senha-max-msg',50)"
+                                           placeholder="Mínimo 6 caracteres">
+                                <f:validateLength minimum="6" maximum="50"/>
+                            </h:inputSecret>
+                            <h:message for="senha" style="color:#FF6B6B; font-size:0.8rem; display:block; margin-top:4px;"/>
+                            <span id="senha-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Limite de 50 caracteres atingido.</span>
                         </div>
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Sua Cidade / Concessionária *</label>

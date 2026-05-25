@@ -70,10 +70,11 @@ public class VrumMotorsSeleniumTest {
     @After
     public void logout() {
         // Pausa de 2 segundos no final de CADA teste para você conseguir ver o resultado visualmente!
-        aguardar(2000); 
+        aguardar(2000);
 
         try {
-            driver.get(BASE_URL + "/login.xhtml"); // reset sessão
+            driver.get(BASE_URL + "/logout");
+            wait.until(ExpectedConditions.urlContains("login"));
         } catch (Exception ignored) {}
     }
 
@@ -83,28 +84,28 @@ public class VrumMotorsSeleniumTest {
 
     private void fazerLogin(String email, String senha) {
         driver.get(LOGIN_URL);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loginForm:email")));
-        
-        // Tenta localizar campos pelo tipo
-        WebElement campoEmail = encontrarInput("email");
-        WebElement campoSenha = encontrarInput("senha");
 
-        aguardar(500); // Pausa antes de digitar
+        // Aguarda o campo email estar clicável (visível E interagível)
+        WebElement campoEmail = wait.until(
+                ExpectedConditions.elementToBeClickable(By.id("loginForm:email")));
+        WebElement campoSenha = wait.until(
+                ExpectedConditions.elementToBeClickable(By.id("loginForm:senha")));
+
+        aguardar(300);
+        campoEmail.click();
         campoEmail.clear();
         campoEmail.sendKeys(email);
-        
-        aguardar(500); // Pausa entre email e senha
+
+        aguardar(300);
+        campoSenha.click();
         campoSenha.clear();
         campoSenha.sendKeys(senha);
 
-        aguardar(500); // Pausa antes de clicar no botão
-        
-        // Clica no botão de entrar
+        aguardar(300);
         WebElement btnLogin = driver.findElement(
                 By.cssSelector("input[type='submit'], button[type='submit']"));
         btnLogin.click();
 
-        // Aguarda redirecionamento
         wait.until(ExpectedConditions.not(
                 ExpectedConditions.urlToBe(LOGIN_URL)));
     }

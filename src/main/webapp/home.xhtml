@@ -2,13 +2,20 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:pt="jakarta.faces.passthrough">
 
 <h:head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Vrum Motors — Sinta a Velocidade</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <script type="text/javascript">
+        function vrumBuscaLimite(campo) {
+            var msg = document.getElementById('busca-max-msg');
+            if (msg) msg.style.display = campo.value.length >= campo.maxLength ? 'block' : 'none';
+        }
+    </script>
     <style>
         .modal-overlay {
             display: none; position: fixed; inset: 0;
@@ -171,7 +178,7 @@
                                 data-cor="#{v.cor}"
                                 data-descricao="#{v.descricao}"
                                 data-tipo="#{v.tipo.descricao}"
-                                onclick="abrirDetalhes(this)">Ver Detalhes</button>
+                                onclick="window.location.hash='veiculo'; abrirDetalhes(this)">Ver Detalhes</button>
                     </div>
                 </div>
             </ui:repeat>
@@ -188,11 +195,13 @@
             <h:form>
                 <div class="d-flex gap-12 align-center">
                     <div style="display:flex; flex-direction:column">
-                        <h:inputText value="#{homeBean.termoBusca}"
-                                     placeholder="Buscar modelo..."
+                        <h:inputText id="campoBusca"
+                                     value="#{homeBean.termoBusca}"
+                                     pt:placeholder="Buscar modelo..."
                                      styleClass="form-control"
                                      maxlength="100"
-                                     oninput="if(this.value.length >= 100) document.getElementById('busca-max-msg').style.display='block'; else document.getElementById('busca-max-msg').style.display='none';"
+                                     oninput="vrumBuscaLimite(this)"
+                                     onkeyup="vrumBuscaLimite(this)"
                                      style="width:220px"/>
                         <span id="busca-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
                     </div>
@@ -244,7 +253,7 @@
                                         data-cor="#{v.cor}"
                                         data-descricao="#{v.descricao}"
                                         data-tipo="#{v.tipo.descricao}"
-                                        onclick="abrirDetalhes(this)">Detalhes</button>
+                                        onclick="window.location.hash='veiculo'; abrirDetalhes(this)">Detalhes</button>
                             </div>
                         </div>
                     </div>

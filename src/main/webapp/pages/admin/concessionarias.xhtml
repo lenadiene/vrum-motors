@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
@@ -9,7 +9,7 @@
 <h:body>
 <div class="app-layout">
     <aside class="sidebar">
-        <a href="/home.xhtml" class="sidebar-logo">VRUM<span>.</span>MOTORS</a>
+        <a href="#{request.contextPath}/home.xhtml" class="sidebar-logo">VRUM<span>.</span>MOTORS</a>
         <div class="sidebar-user">
             <div class="sidebar-user-name">#{loginBean.usuarioLogado.nome}</div>
             <div class="sidebar-user-role">Administrador</div>

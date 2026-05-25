@@ -69,6 +69,10 @@ public class CadastroBean implements Serializable {
     }
 
     public String finalizarPedido() {
+        if (veiculoSelecionado == null) {
+            addErro("Nenhum veículo selecionado. Volte à página inicial, escolha um veículo e clique em Comprar.");
+            return null;
+        }
         try {
             if (cliente.getId() == null) {
                 usuarioService.salvarUsuario(cliente, confirmacaoSenha);
@@ -93,24 +97,101 @@ public class CadastroBean implements Serializable {
     }
 
     private boolean validarDadosCliente() {
-        if (cliente.getNome() == null || cliente.getNome().trim().isEmpty()) {
-            addErro("Nome é obrigatório.");
+        // Nome
+        String nome = cliente.getNome() == null ? "" : cliente.getNome().trim();
+        if (nome.length() < 2) {
+            addErro("Nome é obrigatório e deve ter ao menos 2 caracteres.");
             return false;
         }
-        if (cliente.getEmail() == null || cliente.getEmail().trim().isEmpty()) {
+        if (nome.length() > 100) {
+            addErro("Nome não pode ultrapassar 100 caracteres.");
+            return false;
+        }
+        // Apenas letras (incluindo acentos), espaços, hífens e apóstrofos
+        if (!nome.matches("^[\\p{L}\\p{M}\\s\\-'.]+$")) {
+            addErro("Nome inválido. Use apenas letras, espaços e hífens.");
+            return false;
+        }
+
+        // E-mail
+        String email = cliente.getEmail() == null ? "" : cliente.getEmail().trim();
+        if (email.isEmpty()) {
             addErro("E-mail é obrigatório.");
             return false;
         }
+        if (!email.matches("^[\\w._%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$")) {
+            addErro("Informe um e-mail válido.");
+            return false;
+        }
+        if (email.length() > 150) {
+            addErro("E-mail não pode ultrapassar 150 caracteres.");
+            return false;
+        }
+
+        // Telefone
+        String telefone = cliente.getTelefone() == null ? "" : cliente.getTelefone().trim();
+        if (telefone.isEmpty()) {
+            addErro("Telefone é obrigatório.");
+            return false;
+        }
+        if (telefone.length() > 20) {
+            addErro("Telefone não pode ultrapassar 20 caracteres.");
+            return false;
+        }
+        // Apenas dígitos, espaços, parênteses, hífens e +
+        if (!telefone.matches("^[\\d\\s()\\-+.]+$")) {
+            addErro("Telefone inválido. Use apenas dígitos e símbolos como (), - e +.");
+            return false;
+        }
+
+        // Senha
+        String senha = confirmacaoSenha == null ? "" : confirmacaoSenha.trim();
+        if (senha.length() < 6) {
+            addErro("Senha deve ter no mínimo 6 caracteres.");
+            return false;
+        }
+        if (confirmacaoSenha.length() > 50) {
+            addErro("Senha não pode ultrapassar 50 caracteres.");
+            return false;
+        }
+
+        // Concessionária
         if (concessionariaId == null) {
             addErro("Selecione sua cidade/concessionária.");
             return false;
         }
+
+        // CPF (opcional): apenas dígitos, pontos e hífens
+        String cpf = cliente.getCpf() == null ? "" : cliente.getCpf().trim();
+        if (!cpf.isEmpty()) {
+            if (!cpf.matches("^[\\d.\\-]+$")) {
+                addErro("CPF inválido. Use apenas dígitos, pontos e hífens.");
+                return false;
+            }
+            if (cpf.length() > 14) {
+                addErro("CPF não pode ultrapassar 14 caracteres.");
+                return false;
+            }
+        }
+
+        // E-mail duplicado (apenas para novos cadastros)
+        if (cliente.getId() == null && usuarioService.buscarPorEmail(email) != null) {
+            addErro("E-mail já cadastrado. Faça login ou use outro e-mail.");
+            return false;
+        }
+
+        // Normaliza valores (salva sem espaços desnecessários)
+        cliente.setNome(nome);
+        cliente.setEmail(email);
+        cliente.setTelefone(telefone);
+        cliente.setCpf(cpf.isEmpty() ? null : cpf);
+
         return true;
     }
 
     private void addErro(String msg) {
         FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", msg));
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro: " + msg, null));
     }
 
     public Cliente getCliente() { return cliente; }

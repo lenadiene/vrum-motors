@@ -38,8 +38,17 @@ public class HomeBean implements Serializable {
     public void buscar() {
         if (termoBusca == null || termoBusca.trim().isEmpty()) {
             veiculosFiltrados = todosVeiculos;
+            return;
+        }
+        String termo = termoBusca.trim();
+        if (termo.length() > 100) termo = termo.substring(0, 100);
+        // Remove caracteres HTML/script para evitar XSS
+        termo = termo.replaceAll("[<>\"&]", "");
+        termoBusca = termo;
+        if (termo.isEmpty()) {
+            veiculosFiltrados = todosVeiculos;
         } else {
-            veiculosFiltrados = service.buscarPorNome(termoBusca.trim());
+            veiculosFiltrados = service.buscarPorNome(termo);
         }
     }
 
