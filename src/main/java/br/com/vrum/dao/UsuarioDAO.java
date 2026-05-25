@@ -63,6 +63,20 @@ public class UsuarioDAO extends GenericDAO<Usuario, Long> {
         }
     }
 
+    public boolean cpfJaExiste(String cpf, Long idExcluir) {
+        EntityManager em = getEM();
+        try {
+            String jpql = idExcluir == null
+                    ? "SELECT COUNT(u) FROM Usuario u WHERE u.cpf = :cpf"
+                    : "SELECT COUNT(u) FROM Usuario u WHERE u.cpf = :cpf AND u.id <> :id";
+            var query = em.createQuery(jpql, Long.class).setParameter("cpf", cpf);
+            if (idExcluir != null) query.setParameter("id", idExcluir);
+            return query.getSingleResult() > 0;
+        } finally {
+            em.close();
+        }
+    }
+
     public boolean emailJaExiste(String email, Long idExcluir) {
         EntityManager em = getEM();
         try {

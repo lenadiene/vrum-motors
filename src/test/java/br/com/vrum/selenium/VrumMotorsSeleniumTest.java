@@ -10,6 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -731,5 +732,437 @@ public class VrumMotorsSeleniumTest {
         } else {
              System.out.println("⚠️ TC28 — Campo Senha no Login sem maxlength.");
         }
+    }
+
+    // =========================================================
+    // TC29 — CAD01: Cadastro com dados válidos avança para etapa 2
+    // =========================================================
+    @Test
+    public void tc29_cadastroValidoAvancaEtapa2() {
+        driver.get(CADASTRO_URL);
+
+        WebElement inputNome = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome.sendKeys("Cliente Selenium Valido");
+
+        String emailUnico = "selenium" + System.currentTimeMillis() + "@teste.com";
+        driver.findElement(By.id("cadastroForm:emailCad")).sendKeys(emailUnico);
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys("(81) 99999-0001");
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select")))
+                .selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf"))
+                .sendKeys(String.format("%011d", System.currentTimeMillis() % 100000000000L));
+
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1000);
+
+        WebElement etapa2 = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//*[contains(text(),'Confirmar Pedido')]")));
+        assertNotNull("Deve avançar para a etapa 2", etapa2);
+
+        tirarScreenshot("tc29_cadastro_valido_etapa2");
+        System.out.println("✅ TC_CAD01 — Cadastro válido avança para etapa 2");
+    }
+
+    // =========================================================
+    // TC30 — CAD02: E-mail já existente exibe erro na etapa 1
+    // =========================================================
+    @Test
+    public void tc30_cadastroEmailDuplicadoExibeErro() {
+        driver.get(CADASTRO_URL);
+
+        WebElement inputNome = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome.sendKeys("Cliente Duplicado");
+
+        driver.findElement(By.id("cadastroForm:emailCad")).sendKeys(EMAIL_CLIENTE);
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys("(81) 99999-0002");
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select")))
+                .selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf"))
+                .sendKeys(String.format("%011d", System.currentTimeMillis() % 100000000000L));
+
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1000);
+
+        WebElement msgErro = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".msg-error")));
+        assertTrue("Deve exibir erro de e-mail duplicado",
+                msgErro.getText().toLowerCase().contains("cadastrado") ||
+                msgErro.getText().toLowerCase().contains("e-mail"));
+
+        tirarScreenshot("tc30_email_duplicado");
+        System.out.println("✅ TC_CAD02 — E-mail duplicado exibe erro na etapa 1: " + msgErro.getText());
+    }
+
+    // =========================================================
+    // TC31 — CAD03: Nome com caracteres especiais exibe aviso visual
+    // =========================================================
+    @Test
+    public void tc31_cadastroNomeInvalidoExibeAviso() {
+        driver.get(CADASTRO_URL);
+
+        WebElement inputNome = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome.click();
+        // Digitar '@' aciona onkeydown → vrumNomeTecla → bloqueia e exibe aviso
+        inputNome.sendKeys("@");
+        aguardar(500);
+
+        WebElement msgInvalido = driver.findElement(By.id("nome-invalido-msg"));
+        assertTrue("Mensagem de nome inválido deve aparecer", msgInvalido.isDisplayed());
+
+        // Caractere bloqueado não deve entrar no campo
+        String valor = inputNome.getAttribute("value");
+        assertTrue("Caractere especial não deve entrar no campo",
+                valor == null || valor.isEmpty() || !valor.contains("@"));
+
+        tirarScreenshot("tc31_nome_invalido");
+        System.out.println("✅ TC_CAD03 — Nome com caracteres especiais exibe aviso");
+    }
+
+    // =========================================================
+    // TC32 — CAD04: Senha curta bloqueia avanço para etapa 2
+    // =========================================================
+    @Test
+    public void tc32_cadastroSenhaCurtaBloqueia() {
+        driver.get(CADASTRO_URL);
+
+        WebElement inputNome = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome.sendKeys("Cliente Senha Curta");
+
+        driver.findElement(By.id("cadastroForm:emailCad"))
+                .sendKeys("senhacurta" + System.currentTimeMillis() + "@teste.com");
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys("(81) 99999-0003");
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("abc");
+
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select")))
+                .selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf")).sendKeys("11111111111");
+
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1500);
+
+        // Deve permanecer na etapa 1 — campo nome ainda visível
+        WebElement campoNome = driver.findElement(By.id("cadastroForm:nome"));
+        assertTrue("Deve permanecer na etapa 1 com senha curta", campoNome.isDisplayed());
+
+        tirarScreenshot("tc32_senha_curta");
+        System.out.println("✅ TC_CAD04 — Senha curta bloqueia avanço (permaneceu na etapa 1)");
+    }
+
+    // =========================================================
+    // TC33 — CAD05: Campos obrigatórios vazios bloqueiam avanço
+    // =========================================================
+    @Test
+    public void tc33_cadastroCamposVaziosBloqueia() {
+        driver.get(CADASTRO_URL);
+
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Continuar')]")));
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1500);
+
+        // Deve permanecer na etapa 1 — campo nome ainda visível
+        WebElement campoNome = driver.findElement(By.id("cadastroForm:nome"));
+        assertTrue("Deve permanecer na etapa 1 com campos vazios", campoNome.isDisplayed());
+
+        tirarScreenshot("tc33_campos_obrigatorios");
+        System.out.println("✅ TC_CAD05 — Campos vazios bloqueiam avanço (permaneceu na etapa 1)");
+    }
+
+    // =========================================================
+    // TC34 — CAD06: Botão Voltar na etapa 2 retorna para etapa 1
+    // =========================================================
+    @Test
+    public void tc34_cadastroBotaoVoltarRetornaEtapa1() {
+        driver.get(CADASTRO_URL);
+
+        WebElement inputNome = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome.sendKeys("Cliente Voltar Teste");
+
+        driver.findElement(By.id("cadastroForm:emailCad"))
+                .sendKeys("voltar" + System.currentTimeMillis() + "@teste.com");
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys("(81) 99999-0004");
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select")))
+                .selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf"))
+                .sendKeys(String.format("%011d", System.currentTimeMillis() % 100000000000L));
+
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1000);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//*[contains(text(),'Confirmar Pedido')]")));
+
+        WebElement btnVoltar = driver.findElement(
+                By.xpath("//input[contains(@value,'Voltar')] | //button[contains(text(),'Voltar')]"));
+        btnVoltar.click();
+        aguardar(1000);
+
+        WebElement campoNome = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.id("cadastroForm:nome")));
+        assertTrue("Deve voltar para etapa 1", campoNome.isDisplayed());
+
+        tirarScreenshot("tc34_voltar_etapa1");
+        System.out.println("✅ TC_CAD06 — Botão Voltar retorna para etapa 1");
+    }
+
+    // =========================================================
+    // TC35 — PED01: Clicar em Comprar na home redireciona para cadastro
+    // =========================================================
+    @Test
+    public void tc35_comprarVeiculoRedirecionaCadastro() {
+        driver.get(HOME_URL);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector(".vehicle-card")));
+        aguardar(1000);
+
+        WebElement btnComprar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@value='Comprar']")));
+        btnComprar.click();
+
+        wait.until(ExpectedConditions.urlContains("cadastro"));
+        assertTrue("Comprar deve redirecionar ao cadastro",
+                driver.getCurrentUrl().contains("cadastro"));
+
+        tirarScreenshot("tc35_comprar_redireciona");
+        System.out.println("✅ TC_PED01 — Comprar redireciona ao cadastro: " + driver.getCurrentUrl());
+    }
+
+    // =========================================================
+    // TC36 — PED02: Confirmar pedido sem veículo não finaliza o pedido
+    // =========================================================
+    @Test
+    public void tc36_confirmarSemVeiculoNaoFinalizaPedido() {
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        driver.get(CADASTRO_URL);
+        aguardar(1000);
+
+        // Etapa 2 deve estar visível (cliente logado vai direto)
+        WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Confirmar')]")));
+        btnConfirmar.click();
+        aguardar(2000);
+
+        // Não deve chegar à etapa 3 (PEDIDO REALIZADO)
+        java.util.List<WebElement> sucesso = driver.findElements(
+                By.xpath("//*[contains(text(),'PEDIDO REALIZADO')]"));
+        boolean chegouEtapa3 = sucesso.stream().anyMatch(WebElement::isDisplayed);
+        assertTrue("Sem veículo selecionado não deve finalizar o pedido", !chegouEtapa3);
+
+        // Deve permanecer na URL de cadastro
+        assertTrue("Deve permanecer na página de cadastro",
+                driver.getCurrentUrl().contains("cadastro"));
+
+        tirarScreenshot("tc36_sem_veiculo");
+        System.out.println("✅ TC_PED02 — Confirmar sem veículo não finaliza o pedido");
+    }
+
+    // =========================================================
+    // TC37 — PED03: Fluxo completo de pedido até etapa 3 (sucesso)
+    // =========================================================
+    @Test
+    public void tc37_fluxoCompletoPedidoEtapa3() {
+        driver.get(HOME_URL);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector(".vehicle-card")));
+        aguardar(1000);
+
+        WebElement btnComprar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@value='Comprar']")));
+        btnComprar.click();
+
+        wait.until(ExpectedConditions.urlContains("cadastro"));
+        aguardar(500);
+
+        String emailUnico = "fluxo" + System.currentTimeMillis() + "@teste.com";
+
+        WebElement inputNome = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome.sendKeys("Cliente Fluxo Completo");
+
+        driver.findElement(By.id("cadastroForm:emailCad")).sendKeys(emailUnico);
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys("(81) 99999-0005");
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select")))
+                .selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf"))
+                .sendKeys(String.format("%011d", System.currentTimeMillis() % 100000000000L));
+
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1500);
+
+        WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Confirmar')] | //button[contains(text(),'Confirmar')]")));
+        btnConfirmar.click();
+        aguardar(2000);
+
+        WebElement sucesso = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(),'PEDIDO REALIZADO')]")));
+        assertTrue("Deve exibir tela de sucesso (etapa 3)", sucesso.isDisplayed());
+
+        tirarScreenshot("tc37_fluxo_completo");
+        System.out.println("✅ TC_PED03 — Fluxo completo: pedido realizado com sucesso!");
+    }
+
+    // =========================================================
+    // TC38 — VAL01: Limite de caracteres no cadastro exibe mensagem
+    // =========================================================
+    @Test
+    public void tc38_limiteCaracteresCadastroExibeMensagem() {
+        driver.get(CADASTRO_URL);
+
+        WebElement inputNome = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+
+        // Verifica que maxlength está definido corretamente
+        String maxlength = inputNome.getAttribute("maxlength");
+        assertNotNull("Campo nome deve ter atributo maxlength", maxlength);
+        assertTrue("Maxlength deve ser 100", "100".equals(maxlength));
+
+        // Tenta digitar além do limite
+        inputNome.click();
+        inputNome.sendKeys("A".repeat(150));
+        aguardar(500);
+
+        // O campo não deve conter mais de 100 caracteres
+        String valor = inputNome.getAttribute("value");
+        assertTrue("Campo deve respeitar maxlength de " + maxlength,
+                valor.length() <= Integer.parseInt(maxlength));
+
+        // Chama vrumLimite diretamente via JS para verificar que a mensagem aparece
+        ((JavascriptExecutor) driver).executeScript(
+                "vrumLimite(arguments[0], 'nome-max-msg', 100)", inputNome);
+        aguardar(500);
+
+        WebElement msgLimite = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.id("nome-max-msg")));
+        assertTrue("Mensagem de limite deve aparecer", msgLimite.isDisplayed());
+
+        tirarScreenshot("tc38_limite_nome");
+        System.out.println("✅ TC_VAL01 — Maxlength " + maxlength + " aplicado e mensagem exibida (" + valor.length() + " chars)");
+    }
+
+    // =========================================================
+    // TC39 — VAL02: E-mail com formato inválido exibe aviso ao sair do campo
+    // =========================================================
+    @Test
+    public void tc39_emailFormatoInvalidoExibeAviso() {
+        driver.get(CADASTRO_URL);
+
+        WebElement inputEmail = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:emailCad")));
+        inputEmail.sendKeys("email-invalido@");
+
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].dispatchEvent(new Event('blur'))", inputEmail);
+        aguardar(500);
+
+        WebElement msgFormato = driver.findElement(By.id("email-formato-msg"));
+        assertTrue("Mensagem de formato inválido deve aparecer", msgFormato.isDisplayed());
+
+        tirarScreenshot("tc39_email_invalido");
+        System.out.println("✅ TC_VAL02 — E-mail com formato inválido exibe aviso");
+    }
+
+    // =========================================================
+    // TC40 — CAD07: CPF já existente exibe erro na etapa 1
+    // =========================================================
+    @Test
+    public void tc40_cadastroCpfDuplicadoExibeErro() {
+        // Passo 1: registrar um usuário com CPF único via fluxo completo
+        driver.get(HOME_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+        aguardar(1000);
+
+        WebElement btnComprar1 = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@value='Comprar']")));
+        btnComprar1.click();
+        wait.until(ExpectedConditions.urlContains("cadastro"));
+        aguardar(500);
+
+        long ts = System.currentTimeMillis();
+        String emailUnico1 = "cpfteste1" + ts + "@teste.com";
+        String cpfUnico = String.format("%011d", ts % 100000000000L);
+
+        WebElement inputNome1 = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome1.sendKeys("Cliente CPF Um");
+        driver.findElement(By.id("cadastroForm:emailCad")).sendKeys(emailUnico1);
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys("(81) 99999-0010");
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select"))).selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf")).sendKeys(cpfUnico);
+
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1000);
+
+        WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Confirmar')] | //button[contains(text(),'Confirmar')]")));
+        btnConfirmar.click();
+        aguardar(2000);
+
+        // Garante que o usuário foi salvo no banco
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(),'PEDIDO REALIZADO')]")));
+
+        // Passo 2: logout e tentar cadastrar com o mesmo CPF mas e-mail diferente
+        driver.get(BASE_URL + "/logout");
+        wait.until(ExpectedConditions.urlContains("login"));
+
+        driver.get(HOME_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+        aguardar(500);
+
+        WebElement btnComprar2 = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@value='Comprar']")));
+        btnComprar2.click();
+        wait.until(ExpectedConditions.urlContains("cadastro"));
+        aguardar(500);
+
+        String emailUnico2 = "cpfteste2" + System.currentTimeMillis() + "@teste.com";
+
+        WebElement inputNome2 = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome2.sendKeys("Cliente CPF Dois");
+        driver.findElement(By.id("cadastroForm:emailCad")).sendKeys(emailUnico2);
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys("(81) 99999-0011");
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select"))).selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf")).sendKeys(cpfUnico); // mesmo CPF!
+
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1000);
+
+        WebElement msgErro = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".msg-error")));
+        assertTrue("Deve exibir erro de CPF duplicado",
+                msgErro.getText().toLowerCase().contains("cpf") ||
+                msgErro.getText().toLowerCase().contains("cadastrado"));
+
+        tirarScreenshot("tc40_cpf_duplicado");
+        System.out.println("✅ TC_CAD07 — CPF duplicado exibe erro na etapa 1: " + msgErro.getText());
     }
 }

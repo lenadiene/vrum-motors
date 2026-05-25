@@ -146,7 +146,7 @@
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Nome completo *</label>
                             <h:inputText id="nome" value="#{cadastroBean.cliente.nome}"
-                                         required="true"
+                                         required="#{cadastroBean.etapa == 1}"
                                          requiredMessage="Nome é obrigatório."
                                          styleClass="form-control"
                                          maxlength="100"
@@ -164,7 +164,7 @@
                         <div class="form-group">
                             <label class="form-label">E-mail *</label>
                             <h:inputText id="emailCad" value="#{cadastroBean.cliente.email}"
-                                         required="true"
+                                         required="#{cadastroBean.etapa == 1}"
                                          requiredMessage="E-mail é obrigatório."
                                          styleClass="form-control"
                                          maxlength="150"
@@ -178,8 +178,10 @@
                             <span id="email-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Limite de 150 caracteres atingido.</span>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">CPF</label>
+                            <label class="form-label">CPF *</label>
                             <h:inputText id="cpf" value="#{cadastroBean.cliente.cpf}"
+                                         required="#{cadastroBean.etapa == 1}"
+                                         requiredMessage="CPF é obrigatório."
                                          styleClass="form-control"
                                          maxlength="14"
                                          onkeydown="vrumCPFTecla(event)"
@@ -194,7 +196,7 @@
                         <div class="form-group">
                             <label class="form-label">Telefone / WhatsApp *</label>
                             <h:inputText id="telefone" value="#{cadastroBean.cliente.telefone}"
-                                         required="true"
+                                         required="#{cadastroBean.etapa == 1}"
                                          requiredMessage="Telefone é obrigatório."
                                          styleClass="form-control"
                                          maxlength="20"
@@ -210,7 +212,7 @@
                         <div class="form-group">
                             <label class="form-label">Senha *</label>
                             <h:inputSecret id="senha" value="#{cadastroBean.confirmacaoSenha}"
-                                           required="true"
+                                           required="#{cadastroBean.etapa == 1}"
                                            requiredMessage="Senha é obrigatória."
                                            styleClass="form-control"
                                            redisplay="true"
@@ -226,7 +228,7 @@
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Sua Cidade / Concessionária *</label>
                             <h:selectOneMenu value="#{cadastroBean.concessionariaId}"
-                                             required="true" styleClass="form-control">
+                                             required="#{cadastroBean.etapa == 1}" styleClass="form-control">
                                 <f:selectItem itemLabel="Selecione sua cidade..." itemValue="#{null}"/>
                                 <f:selectItems value="#{cadastroBean.concessionarias}"
                                                var="c"

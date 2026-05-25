@@ -63,4 +63,8 @@ public class UsuarioService {
     public Usuario buscarPorEmail(String email) {
         return usuarioDAO.buscarPorEmail(email);
     }
+
+    public boolean cpfJaExiste(String cpf, Long idExcluir) {
+        return usuarioDAO.cpfJaExiste(cpf, idExcluir);
+    }
 }

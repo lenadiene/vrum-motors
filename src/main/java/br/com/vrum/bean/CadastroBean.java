@@ -161,17 +161,19 @@ public class CadastroBean implements Serializable {
             return false;
         }
 
-        // CPF (opcional): apenas dígitos, pontos e hífens
+        // CPF (obrigatório): apenas dígitos, pontos e hífens
         String cpf = cliente.getCpf() == null ? "" : cliente.getCpf().trim();
-        if (!cpf.isEmpty()) {
-            if (!cpf.matches("^[\\d.\\-]+$")) {
-                addErro("CPF inválido. Use apenas dígitos, pontos e hífens.");
-                return false;
-            }
-            if (cpf.length() > 14) {
-                addErro("CPF não pode ultrapassar 14 caracteres.");
-                return false;
-            }
+        if (cpf.isEmpty()) {
+            addErro("CPF é obrigatório.");
+            return false;
+        }
+        if (!cpf.matches("^[\\d.\\-]+$")) {
+            addErro("CPF inválido. Use apenas dígitos, pontos e hífens.");
+            return false;
+        }
+        if (cpf.length() > 14) {
+            addErro("CPF não pode ultrapassar 14 caracteres.");
+            return false;
         }
 
         // E-mail duplicado (apenas para novos cadastros)
@@ -180,11 +182,17 @@ public class CadastroBean implements Serializable {
             return false;
         }
 
+        // CPF duplicado (apenas para novos cadastros)
+        if (cliente.getId() == null && usuarioService.cpfJaExiste(cpf, null)) {
+            addErro("CPF já cadastrado. Verifique os dados ou faça login.");
+            return false;
+        }
+
         // Normaliza valores (salva sem espaços desnecessários)
         cliente.setNome(nome);
         cliente.setEmail(email);
         cliente.setTelefone(telefone);
-        cliente.setCpf(cpf.isEmpty() ? null : cpf);
+        cliente.setCpf(cpf);
 
         return true;
     }
