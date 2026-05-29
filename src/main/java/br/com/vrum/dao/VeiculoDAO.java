@@ -5,6 +5,8 @@ import java.util.List;
 import br.com.vrum.model.TipoVeiculo;
 import br.com.vrum.model.Veiculo;
 import jakarta.persistence.EntityManager;
+import java.math.BigDecimal;
+import jakarta.persistence.TypedQuery;
 
 public class VeiculoDAO extends GenericDAO<Veiculo, Long> {
 
@@ -84,4 +86,65 @@ public class VeiculoDAO extends GenericDAO<Veiculo, Long> {
             em.close();
         }
     }
+
+    public List<Veiculo> buscarComFiltros(
+            String termo,
+            TipoVeiculo tipo,
+            BigDecimal precoMinimo,
+            BigDecimal precoMaximo) {
+
+        EntityManager em = getEM();
+        try {
+            StringBuilder jpql = new StringBuilder(
+                    "SELECT v FROM Veiculo v WHERE v.disponivel = true"
+            );
+
+            if (termo != null && !termo.isBlank()) {
+                jpql.append(" AND (")
+                        .append("LOWER(v.nome) LIKE :termo ")
+                        .append("OR LOWER(v.marca) LIKE :termo ")
+                        .append("OR LOWER(v.modelo) LIKE :termo")
+                        .append(")");
+            }
+
+            if (tipo != null) {
+                jpql.append(" AND v.tipo = :tipo");
+            }
+
+            if (precoMinimo != null) {
+                jpql.append(" AND v.preco >= :precoMinimo");
+            }
+
+            if (precoMaximo != null) {
+                jpql.append(" AND v.preco <= :precoMaximo");
+            }
+
+            jpql.append(" ORDER BY v.nome");
+
+            TypedQuery<Veiculo> query =
+                    em.createQuery(jpql.toString(), Veiculo.class);
+
+            if (termo != null && !termo.isBlank()) {
+                query.setParameter("termo", "%" + termo.toLowerCase() + "%");
+            }
+
+            if (tipo != null) {
+                query.setParameter("tipo", tipo);
+            }
+
+            if (precoMinimo != null) {
+                query.setParameter("precoMinimo", precoMinimo);
+            }
+
+            if (precoMaximo != null) {
+                query.setParameter("precoMaximo", precoMaximo);
+            }
+
+            return query.getResultList();
+
+        } finally {
+            em.close();
+        }
+    }
+
 }
