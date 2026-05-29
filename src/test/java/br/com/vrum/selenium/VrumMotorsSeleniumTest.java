@@ -1165,4 +1165,176 @@ public class VrumMotorsSeleniumTest {
         tirarScreenshot("tc40_cpf_duplicado");
         System.out.println("✅ TC_CAD07 — CPF duplicado exibe erro na etapa 1: " + msgErro.getText());
     }
+
+    // =========================================================
+    // TC41 — BUS01: Busca por nome existente filtra veículos
+    // =========================================================
+    @Test
+    public void tc41_buscaNomeExistenteFiltraResultados() {
+        driver.get(HOME_URL);
+
+        // Aguarda catálogo carregar
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector(".vehicle-card")));
+
+        // Conta quantidade original
+        int quantidadeOriginal = driver.findElements(
+                By.cssSelector(".vehicle-card")).size();
+
+        assertTrue("Catálogo deve possuir veículos",
+                quantidadeOriginal > 0);
+
+        // Digita termo existente
+        WebElement campoBusca = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.xpath("//input[contains(@placeholder,'Buscar')]")));
+
+        campoBusca.clear();
+        campoBusca.sendKeys("Vrum");
+
+        aguardar(1000);
+
+        // Caso exista botão buscar
+        java.util.List<WebElement> botoesBusca = driver.findElements(
+                By.xpath("//input[@value='Buscar'] | //button[contains(text(),'Buscar')]"));
+
+        if (!botoesBusca.isEmpty()) {
+            botoesBusca.get(0).click();
+        }
+
+        aguardar(1500);
+
+        // Captura resultados filtrados
+        java.util.List<WebElement> resultados = driver.findElements(
+                By.cssSelector(".vehicle-card"));
+
+        assertTrue("Busca deve retornar ao menos um veículo",
+                resultados.size() > 0);
+
+        // Verifica se os cards possuem o termo pesquisado
+        for (WebElement card : resultados) {
+            String textoCard = card.getText().toLowerCase();
+
+            assertTrue(
+                    "Resultado deve conter o termo pesquisado",
+                    textoCard.contains("vrum"));
+        }
+
+        tirarScreenshot("tc41_busca_nome_existente");
+
+        System.out.println("✅ TC_BUS01 — Busca por nome existente filtrou corretamente");
+    }
+
+    // =========================================================
+    // TC42 — BUS02: Busca com termo inexistente exibe vazio
+    // =========================================================
+    @Test
+    public void tc42_buscaTermoInexistenteExibeNenhumResultado() {
+        driver.get(HOME_URL);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector(".vehicle-card")));
+
+        WebElement campoBusca = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.xpath("//input[contains(@placeholder,'Buscar')]")));
+
+        campoBusca.clear();
+
+        // Termo impossível de existir
+        campoBusca.sendKeys("xyzabc987654teste");
+
+        aguardar(1000);
+
+        java.util.List<WebElement> botoesBusca = driver.findElements(
+                By.xpath("//input[@value='Buscar'] | //button[contains(text(),'Buscar')]"));
+
+        if (!botoesBusca.isEmpty()) {
+            botoesBusca.get(0).click();
+        }
+
+        aguardar(1500);
+
+        // Verifica se não existem cards
+        java.util.List<WebElement> resultados = driver.findElements(
+                By.cssSelector(".vehicle-card"));
+
+        boolean semResultados = resultados.isEmpty();
+
+        // Ou verifica mensagem visual
+        java.util.List<WebElement> mensagens = driver.findElements(
+                By.xpath("//*[contains(text(),'Nenhum resultado')] "
+                        + "| //*[contains(text(),'nenhum veículo')]"));
+
+        boolean mensagemVisivel = mensagens.stream()
+                .anyMatch(WebElement::isDisplayed);
+
+        assertTrue(
+                "Busca inexistente deve exibir lista vazia ou mensagem",
+                semResultados || mensagemVisivel);
+
+        tirarScreenshot("tc42_busca_inexistente");
+
+        System.out.println("✅ TC_BUS02 — Busca inexistente exibiu vazio/mensagem");
+    }
+
+    // =========================================================
+    // TC43 — BUS03: Limpar busca restaura catálogo completo
+    // =========================================================
+    @Test
+    public void tc43_limparBuscaRestauraCatalogo() {
+        driver.get(HOME_URL);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector(".vehicle-card")));
+
+        // Quantidade original
+        int quantidadeOriginal = driver.findElements(
+                By.cssSelector(".vehicle-card")).size();
+
+        assertTrue("Catálogo inicial deve possuir veículos",
+                quantidadeOriginal > 0);
+
+        WebElement campoBusca = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.xpath("//input[contains(@placeholder,'Buscar')]")));
+
+        // Filtra
+        campoBusca.sendKeys("Vrum");
+
+        aguardar(1000);
+
+        java.util.List<WebElement> botoesBusca = driver.findElements(
+                By.xpath("//input[@value='Buscar'] | //button[contains(text(),'Buscar')]"));
+
+        if (!botoesBusca.isEmpty()) {
+            botoesBusca.get(0).click();
+        }
+
+        aguardar(1500);
+
+        // Limpa busca
+        campoBusca.clear();
+
+        aguardar(1000);
+
+        // Se houver botão buscar, clica novamente
+        if (!botoesBusca.isEmpty()) {
+            botoesBusca.get(0).click();
+        }
+
+        aguardar(1500);
+
+        // Verifica se catálogo voltou
+        int quantidadeFinal = driver.findElements(
+                By.cssSelector(".vehicle-card")).size();
+
+        assertTrue(
+                "Catálogo completo deve voltar após limpar busca",
+                quantidadeFinal >= quantidadeOriginal);
+
+        tirarScreenshot("tc43_limpar_busca");
+
+        System.out.println("✅ TC_BUS03 — Limpar busca restaurou catálogo");
+    }
 }

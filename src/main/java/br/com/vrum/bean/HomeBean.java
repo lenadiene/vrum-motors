@@ -10,6 +10,8 @@ import jakarta.faces.context.FacesContext;
 import jakarta.faces.event.AjaxBehaviorEvent;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Named;
+import java.math.BigDecimal;
+import br.com.vrum.model.TipoVeiculo;
 
 @Named("homeBean")
 @ViewScoped
@@ -24,6 +26,9 @@ public class HomeBean implements Serializable {
     private String termoBusca;
     private Veiculo veiculoSelecionado;
     private Long veiculoDetalheId;
+    private TipoVeiculo tipoBusca;
+    private BigDecimal precoMinimo;
+    private BigDecimal precoMaximo;
 
     private final VeiculoService service = new VeiculoService();
 
@@ -36,21 +41,30 @@ public class HomeBean implements Serializable {
     }
 
     public void buscar() {
-        if (termoBusca == null || termoBusca.trim().isEmpty()) {
-            veiculosFiltrados = todosVeiculos;
-            return;
+        String termo = termoBusca;
+        if (termo != null) {
+            termo = termo.trim();
+            if (termo.length() > 100) {
+                termo = termo.substring(0, 100);
+            }
+
+            termo = termo.replaceAll("[<>\"&]", "");
+
+            if (termo.isBlank()) {
+                termo = null;
+            }
         }
-        String termo = termoBusca.trim();
-        if (termo.length() > 100) termo = termo.substring(0, 100);
-        // Remove caracteres HTML/script para evitar XSS
-        termo = termo.replaceAll("[<>\"&]", "");
+
         termoBusca = termo;
-        if (termo.isEmpty()) {
-            veiculosFiltrados = todosVeiculos;
-        } else {
-            veiculosFiltrados = service.buscarPorNome(termo);
-        }
+
+        veiculosFiltrados = service.buscarComFiltros(
+                termoBusca,
+                tipoBusca,
+                precoMinimo,
+                precoMaximo
+        );
     }
+
 
     public void abrirDetalhesAjax(AjaxBehaviorEvent event) {
         if (veiculoDetalheId != null) {
@@ -75,8 +89,12 @@ public class HomeBean implements Serializable {
 
     public void limparBusca() {
         termoBusca = null;
+        tipoBusca = null;
+        precoMinimo = null;
+        precoMaximo = null;
         veiculosFiltrados = todosVeiculos;
     }
+
 
     public List<Veiculo> getDestaques()           { return destaques; }
     public List<Veiculo> getLancamentos()         { return lancamentos; }
@@ -88,4 +106,32 @@ public class HomeBean implements Serializable {
     public void setVeiculoSelecionado(Veiculo v)  { this.veiculoSelecionado = v; }
     public Long getVeiculoDetalheId()             { return veiculoDetalheId; }
     public void setVeiculoDetalheId(Long id)      { this.veiculoDetalheId = id; }
+    public TipoVeiculo getTipoBusca() {
+        return tipoBusca;
+    }
+
+    public void setTipoBusca(TipoVeiculo tipoBusca) {
+        this.tipoBusca = tipoBusca;
+    }
+
+    public BigDecimal getPrecoMinimo() {
+        return precoMinimo;
+    }
+
+    public void setPrecoMinimo(BigDecimal precoMinimo) {
+        this.precoMinimo = precoMinimo;
+    }
+
+    public BigDecimal getPrecoMaximo() {
+        return precoMaximo;
+    }
+
+    public void setPrecoMaximo(BigDecimal precoMaximo) {
+        this.precoMaximo = precoMaximo;
+    }
+
+    public TipoVeiculo[] getTiposVeiculo() {
+        return TipoVeiculo.values();
+    }
+
 }

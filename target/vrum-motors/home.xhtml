@@ -3,6 +3,8 @@
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="jakarta.tags.core"
       xmlns:pt="jakarta.faces.passthrough">
 
 <h:head>
@@ -193,7 +195,7 @@
                 <div class="section-line"></div>
             </div>
             <h:form>
-                <div class="d-flex gap-12 align-center">
+                <div class="d-flex gap-12 align-center" style="flex-wrap:wrap">
                     <div style="display:flex; flex-direction:column">
                         <h:inputText id="campoBusca"
                                      value="#{homeBean.termoBusca}"
@@ -203,10 +205,42 @@
                                      oninput="vrumBuscaLimite(this)"
                                      onkeyup="vrumBuscaLimite(this)"
                                      style="width:220px"/>
-                        <span id="busca-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
+
+                        <span id="busca-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">
+                            Você atingiu o limite de 100 caracteres.</span>
                     </div>
-                    <h:commandButton value="Buscar" action="#{homeBean.buscar}" styleClass="btn btn-primary btn-sm"/>
-                    <h:commandButton value="Limpar" action="#{homeBean.limparBusca}" styleClass="btn btn-ghost btn-sm"/>
+
+                    <h:selectOneMenu value="#{homeBean.tipoBusca}"
+                                     styleClass="form-control"
+                                     style="width:180px">
+                        <f:selectItem itemLabel="Todos os tipos"
+                                      itemValue="#{null}" />
+                        <f:selectItems value="#{homeBean.tiposVeiculo}"
+                                       var="tipo"
+                                       itemLabel="#{tipo.descricao}"
+                                       itemValue="#{tipo}" />
+                    </h:selectOneMenu>
+
+                    <h:inputText value="#{homeBean.precoMinimo}"
+                                 pt:placeholder="Preço mínimo"
+                                 styleClass="form-control"
+                                 style="width:160px">
+                        <f:convertNumber />
+                    </h:inputText>
+
+                    <h:inputText value="#{homeBean.precoMaximo}"
+                                 pt:placeholder="Preço máximo"
+                                 styleClass="form-control"
+                                 style="width:160px">
+                        <f:convertNumber />
+                    </h:inputText>
+
+                    <h:commandButton value="Buscar"
+                                     action="#{homeBean.buscar}"
+                                     styleClass="btn btn-primary btn-sm"/>
+                    <h:commandButton value="Limpar"
+                                     action="#{homeBean.limparBusca}"
+                                     styleClass="btn btn-ghost btn-sm"/>
                 </div>
             </h:form>
         </div>
@@ -258,6 +292,13 @@
                         </div>
                     </div>
                 </ui:repeat>
+                <h:panelGroup rendered="#{empty homeBean.veiculosFiltrados}"> <div style="
+                                 text-align:center;
+                                 padding:40px;
+                                 color:#9CA3AF;
+                                 font-size:1.1rem;
+                                 width:100%;">Nenhum veículo encontrado para os filtros informados. </div>
+                </h:panelGroup>
             </div>
         </h:form>
     </section>
