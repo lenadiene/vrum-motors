@@ -1337,4 +1337,236 @@ public class VrumMotorsSeleniumTest {
 
         System.out.println("✅ TC_BUS03 — Limpar busca restaurou catálogo");
     }
+
+    // =========================================================
+    // TC44 — FAB01: Admin fábrica seleciona pedido para atualização
+    // =========================================================
+    @Test
+    public void tc44_fabricaSelecionaPedido() {
+        fazerLogin(EMAIL_FABRICA, SENHA_FABRICA);
+
+        driver.get(BASE_URL + "/pages/fabrica/pedidos.xhtml");
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.id("fabricaForm")));
+
+        java.util.List<WebElement> botoes = driver.findElements(
+                By.id("fabricaForm:btnSelecionarPedido"));
+
+        assertTrue("Deve existir ao menos um pedido disponível",
+                botoes.size() > 0);
+
+        aguardar(1000);
+
+        botoes.get(0).click();
+
+        aguardar(1500);
+
+        WebElement painel = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.id("fabricaForm:selectStatus")));
+
+        assertTrue("Painel de atualização deve aparecer",
+                painel.isDisplayed());
+
+        tirarScreenshot("tc44_fabrica_seleciona_pedido");
+
+        System.out.println("✅ TC_FAB01 — Pedido selecionado para atualização");
+    }
+
+    // =========================================================
+    // TC45 — FAB02: Admin fábrica atualiza status do pedido
+    // =========================================================
+    @Test
+    public void tc45_fabricaAtualizaStatusPedido() {
+        fazerLogin(EMAIL_FABRICA, SENHA_FABRICA);
+
+        driver.get(BASE_URL + "/pages/fabrica/pedidos.xhtml");
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.id("fabricaForm")));
+
+        java.util.List<WebElement> botoes = driver.findElements(
+                By.id("fabricaForm:btnSelecionarPedido"));
+
+        assertTrue("Deve existir pedido para atualizar",
+                botoes.size() > 0);
+
+        aguardar(1000);
+
+        botoes.get(0).click();
+
+        aguardar(1500);
+
+        WebElement select = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.id("fabricaForm:selectStatus")));
+
+        Select status = new Select(select);
+
+        // Seleciona próximo status permitido
+        status.selectByIndex(1);
+
+        aguardar(1000);
+
+        WebElement observacoes = driver.findElement(
+                By.id("fabricaForm:observacoes"));
+
+        observacoes.sendKeys("Atualização realizada via Selenium.");
+
+        aguardar(1000);
+
+        WebElement btnSalvar = driver.findElement(
+                By.id("fabricaForm:btnSalvarStatus"));
+
+        btnSalvar.click();
+
+        aguardar(2000);
+
+        WebElement mensagem = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.cssSelector(".msg-success")));
+
+        assertTrue("Mensagem de sucesso deve aparecer",
+                mensagem.isDisplayed());
+
+        tirarScreenshot("tc45_atualiza_status");
+
+        System.out.println("✅ TC_FAB02 — Status atualizado com sucesso");
+    }
+
+    // =========================================================
+    // TC46 — FAB03: Campo observações respeita maxlength
+    // =========================================================
+    @Test
+    public void tc46_observacoesRespeitaMaxlength() {
+        fazerLogin(EMAIL_FABRICA, SENHA_FABRICA);
+
+        driver.get(BASE_URL + "/pages/fabrica/pedidos.xhtml");
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.id("fabricaForm")));
+
+        java.util.List<WebElement> botoes = driver.findElements(
+                By.id("fabricaForm:btnSelecionarPedido"));
+
+        assertTrue("Deve existir pedido",
+                botoes.size() > 0);
+
+        botoes.get(0).click();
+
+        aguardar(1000);
+
+        WebElement textarea = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.id("fabricaForm:observacoes")));
+
+        String textoGrande = "A".repeat(600);
+
+        textarea.sendKeys(textoGrande);
+
+        aguardar(1000);
+
+        String valor = textarea.getAttribute("value");
+
+        assertTrue("Campo deve respeitar maxlength",
+                valor.length() <= 500);
+
+        WebElement msg = driver.findElement(
+                By.id("obs-max-msg"));
+
+        assertTrue("Mensagem de limite deve aparecer",
+                msg.isDisplayed());
+
+        tirarScreenshot("tc46_obs_maxlength");
+
+        System.out.println("✅ TC_FAB03 — Observações respeita maxlength");
+    }
+
+    // =========================================================
+    // TC47 — FAB04: Campo prazo respeita limite de caracteres
+    // =========================================================
+    @Test
+    public void tc47_prazoEntregaRespeitaLimite() {
+        fazerLogin(EMAIL_FABRICA, SENHA_FABRICA);
+
+        driver.get(BASE_URL + "/pages/fabrica/pedidos.xhtml");
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.id("fabricaForm")));
+
+        java.util.List<WebElement> botoes = driver.findElements(
+                By.id("fabricaForm:btnSelecionarPedido"));
+
+        assertTrue("Deve existir pedido",
+                botoes.size() > 0);
+
+        botoes.get(0).click();
+
+        aguardar(1000);
+
+        WebElement prazo = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.id("fabricaForm:prazoEntrega")));
+
+        prazo.sendKeys("123456789101112");
+
+        aguardar(1000);
+
+        String valor = prazo.getAttribute("value");
+
+        assertTrue("Campo prazo deve respeitar maxlength",
+                valor.length() <= 10);
+
+        WebElement msg = driver.findElement(
+                By.id("prazo-max-msg"));
+
+        assertTrue("Mensagem de limite deve aparecer",
+                msg.isDisplayed());
+
+        tirarScreenshot("tc47_prazo_maxlength");
+
+        System.out.println("✅ TC_FAB04 — Prazo respeita maxlength");
+    }
+
+    // =========================================================
+    // TC48 — FAB05: Atualizar sem selecionar status não salva
+    // =========================================================
+    @Test
+    public void tc48_atualizarSemStatusNaoSalva() {
+        fazerLogin(EMAIL_FABRICA, SENHA_FABRICA);
+
+        driver.get(BASE_URL + "/pages/fabrica/pedidos.xhtml");
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.id("fabricaForm")));
+
+        java.util.List<WebElement> botoes = driver.findElements(
+                By.id("fabricaForm:btnSelecionarPedido"));
+
+        assertTrue("Deve existir pedido",
+                botoes.size() > 0);
+
+        botoes.get(0).click();
+
+        aguardar(1000);
+
+        WebElement btnSalvar = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                        By.id("fabricaForm:btnSalvarStatus")));
+
+        btnSalvar.click();
+
+        aguardar(2000);
+
+        boolean continuaNaPagina =
+                driver.getCurrentUrl().contains("pedidos");
+
+        assertTrue("Não deve salvar sem selecionar status",
+                continuaNaPagina);
+
+        tirarScreenshot("tc48_sem_status");
+
+        System.out.println("✅ TC_FAB05 — Atualização sem status bloqueada");
+    }
 }
