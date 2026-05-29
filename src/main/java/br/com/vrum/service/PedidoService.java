@@ -35,13 +35,26 @@ public class PedidoService {
     }
 
     /**
-     * Vendedor envia pedido para fabricação
+     * Vendedor envia pedido para fabricação (US-11)
      */
     public void enviarParaFabricacao(Pedido pedido, LocalDate prazoFabricacao, String formaPagamento) {
         validarVendedorDoPedido(pedido);
+        
+        // Trava de status
+        if (pedido.getStatus() != StatusPedido.EM_NEGOCIACAO) {
+            throw new IllegalStateException("Somente pedidos em negociação podem ser enviados para fabricação.");
+        }
+        // Travas de campos obrigatórios
+        if (prazoFabricacao == null) {
+            throw new IllegalArgumentException("Prazo de fabricação é obrigatório.");
+        }
+        if (formaPagamento == null || formaPagamento.trim().isEmpty()) {
+            throw new IllegalArgumentException("Forma de pagamento é obrigatória.");
+        }
+        
         pedido.setStatus(StatusPedido.EM_FABRICACAO);
         pedido.setPrazoFabricacao(prazoFabricacao);
-        pedido.setFormaPagamento(formaPagamento);
+        pedido.setFormaPagamento(formaPagamento.trim());
         pedidoDAO.atualizar(pedido);
     }
 
@@ -94,20 +107,36 @@ public class PedidoService {
         }
     }
 
-    /**
-     * Vendedor marca como pronto para entrega (veículo chegou na loja)
+   /**
+     * Vendedor marca como pronto para entrega (US-12)
      */
     public void marcarProntoEntrega(Pedido pedido) {
         validarVendedorDoPedido(pedido);
+        
+        // Trava de máquina de estados: impede pular etapas
+        if (pedido.getStatus() != StatusPedido.ENVIADO_CIDADE) {
+            throw new IllegalStateException("O veículo precisa ser ENVIADO_CIDADE pela fábrica antes de ser marcado como pronto.");
+        }
+        
         pedido.setStatus(StatusPedido.PRONTO_ENTREGA);
         pedidoDAO.atualizar(pedido);
     }
 
     /**
-     * Vendedor finaliza o pedido com data de retirada
+     * Vendedor finaliza o pedido com data de retirada (US-13)
      */
     public void finalizarPedido(Pedido pedido, LocalDate dataRetirada) {
         validarVendedorDoPedido(pedido);
+        
+        // Trava de máquina de estados
+        if (pedido.getStatus() != StatusPedido.PRONTO_ENTREGA) {
+            throw new IllegalStateException("Apenas pedidos PRONTO_ENTREGA podem ser finalizados.");
+        }
+        // Trava de campo obrigatório
+        if (dataRetirada == null) {
+            throw new IllegalArgumentException("A data de retirada pelo cliente é obrigatória.");
+        }
+        
         pedido.setStatus(StatusPedido.FINALIZADO);
         pedido.setDataRetirada(dataRetirada);
         pedidoDAO.atualizar(pedido);
