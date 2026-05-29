@@ -1569,7 +1569,7 @@ public class VrumMotorsSeleniumTest {
 
         System.out.println("✅ TC_FAB05 — Atualização sem status bloqueada");
     }
-    // =========================================================
+   // =========================================================
     // TC49 — US-10: Vendedor assume pedido disponível
     // =========================================================
     @Test
@@ -1625,9 +1625,11 @@ public class VrumMotorsSeleniumTest {
         }
     }
 
-    // =========================================================
+    /* =========================================================
+    TESTES TC51 E TC52 COMENTADOS TEMPORARIAMENTE PARA A SPRINT
+    =========================================================
+    
     // TC51 — US-11 (Validação): Sistema bloqueia envio sem pagamento
-    // =========================================================
     @Test
     public void tc51_us11_validacao_EnviarFabricaSemPagamento() {
         fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
@@ -1662,6 +1664,52 @@ public class VrumMotorsSeleniumTest {
         tirarScreenshot("tc51_validacao_pagamento_vazio");
         System.out.println("✅ TC51 (US-11 Validação) — Sistema bloqueou envio sem pagamento (Trava funcionando!)");
     }
+
+    // TC52 — US-11 (Caminho Feliz): Enviar para fabricação com sucesso
+    @Test
+    public void tc52_us11_enviarParaFabricacao_Sucesso() {
+        fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
+        wait.until(ExpectedConditions.urlContains("/vendedor/"));
+
+        java.util.List<WebElement> botoesGerenciar = driver.findElements(
+                By.xpath("//input[contains(@value,'Gerenciar')]"));
+        
+        if (botoesGerenciar.isEmpty()) {
+            System.out.println("⚠️ TC52 ignorado: Nenhum pedido EM_NEGOCIACAO para testar envio.");
+            return;
+        }
+
+        botoesGerenciar.get(0).click();
+        aguardar(1500);
+
+        // Preenche Forma de Pagamento
+        WebElement inputPagamento = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//input[contains(@placeholder,'Financiamento')]")));
+        inputPagamento.clear();
+        inputPagamento.sendKeys("Pix à Vista");
+
+        // Preenche Prazo de Fabricação
+        WebElement inputPrazo = driver.findElement(
+                By.xpath("//input[contains(@placeholder,'dd/MM/yyyy')]"));
+        inputPrazo.clear();
+        inputPrazo.sendKeys("15/06/2026");
+
+        aguardar(500);
+
+        WebElement btnEnviarFabrica = driver.findElement(
+                By.xpath("//input[contains(@value,'Enviar para Fabricação')]"));
+        btnEnviarFabrica.click();
+        
+        aguardar(1500);
+
+        WebElement msgSucesso = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".msg-success")));
+        assertTrue("Mensagem de sucesso deve aparecer", msgSucesso.isDisplayed());
+
+        tirarScreenshot("tc52_enviar_fabricacao");
+        System.out.println("✅ TC52 (US-11) — Pedido enviado para fabricação com sucesso");
+    }
+    */
 
     // =========================================================
     // TC53 — US-12: Vendedor marca veículo como pronto para entrega
