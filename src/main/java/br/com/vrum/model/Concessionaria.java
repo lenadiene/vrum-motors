@@ -14,7 +14,7 @@ public class Concessionaria implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 300)
     private String nome;
 
     @Column(nullable = false, length = 100)
@@ -23,7 +23,7 @@ public class Concessionaria implements Serializable {
     @Column(nullable = false, length = 2)
     private String estado;
 
-    @Column(length = 200)
+    @Column(length = 500)
     private String endereco;
 
     @Column(length = 20)

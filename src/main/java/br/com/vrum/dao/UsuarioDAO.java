@@ -90,4 +90,18 @@ public class UsuarioDAO extends GenericDAO<Usuario, Long> {
             em.close();
         }
     }
+
+    public boolean telefoneJaExiste(String telefone, Long idExcluir) {
+        EntityManager em = getEM();
+        try {
+            String jpql = idExcluir == null
+                    ? "SELECT COUNT(u) FROM Usuario u WHERE u.telefone = :telefone"
+                    : "SELECT COUNT(u) FROM Usuario u WHERE u.telefone = :telefone AND u.id <> :id";
+            var query = em.createQuery(jpql, Long.class).setParameter("telefone", telefone);
+            if (idExcluir != null) query.setParameter("id", idExcluir);
+            return query.getSingleResult() > 0;
+        } finally {
+            em.close();
+        }
+    }
 }

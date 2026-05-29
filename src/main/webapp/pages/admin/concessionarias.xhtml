@@ -1,10 +1,237 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
-<h:head><meta charset="UTF-8"/><title>Concessionárias — Vrum Motors</title>
+<h:head>
+    <meta charset="UTF-8"/>
+    <title>Concessionárias — Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <style>
+        .field-error   { color:#FF6B6B; font-size:0.8rem; margin-top:4px; display:none; }
+        .input-invalid { border-color:#FF6B6B !important; box-shadow:0 0 0 2px rgba(214,40,40,.15) !important; }
+        .btn-salvar:disabled,
+        .btn-salvar[disabled] {
+            background-color: #9A9A9A !important;
+            border-color:     #9A9A9A !important;
+            color:            #fff    !important;
+            opacity:          0.7;
+            cursor:           not-allowed;
+            pointer-events:   auto;
+        }
+        .btn-salvar:disabled:hover { background-color:#9A9A9A !important; border-color:#9A9A9A !important; }
+        select.form-control { appearance:auto; }
+        select.form-control:disabled { opacity:0.55; cursor:not-allowed; }
+    </style>
+    <script>//<![CDATA[
+        var _ibge = 'https://servicodados.ibge.gov.br/api/v1/localidades';
+
+        /* ---- IBGE — estados ---- */
+        function fetchEstados() {
+            var ufSel = document.getElementById('ufSelect');
+            var cSel  = document.getElementById('cidadeSelect');
+            if (!ufSel) return;
+            ufSel.innerHTML = '<option value="">Carregando estados...</option>';
+            ufSel.disabled  = true;
+            cSel.innerHTML  = '<option value="">Selecione o estado primeiro</option>';
+            cSel.disabled   = true;
+
+            fetch(_ibge + '/estados?orderBy=nome')
+                .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
+                .then(function(lista) {
+                    ufSel.innerHTML = '<option value="">Selecione o estado...</option>';
+                    lista.forEach(function(e) {
+                        var o = document.createElement('option');
+                        o.value = e.sigla;
+                        o.textContent = e.nome + ' (' + e.sigla + ')';
+                        ufSel.appendChild(o);
+                    });
+                    ufSel.disabled = false;
+                    /* pré-selecionar no modo edição */
+                    var hE = document.querySelector('[id$=":hiddenEstado"]');
+                    if (hE && hE.value) {
+                        ufSel.value = hE.value;
+                        if (ufSel.value) {
+                            fetchCidades(ufSel.value, function() {
+                                var hC = document.querySelector('[id$=":hiddenCidade"]');
+                                if (hC && hC.value) document.getElementById('cidadeSelect').value = hC.value;
+                                atualizarBotaoCon();
+                            });
+                            return;
+                        }
+                    }
+                    atualizarBotaoCon();
+                })
+                .catch(function() {
+                    ufSel.innerHTML = '<option value="">-- Falha ao carregar --</option>';
+                    ufSel.disabled  = false;
+                    mostrarErroIbge('Falha ao carregar estados. Verifique sua conexão.');
+                });
+        }
+
+        /* ---- IBGE — cidades por UF ---- */
+        function fetchCidades(uf, callback) {
+            var cSel = document.getElementById('cidadeSelect');
+            if (!cSel) return;
+            cSel.innerHTML = '<option value="">Carregando cidades...</option>';
+            cSel.disabled  = true;
+
+            fetch(_ibge + '/estados/' + uf + '/municipios')
+                .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
+                .then(function(lista) {
+                    lista.sort(function(a, b) { return a.nome.localeCompare(b.nome, 'pt-BR'); });
+                    cSel.innerHTML = '<option value="">Selecione a cidade...</option>';
+                    lista.forEach(function(c) {
+                        var o = document.createElement('option');
+                        o.value = o.textContent = c.nome;
+                        cSel.appendChild(o);
+                    });
+                    cSel.disabled = false;
+                    if (callback) callback();
+                    atualizarBotaoCon();
+                })
+                .catch(function() {
+                    cSel.innerHTML = '<option value="">-- Falha ao carregar --</option>';
+                    cSel.disabled  = false;
+                    mostrarErroIbge('Falha ao carregar cidades. Verifique sua conexão.');
+                });
+        }
+
+        /* ---- handlers dos selects ---- */
+        function onUfChange(el) {
+            var hE = document.querySelector('[id$=":hiddenEstado"]');
+            var hC = document.querySelector('[id$=":hiddenCidade"]');
+            if (hE) hE.value = el.value;
+            if (hC) hC.value = '';
+            validarUFCon();
+            if (el.value) {
+                fetchCidades(el.value, null);
+            } else {
+                var cSel = document.getElementById('cidadeSelect');
+                if (cSel) {
+                    cSel.innerHTML = '<option value="">Selecione o estado primeiro</option>';
+                    cSel.disabled  = true;
+                }
+                atualizarBotaoCon();
+            }
+        }
+
+        function onCidadeChange(el) {
+            var hC = document.querySelector('[id$=":hiddenCidade"]');
+            if (hC) hC.value = el.value;
+            validarCidadeCon();
+        }
+
+        function mostrarErroIbge(msg) {
+            var el = document.getElementById('ibge-error-msg');
+            if (el) { el.textContent = msg; el.style.display = 'block'; }
+        }
+
+        /* ---- tocados ---- */
+        var tocadosCon = { nome: false, telefone: false, endereco: false };
+
+        /* ---- validadores ---- */
+        function validarNomeCon(el) {
+            var msg = document.getElementById('conc-nome-msg');
+            var val = el ? el.value.trim() : '';
+            if (!val) {
+                if (tocadosCon.nome) return showErrCon(el, msg, 'Informe o nome da unidade.');
+                if (el) el.classList.remove('input-invalid');
+                atualizarBotaoCon(); return false;
+            }
+            if (val.length > 300) return showErrCon(el, msg, 'O nome deve ter no máximo 300 caracteres.');
+            return clearErrCon(el, msg);
+        }
+
+        function validarUFCon() {
+            var el  = document.getElementById('ufSelect');
+            var msg = document.getElementById('conc-uf-msg');
+            if (!el || !el.value) return showErrCon(el, msg, 'Selecione o estado (UF).');
+            return clearErrCon(el, msg);
+        }
+
+        function validarCidadeCon() {
+            var el  = document.getElementById('cidadeSelect');
+            var msg = document.getElementById('conc-cidade-msg');
+            if (!el || !el.value) return showErrCon(el, msg, 'Selecione a cidade.');
+            return clearErrCon(el, msg);
+        }
+
+        function validarTelefoneCon(el) {
+            if (el) el.value = el.value.replace(/\D/g, '');
+            var msg = document.getElementById('conc-telefone-msg');
+            var val = el ? el.value : '';
+            if (!val) {
+                if (tocadosCon.telefone) return showErrCon(el, msg, 'Informe o telefone da unidade.');
+                if (el) el.classList.remove('input-invalid');
+                atualizarBotaoCon(); return false;
+            }
+            if (val.length !== 11) return showErrCon(el, msg, 'Informe um telefone válido com DDD e 9 dígitos.');
+            return clearErrCon(el, msg);
+        }
+
+        function validarEnderecoCon(el) {
+            var msg = document.getElementById('conc-endereco-msg');
+            var val = el ? el.value.trim() : '';
+            if (!val) {
+                if (tocadosCon.endereco) return showErrCon(el, msg, 'Informe o endereço da unidade.');
+                if (el) el.classList.remove('input-invalid');
+                atualizarBotaoCon(); return false;
+            }
+            if (val.length > 500) return showErrCon(el, msg, 'O endereço deve ter no máximo 500 caracteres.');
+            return clearErrCon(el, msg);
+        }
+
+        function filtrarNumCon(event) {
+            var k = event.key;
+            if (/^\d$/.test(k)) return true;
+            var ok = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End','Enter'];
+            if (ok.indexOf(k) !== -1 || event.ctrlKey || event.metaKey) return true;
+            event.preventDefault(); return false;
+        }
+
+        /* ---- helpers ---- */
+        function showErrCon(el, msgEl, txt) {
+            if (el)    el.classList.add('input-invalid');
+            if (msgEl) { msgEl.textContent = txt; msgEl.style.display = 'block'; }
+            atualizarBotaoCon(); return false;
+        }
+        function clearErrCon(el, msgEl) {
+            if (el)    el.classList.remove('input-invalid');
+            if (msgEl) msgEl.style.display = 'none';
+            atualizarBotaoCon(); return true;
+        }
+
+        /* ---- habilita / desabilita botão Salvar ---- */
+        function atualizarBotaoCon() {
+            var nomeEl = document.querySelector('[id$=":inputNomeCon"]');
+            var ufEl   = document.getElementById('ufSelect');
+            var cidEl  = document.getElementById('cidadeSelect');
+            var telEl  = document.querySelector('[id$=":inputTelefoneCon"]');
+            var endEl  = document.querySelector('[id$=":inputEnderecoCon"]');
+            var btn    = document.querySelector('[id$=":btnSalvarCon"]');
+            if (!btn) return;
+            var nomeOk = nomeEl && !nomeEl.classList.contains('input-invalid') && nomeEl.value.trim().length > 0;
+            var ufOk   = ufEl   && !ufEl.classList.contains('input-invalid')   && ufEl.value !== '';
+            var cidOk  = cidEl  && !cidEl.classList.contains('input-invalid')  && cidEl.value !== '';
+            var telVal = telEl ? telEl.value : '';
+            var telOk  = telEl  && !telEl.classList.contains('input-invalid')  && telVal.length === 11;
+            var endOk  = endEl  && !endEl.classList.contains('input-invalid')  && endEl.value.trim().length > 0;
+            btn.disabled = !(nomeOk && ufOk && cidOk && telOk && endOk);
+        }
+
+        /* ---- init (DOMContentLoaded) ---- */
+        window.addEventListener('DOMContentLoaded', function() {
+            if (!document.getElementById('ufSelect')) return;
+            fetchEstados();
+            var nomeEl = document.querySelector('[id$=":inputNomeCon"]');
+            var telEl  = document.querySelector('[id$=":inputTelefoneCon"]');
+            var endEl  = document.querySelector('[id$=":inputEnderecoCon"]');
+            if (nomeEl && nomeEl.value.trim()) { tocadosCon.nome     = true; validarNomeCon(nomeEl); }
+            if (telEl  && telEl.value)         { tocadosCon.telefone = true; validarTelefoneCon(telEl); }
+            if (endEl  && endEl.value.trim())  { tocadosCon.endereco = true; validarEnderecoCon(endEl); }
+        });
+    //]]></script>
 </h:head>
 <h:body>
 <div class="app-layout">
@@ -32,50 +259,93 @@
                 <h:commandButton value="+ Nova Concessionária" action="#{adminBean.novaConcessionaria}" styleClass="btn btn-primary"/>
             </h:form>
         </div>
+
         <h:form id="concessionariaForm">
             <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
 
-            <!-- Formulário -->
             <h:panelGroup rendered="#{adminBean.concessionariaEdicao != null}">
                 <div class="card" style="border:2px solid #D62828; margin-bottom:24px">
-                    <div class="card-header">#{adminBean.concessionariaEdicao.id == null ? 'Nova Concessionária' : 'Editar'}</div>
+                    <div class="card-header">#{adminBean.concessionariaEdicao.id == null ? 'Nova Concessionária' : 'Editar Concessionária'}</div>
+
+                    <!-- Erros de API (IBGE) -->
+                    <div id="ibge-error-msg" class="field-error" style="margin-bottom:8px; font-size:0.9rem;"></div>
+
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-                        <div class="form-group">
+
+                        <!-- Nome da Unidade -->
+                        <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Nome da Unidade *</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.nome}" required="true" styleClass="form-control" maxlength="200" oninput="if(this.value.length >= 200) document.getElementById('nome-max-msg').style.display='block'; else document.getElementById('nome-max-msg').style.display='none';" placeholder="Vrum Motors Recife"/>
-                            <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 200 caracteres.</span>
+                            <h:inputText id="inputNomeCon" value="#{adminBean.concessionariaEdicao.nome}" required="true"
+                                         styleClass="form-control" maxlength="300"
+                                         placeholder="Ex: Vrum Motors Recife"
+                                         oninput="tocadosCon.nome=true; validarNomeCon(this);"
+                                         onblur="tocadosCon.nome=true;  validarNomeCon(this);"/>
+                            <span id="conc-nome-msg" class="field-error"></span>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Cidade *</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.cidade}" required="true" styleClass="form-control" maxlength="200" oninput="if(this.value.length >= 200) document.getElementById('cidade-max-msg').style.display='block'; else document.getElementById('cidade-max-msg').style.display='none';"/>
-                            <span id="cidade-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 200 caracteres.</span>
-                        </div>
+
+                        <!-- Estado (UF) — select populado via IBGE -->
                         <div class="form-group">
                             <label class="form-label">Estado (UF) *</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.estado}" required="true" styleClass="form-control" placeholder="PE" maxlength="2" oninput="if(this.value.length >= 2) document.getElementById('estado-max-msg').style.display='block'; else document.getElementById('estado-max-msg').style.display='none';"/>
-                            <span id="estado-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 2 caracteres.</span>
+                            <select id="ufSelect" class="form-control" onchange="onUfChange(this);">
+                                <option value="">Carregando estados...</option>
+                            </select>
+                            <h:inputHidden id="hiddenEstado" value="#{adminBean.concessionariaEdicao.estado}"/>
+                            <span id="conc-uf-msg" class="field-error"></span>
                         </div>
+
+                        <!-- Cidade — select dependente do UF -->
                         <div class="form-group">
-                            <label class="form-label">Telefone</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.telefone}" styleClass="form-control" maxlength="20" oninput="if(this.value.length >= 20) document.getElementById('telefone-max-msg').style.display='block'; else document.getElementById('telefone-max-msg').style.display='none';"/>
-                            <span id="telefone-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 20 caracteres.</span>
+                            <label class="form-label">Cidade *</label>
+                            <select id="cidadeSelect" class="form-control" onchange="onCidadeChange(this);" disabled="disabled">
+                                <option value="">Selecione o estado primeiro</option>
+                            </select>
+                            <h:inputHidden id="hiddenCidade" value="#{adminBean.concessionariaEdicao.cidade}"/>
+                            <span id="conc-cidade-msg" class="field-error"></span>
                         </div>
+
+                        <!-- Telefone -->
+                        <div class="form-group">
+                            <label class="form-label">Telefone *</label>
+                            <h:inputText id="inputTelefoneCon" value="#{adminBean.concessionariaEdicao.telefone}"
+                                         styleClass="form-control" maxlength="11"
+                                         placeholder="DDD + 9 dígitos"
+                                         onkeydown="return filtrarNumCon(event);"
+                                         oninput="tocadosCon.telefone=true; validarTelefoneCon(this);"
+                                         onblur="tocadosCon.telefone=true;  validarTelefoneCon(this);"/>
+                            <span id="conc-telefone-msg" class="field-error"></span>
+                        </div>
+
+                        <!-- Endereço -->
                         <div class="form-group" style="grid-column:1/-1">
-                            <label class="form-label">Endereço</label>
-                            <h:inputText value="#{adminBean.concessionariaEdicao.endereco}" styleClass="form-control" maxlength="200" oninput="if(this.value.length >= 200) document.getElementById('endereco-max-msg').style.display='block'; else document.getElementById('endereco-max-msg').style.display='none';"/>
-                            <span id="endereco-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 200 caracteres.</span>
+                            <label class="form-label">Endereço *</label>
+                            <h:inputText id="inputEnderecoCon" value="#{adminBean.concessionariaEdicao.endereco}"
+                                         styleClass="form-control" maxlength="500"
+                                         placeholder="Rua, número, bairro"
+                                         oninput="tocadosCon.endereco=true; validarEnderecoCon(this);"
+                                         onblur="tocadosCon.endereco=true;  validarEnderecoCon(this);"/>
+                            <span id="conc-endereco-msg" class="field-error"></span>
                         </div>
+
                     </div>
-                    <div style="display:flex; gap:12px; margin-top:8px">
-                        <h:commandButton value="Salvar" action="#{adminBean.salvarConcessionaria}" styleClass="btn btn-primary"/>
-                        <h:commandButton value="Cancelar" action="#{adminBean.cancelarEdicaoConcessionaria}" styleClass="btn btn-ghost" immediate="true"/>
+
+                    <div style="display:flex; gap:12px; margin-top:16px">
+                        <h:commandButton id="btnSalvarCon" value="Salvar"
+                                         action="#{adminBean.salvarConcessionaria}"
+                                         styleClass="btn btn-primary btn-salvar"/>
+                        <h:commandButton value="Cancelar" action="#{adminBean.cancelarEdicaoConcessionaria}"
+                                         styleClass="btn btn-ghost" immediate="true"/>
                     </div>
+
+                    <!-- Define estado inicial do botão ao renderizar o formulário -->
+                    <script>atualizarBotaoCon();</script>
                 </div>
             </h:panelGroup>
 
             <div class="card">
                 <table class="vrum-table">
-                    <thead><tr><th>Nome</th><th>Cidade</th><th>UF</th><th>Telefone</th><th>Status</th><th>Ações</th></tr></thead>
+                    <thead>
+                        <tr><th>Nome</th><th>Cidade</th><th>UF</th><th>Telefone</th><th>Status</th><th>Ações</th></tr>
+                    </thead>
                     <tbody>
                         <ui:repeat value="#{adminBean.concessionarias}" var="c">
                             <tr>
@@ -85,7 +355,8 @@
                                 <td style="color:#9A9A9A">#{c.telefone}</td>
                                 <td><span class="badge #{c.ativa ? 'badge-pronto' : 'badge-cancelado'}">#{c.ativa ? 'Ativa' : 'Inativa'}</span></td>
                                 <td>
-                                    <h:commandButton value="Editar" action="#{adminBean.editarConcessionaria(c)}" styleClass="btn btn-ghost btn-sm" immediate="true"/>
+                                    <h:commandButton value="Editar" action="#{adminBean.editarConcessionaria(c)}"
+                                                     styleClass="btn btn-ghost btn-sm" immediate="true"/>
                                 </td>
                             </tr>
                         </ui:repeat>

@@ -16,10 +16,24 @@ public class UsuarioService {
     }
 
     public Usuario salvarUsuario(Usuario usuario, String senhaPlana) {
-        if (usuarioDAO.emailJaExiste(usuario.getEmail(), usuario.getId())) {
-            throw new IllegalArgumentException("E-mail já cadastrado no sistema.");
+        // Normaliza antes de qualquer checagem para comparação consistente
+        String emailNorm = usuario.getEmail().trim().toLowerCase();
+        usuario.setEmail(emailNorm);
+
+        if (usuarioDAO.emailJaExiste(emailNorm, usuario.getId())) {
+            throw new IllegalArgumentException("E-mail já cadastrado.");
         }
-        usuario.setEmail(usuario.getEmail().trim().toLowerCase());
+
+        String tel = usuario.getTelefone();
+        if (tel != null && !tel.isEmpty() && usuarioDAO.telefoneJaExiste(tel, usuario.getId())) {
+            throw new IllegalArgumentException("Telefone já cadastrado.");
+        }
+
+        String cpf = usuario.getCpf();
+        if (cpf != null && !cpf.isEmpty() && usuarioDAO.cpfJaExiste(cpf, usuario.getId())) {
+            throw new IllegalArgumentException("CPF já cadastrado.");
+        }
+
         if (senhaPlana != null && !senhaPlana.isEmpty()) {
             usuario.setSenha(SenhaUtil.hashSenha(senhaPlana));
         }

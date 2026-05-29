@@ -38,6 +38,7 @@ br\com\vrum\model\PerfilUsuario.class
 br\com\vrum\filter\AuthFilter.class
 br\com\vrum\dao\VendedorDAO.class
 br\com\vrum\bean\AdminBean$1.class
+br\com\vrum\dao\UsuarioDAO$1.class
 br\com\vrum\model\Pedido.class
 br\com\vrum\service\ConcessionariaService.class
 br\com\vrum\bean\FabricaBean.class

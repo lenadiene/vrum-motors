@@ -13,6 +13,9 @@ public class ConcessionariaService {
     private final VendedorDAO vendedorDAO = new VendedorDAO();
 
     public Concessionaria salvar(Concessionaria c) {
+        if (concDAO.nomeJaExiste(c.getNome(), c.getId())) {
+            throw new IllegalArgumentException("Nome já cadastrado.");
+        }
         if (c.getId() == null) return concDAO.salvar(c);
         return concDAO.atualizar(c);
     }

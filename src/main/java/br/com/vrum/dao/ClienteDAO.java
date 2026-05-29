@@ -15,6 +15,7 @@ public class ClienteDAO extends GenericDAO<Cliente, Long> {
                     .getSingleResult();
         } catch (NoResultException e) {
             return null;
+            
         } finally {
             em.close();
         }

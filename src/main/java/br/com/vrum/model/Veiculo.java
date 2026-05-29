@@ -60,7 +60,7 @@ public class Veiculo implements Serializable {
     @Column(length = 50)
     private String cor;
 
-    @Column(length = 500)
+    @Column(length = 200)
     private String descricao;
 
     @Column(name = "descricao_longa", columnDefinition = "TEXT")

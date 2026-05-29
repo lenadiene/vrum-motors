@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 public class Gerente extends Usuario {
 
     @OneToOne
-    @JoinColumn(name = "concessionaria_id")
+    @JoinColumn(name = "concessionaria_id", unique = true)
     private Concessionaria concessionaria;
 
     public Gerente() {

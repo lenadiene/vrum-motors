@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(powershell -Command \"Get-Process java -ErrorAction SilentlyContinue | Select-Object Id, CPU, WorkingSet, MainWindowTitle | Format-Table\")",
-      "Bash(tasklist /fi \"imagename eq java.exe\" /v)"
+      "Bash(tasklist /fi \"imagename eq java.exe\" /v)",
+      "Bash(dir /s /b)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\lenad\\\\OneDrive\\\\Documentos\\\\vrum-motors\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(git pull *)"
     ]
   }
 }

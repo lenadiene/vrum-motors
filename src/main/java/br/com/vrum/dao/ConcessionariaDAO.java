@@ -18,6 +18,20 @@ public class ConcessionariaDAO extends GenericDAO<Concessionaria, Long> {
         }
     }
 
+    public boolean nomeJaExiste(String nome, Long idExcluir) {
+        EntityManager em = getEM();
+        try {
+            String jpql = idExcluir == null
+                    ? "SELECT COUNT(c) FROM Concessionaria c WHERE LOWER(c.nome) = LOWER(:nome)"
+                    : "SELECT COUNT(c) FROM Concessionaria c WHERE LOWER(c.nome) = LOWER(:nome) AND c.id <> :id";
+            var query = em.createQuery(jpql, Long.class).setParameter("nome", nome);
+            if (idExcluir != null) query.setParameter("id", idExcluir);
+            return query.getSingleResult() > 0;
+        } finally {
+            em.close();
+        }
+    }
+
     public Concessionaria buscarPorCidade(String cidade) {
         EntityManager em = getEM();
         try {

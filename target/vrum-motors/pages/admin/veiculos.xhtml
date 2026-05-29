@@ -7,11 +7,244 @@
     <meta charset="UTF-8"/>
     <title>Veículos — Admin Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <style>
+        .field-error   { color:#FF6B6B; font-size:0.8rem; margin-top:4px; display:none; }
+        .input-invalid { border-color:#FF6B6B !important; box-shadow:0 0 0 2px rgba(214,40,40,.15) !important; }
+
+        /* sufixo (cv, km/h, etc.) */
+        .input-sufixo { display:flex; align-items:stretch; }
+        .input-sufixo .form-control {
+            border-radius:6px 0 0 6px !important;
+            border-right:none !important;
+        }
+        .input-sufixo .sufixo {
+            padding:0 10px;
+            background:#2a2a2a;
+            border:1px solid #3a3a3a;
+            border-radius:0 6px 6px 0;
+            color:#9A9A9A;
+            font-size:0.82rem;
+            white-space:nowrap;
+            display:flex;
+            align-items:center;
+        }
+
+        /* separador de seção dentro do card */
+        .form-section-title {
+            grid-column:1/-1;
+            border-bottom:1px solid #3a3a3a;
+            padding-bottom:6px;
+            margin-top:8px;
+            color:#9A9A9A;
+            font-size:0.75rem;
+            text-transform:uppercase;
+            letter-spacing:1.5px;
+        }
+
+        /* contador de caracteres */
+        .char-counter { font-size:0.78rem; color:#9A9A9A; float:right; margin-top:4px; }
+        .char-counter.danger { color:#FF6B6B; }
+
+        /* botão salvar desabilitado */
+        .btn-salvar:disabled,
+        .btn-salvar[disabled] {
+            background-color:#9A9A9A !important;
+            border-color:#9A9A9A !important;
+            color:#fff !important;
+            opacity:0.7;
+            cursor:not-allowed;
+            pointer-events:auto;
+        }
+        .btn-salvar:disabled:hover { background-color:#9A9A9A !important; }
+
+        /* campo marca readonly */
+        .marca-badge {
+            background:#D62828;
+            color:#fff;
+            font-weight:700;
+            padding:8px 16px;
+            border-radius:6px;
+            display:inline-block;
+            font-size:0.9rem;
+            letter-spacing:2px;
+        }
+
+        select.form-control { appearance:auto; }
+    </style>
+    <script>//<![CDATA[
+        /* ============================================================
+           Utilitários gerais
+        ============================================================ */
+        var tocadosV = { modelo: false };
+
+        function showErrV(el, msgEl, txt) {
+            if (el)    el.classList.add('input-invalid');
+            if (msgEl) { msgEl.textContent = txt; msgEl.style.display = 'block'; }
+            atualizarBotaoVeiculo(); return false;
+        }
+        function clearErrV(el, msgEl) {
+            if (el)    el.classList.remove('input-invalid');
+            if (msgEl) msgEl.style.display = 'none';
+            atualizarBotaoVeiculo(); return true;
+        }
+
+        /* ============================================================
+           Seletor de Ano
+        ============================================================ */
+        function gerarSelectAno() {
+            var sel = document.getElementById('anoSelect');
+            if (!sel) return;
+            var anoAtual = new Date().getFullYear();
+            sel.innerHTML = '<option value="">Selecione o ano...</option>';
+            for (var y = anoAtual + 1; y >= 1950; y--) {
+                var o = document.createElement('option');
+                o.value = o.textContent = y;
+                sel.appendChild(o);
+            }
+            var h = document.querySelector('[id$=":hiddenAno"]');
+            if (h && h.value) sel.value = h.value;
+        }
+
+        function onAnoChange(el) {
+            var h = document.querySelector('[id$=":hiddenAno"]');
+            if (h) h.value = el.value;
+            atualizarBotaoVeiculo();
+        }
+
+        /* ============================================================
+           Máscara Monetária  →  R$ 0.000,00
+        ============================================================ */
+        function mascaraPreco(el) {
+            var digits = el.value.replace(/\D/g, '');
+            if (!digits) { el.value = ''; atualizarBotaoVeiculo(); return; }
+            var num = parseInt(digits, 10) || 0;
+            var formatted = (num / 100).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            el.value = 'R$ ' + formatted;
+            atualizarBotaoVeiculo();
+        }
+
+        /* formata o preço existente (modo edição) */
+        function formatarPrecoInicial(el) {
+            var raw = el.value.replace(/\D/g, '');
+            if (!raw) return;
+            /* valor vem como "150000.00" → converte para centavos */
+            var parts = el.value.split('.');
+            var inteiro = parts[0].replace(/\D/g, '');
+            var decimal = (parts[1] || '00').substring(0, 2).padEnd(2, '0');
+            var digits  = inteiro + decimal;
+            var num     = parseInt(digits, 10) || 0;
+            el.value = 'R$ ' + (num / 100).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2, maximumFractionDigits: 2
+            });
+        }
+
+        /* ============================================================
+           Filtros de tecla
+        ============================================================ */
+        function filtrarIntPos(event) {
+            var k = event.key;
+            if (/^\d$/.test(k)) return true;
+            var ok = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+            if (ok.indexOf(k) !== -1 || event.ctrlKey || event.metaKey) return true;
+            event.preventDefault(); return false;
+        }
+
+        function filtrarDecimalPos(event) {
+            var k = event.key;
+            if (/^\d$/.test(k)) return true;
+            if (k === '.') {
+                var el = event.target;
+                if (el && el.value.indexOf('.') === -1) return true;
+                event.preventDefault(); return false;
+            }
+            var ok = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+            if (ok.indexOf(k) !== -1 || event.ctrlKey || event.metaKey) return true;
+            event.preventDefault(); return false;
+        }
+
+        /* ============================================================
+           Validadores de campo
+        ============================================================ */
+        function validarNomeV(el) {
+            var msg = document.getElementById('v-nome-msg');
+            var val = el ? el.value.trim() : '';
+            if (!val) return showErrV(el, msg, 'Informe o nome do modelo.');
+            return clearErrV(el, msg);
+        }
+
+        function validarModelo(el) {
+            var msg = document.getElementById('v-modelo-msg');
+            var val = el ? el.value.trim() : '';
+            if (!val) {
+                if (tocadosV.modelo) return showErrV(el, msg, 'Informe o modelo do veículo.');
+                if (el) el.classList.remove('input-invalid');
+                atualizarBotaoVeiculo(); return false;
+            }
+            if (val.length < 2) return showErrV(el, msg, 'O modelo deve ter no mínimo 2 caracteres.');
+            if (val.length > 50) return showErrV(el, msg, 'O modelo deve ter no máximo 50 caracteres.');
+            return clearErrV(el, msg);
+        }
+
+        /* ============================================================
+           Contador regressivo — Descrição Curta
+        ============================================================ */
+        function contarDescricao(el) {
+            var max   = 200;
+            var resto = max - el.value.length;
+            var cnt   = document.getElementById('desc-contador');
+            if (!cnt) return;
+            cnt.textContent = resto + ' restantes';
+            cnt.className   = 'char-counter' + (resto < 30 ? ' danger' : '');
+        }
+
+        /* ============================================================
+           Habilita / desabilita botão Salvar
+        ============================================================ */
+        function atualizarBotaoVeiculo() {
+            var nomeEl   = document.querySelector('[id$=":inputNomeV"]');
+            var modeloEl = document.querySelector('[id$=":inputModelo"]');
+            var anoEl    = document.getElementById('anoSelect');
+            var tipoEl   = document.querySelector('[id$=":tipoSelect"]');
+            var btn      = document.querySelector('[id$=":btnSalvarVeiculo"]');
+            if (!btn) return;
+            var nomeOk   = nomeEl   && nomeEl.value.trim().length > 0   && !nomeEl.classList.contains('input-invalid');
+            var modeloOk = modeloEl && modeloEl.value.trim().length >= 2 && !modeloEl.classList.contains('input-invalid');
+            var anoOk    = anoEl    && anoEl.value !== '';
+            var tipoOk   = tipoEl   && tipoEl.value !== '';
+            btn.disabled = !(nomeOk && modeloOk && anoOk && tipoOk);
+        }
+
+        /* ============================================================
+           Inicialização
+        ============================================================ */
+        window.addEventListener('DOMContentLoaded', function() {
+            gerarSelectAno();
+
+            /* modo edição: formatar preço existente */
+            var precoEl = document.querySelector('[id$=":inputPreco"]');
+            if (precoEl && precoEl.value) formatarPrecoInicial(precoEl);
+
+            /* validar campos pré-preenchidos */
+            var nomeEl   = document.querySelector('[id$=":inputNomeV"]');
+            var modeloEl = document.querySelector('[id$=":inputModelo"]');
+            if (nomeEl   && nomeEl.value.trim())   validarNomeV(nomeEl);
+            if (modeloEl && modeloEl.value.trim()) { tocadosV.modelo = true; validarModelo(modeloEl); }
+
+            /* inicializar contador */
+            var descEl = document.querySelector('[id$=":inputDescCurta"]');
+            if (descEl) contarDescricao(descEl);
+
+            atualizarBotaoVeiculo();
+        });
+    //]]></script>
 </h:head>
 <h:body>
 <div class="app-layout">
     <aside class="sidebar">
-        <a href="/home.xhtml" class="sidebar-logo">VRUM<span>.</span>MOTORS</a>
+        <a href="#{request.contextPath}/home.xhtml" class="sidebar-logo">VRUM<span>.</span>MOTORS</a>
         <div class="sidebar-user">
             <div class="sidebar-user-name">#{loginBean.usuarioLogado.nome}</div>
             <div class="sidebar-user-role">Administrador</div>
@@ -27,6 +260,7 @@
             <h:form><h:commandLink action="#{loginBean.logout}" styleClass="btn btn-ghost btn-sm w-100">Sair</h:commandLink></h:form>
         </div>
     </aside>
+
     <main class="main-content">
         <div class="page-header d-flex justify-between align-center">
             <div><h1>Veículos</h1><p>Catálogo da Vrum Motors</p></div>
@@ -38,113 +272,251 @@
         <h:form id="veiculoForm">
             <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
 
-            <!-- Form novo/editar veículo -->
             <h:panelGroup rendered="#{adminBean.mostrarFormVeiculo}">
                 <div class="card" style="border:2px solid #D62828; margin-bottom:24px">
                     <div class="card-header">#{adminBean.veiculoEdicao.id == null ? 'Novo Veículo' : 'Editar Veículo'}</div>
+
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px">
+
+                        <!-- ── IDENTIFICAÇÃO ─────────────────────────────── -->
+                        <div class="form-section-title">Identificação</div>
+
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Nome do Modelo *</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.nome}" required="true" styleClass="form-control" maxlength="100" oninput="if(this.value.length >= 100) document.getElementById('nome-max-msg').style.display='block'; else document.getElementById('nome-max-msg').style.display='none';" placeholder="Ex: Vrum GT-S"/>
-                            <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 100 caracteres.</span>
+                            <h:inputText id="inputNomeV" value="#{adminBean.veiculoEdicao.nome}" required="true"
+                                         styleClass="form-control" maxlength="100"
+                                         placeholder="Ex: Vrum GT-S 2.0 Turbo"
+                                         oninput="validarNomeV(this);"
+                                         onblur="validarNomeV(this);"/>
+                            <span id="v-nome-msg" class="field-error"></span>
                         </div>
+
+                        <!-- Modelo -->
+                        <div class="form-group">
+                            <label class="form-label">Modelo *</label>
+                            <h:inputText id="inputModelo" value="#{adminBean.veiculoEdicao.modelo}" required="true"
+                                         styleClass="form-control" maxlength="50"
+                                         placeholder="Ex: GT-S"
+                                         oninput="tocadosV.modelo=true; validarModelo(this);"
+                                         onblur="tocadosV.modelo=true;  validarModelo(this);"/>
+                            <span id="v-modelo-msg" class="field-error"></span>
+                        </div>
+
+                        <!-- Ano -->
+                        <div class="form-group">
+                            <label class="form-label">Ano *</label>
+                            <select id="anoSelect" class="form-control" onchange="onAnoChange(this);">
+                                <option value="">Selecione o ano...</option>
+                            </select>
+                            <h:inputHidden id="hiddenAno" value="#{adminBean.anoTexto}"/>
+                            <span id="v-ano-msg" class="field-error"></span>
+                        </div>
+
+                        <!-- Marca (exibição somente) -->
                         <div class="form-group">
                             <label class="form-label">Marca</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.marca}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('marca-max-msg').style.display='block'; else document.getElementById('marca-max-msg').style.display='none';"/>
-                            <span id="marca-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
+                            <div style="padding-top:6px">
+                                <span class="marca-badge">VRUM</span>
+                                <div style="font-size:0.75rem; color:#9A9A9A; margin-top:4px">Preenchida automaticamente pelo sistema</div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Modelo</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.modelo}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('modelo-max-msg').style.display='block'; else document.getElementById('modelo-max-msg').style.display='none';"/>
-                            <span id="modelo-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Ano</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.ano}" styleClass="form-control" maxlength="4" oninput="if(this.value.length >= 4) document.getElementById('ano-max-msg').style.display='block'; else document.getElementById('ano-max-msg').style.display='none';"/>
-                            <span id="ano-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 4 caracteres.</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Preço (R$)</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.preco}" styleClass="form-control" placeholder="150000.00"/>
-                        </div>
+
+                        <!-- ── MECÂNICA ───────────────────────────────────── -->
+                        <div class="form-section-title">Especificações Mecânicas</div>
+
                         <div class="form-group">
                             <label class="form-label">Motor</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.motor}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('motor-max-msg').style.display='block'; else document.getElementById('motor-max-msg').style.display='none';" placeholder="2.0 Turbo"/>
-                            <span id="motor-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
+                            <h:selectOneMenu value="#{adminBean.veiculoEdicao.motor}" styleClass="form-control">
+                                <f:selectItem itemLabel="Selecione..." itemValue=""/>
+                                <f:selectItem itemLabel="1.0"        itemValue="1.0"/>
+                                <f:selectItem itemLabel="1.0 Turbo"  itemValue="1.0 Turbo"/>
+                                <f:selectItem itemLabel="1.3 Turbo"  itemValue="1.3 Turbo"/>
+                                <f:selectItem itemLabel="1.4 Turbo"  itemValue="1.4 Turbo"/>
+                                <f:selectItem itemLabel="1.5"        itemValue="1.5"/>
+                                <f:selectItem itemLabel="1.6"        itemValue="1.6"/>
+                                <f:selectItem itemLabel="2.0"        itemValue="2.0"/>
+                                <f:selectItem itemLabel="2.0 Turbo"  itemValue="2.0 Turbo"/>
+                                <f:selectItem itemLabel="3.0"        itemValue="3.0"/>
+                                <f:selectItem itemLabel="4.0"        itemValue="4.0"/>
+                                <f:selectItem itemLabel="Elétrico"   itemValue="Elétrico"/>
+                            </h:selectOneMenu>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Potência</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.potencia}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('potencia-max-msg').style.display='block'; else document.getElementById('potencia-max-msg').style.display='none';" placeholder="200 cv"/>
-                            <span id="potencia-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Torque</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.torque}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('torque-max-msg').style.display='block'; else document.getElementById('torque-max-msg').style.display='none';" placeholder="300 Nm"/>
-                            <span id="torque-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Transmissão</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.transmissao}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('transmissao-max-msg').style.display='block'; else document.getElementById('transmissao-max-msg').style.display='none';"/>
-                            <span id="transmissao-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
-                        </div>
+
                         <div class="form-group">
                             <label class="form-label">Combustível</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.combustivel}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('combustivel-max-msg').style.display='block'; else document.getElementById('combustivel-max-msg').style.display='none';"/>
-                            <span id="combustivel-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
+                            <h:selectOneMenu value="#{adminBean.veiculoEdicao.combustivel}" styleClass="form-control">
+                                <f:selectItem itemLabel="Selecione..."            itemValue=""/>
+                                <f:selectItem itemLabel="Flex (Gasolina/Álcool)"  itemValue="Flex (Gasolina/Álcool)"/>
+                                <f:selectItem itemLabel="Gasolina"                itemValue="Gasolina"/>
+                                <f:selectItem itemLabel="Etanol"                  itemValue="Etanol"/>
+                                <f:selectItem itemLabel="Diesel"                  itemValue="Diesel"/>
+                                <f:selectItem itemLabel="Híbrido"                 itemValue="Híbrido"/>
+                                <f:selectItem itemLabel="Elétrico"                itemValue="Elétrico"/>
+                            </h:selectOneMenu>
                         </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Transmissão</label>
+                            <h:selectOneMenu value="#{adminBean.veiculoEdicao.transmissao}" styleClass="form-control">
+                                <f:selectItem itemLabel="Selecione..."  itemValue=""/>
+                                <f:selectItem itemLabel="Manual"        itemValue="Manual"/>
+                                <f:selectItem itemLabel="Automático"    itemValue="Automático"/>
+                                <f:selectItem itemLabel="Automatizado"  itemValue="Automatizado"/>
+                                <f:selectItem itemLabel="CVT"           itemValue="CVT"/>
+                            </h:selectOneMenu>
+                        </div>
+
                         <div class="form-group">
                             <label class="form-label">Tração</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.tracao}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('tracao-max-msg').style.display='block'; else document.getElementById('tracao-max-msg').style.display='none';"/>
-                            <span id="tracao-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
+                            <h:selectOneMenu value="#{adminBean.veiculoEdicao.tracao}" styleClass="form-control">
+                                <f:selectItem itemLabel="Selecione..."       itemValue=""/>
+                                <f:selectItem itemLabel="4x2 (Dianteira)"    itemValue="4x2 (Dianteira)"/>
+                                <f:selectItem itemLabel="4x2 (Traseira)"     itemValue="4x2 (Traseira)"/>
+                                <f:selectItem itemLabel="4x4"                itemValue="4x4"/>
+                                <f:selectItem itemLabel="AWD (Integral)"     itemValue="AWD (Integral)"/>
+                            </h:selectOneMenu>
                         </div>
+
+                        <!-- ── MÉTRICAS TÉCNICAS ──────────────────────────── -->
+                        <div class="form-section-title">Métricas Técnicas</div>
+
+                        <!-- Potência cv -->
+                        <div class="form-group">
+                            <label class="form-label">Potência</label>
+                            <div class="input-sufixo">
+                                <h:inputText value="#{adminBean.veiculoEdicao.potencia}"
+                                             styleClass="form-control" maxlength="4"
+                                             placeholder="200"
+                                             onkeydown="return filtrarIntPos(event);"
+                                             oninput="this.value=this.value.replace(/\D/g,'').substring(0,4);"/>
+                                <span class="sufixo">cv</span>
+                            </div>
+                        </div>
+
+                        <!-- Torque kgfm -->
+                        <div class="form-group">
+                            <label class="form-label">Torque</label>
+                            <div class="input-sufixo">
+                                <h:inputText value="#{adminBean.veiculoEdicao.torque}"
+                                             styleClass="form-control" maxlength="6"
+                                             placeholder="30.5"
+                                             onkeydown="return filtrarDecimalPos(event);"
+                                             oninput="this.value=this.value.replace(/[^0-9.]/g,'').substring(0,6);"/>
+                                <span class="sufixo">kgfm</span>
+                            </div>
+                        </div>
+
+                        <!-- Velocidade km/h -->
                         <div class="form-group">
                             <label class="form-label">Vel. Máxima</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.velocidadeMax}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('vel-max-msg').style.display='block'; else document.getElementById('vel-max-msg').style.display='none';"/>
-                            <span id="vel-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
+                            <div class="input-sufixo">
+                                <h:inputText value="#{adminBean.veiculoEdicao.velocidadeMax}"
+                                             styleClass="form-control" maxlength="3"
+                                             placeholder="250"
+                                             onkeydown="return filtrarIntPos(event);"
+                                             oninput="this.value=this.value.replace(/\D/g,'').substring(0,3);"/>
+                                <span class="sufixo">km/h</span>
+                            </div>
                         </div>
+
+                        <!-- Aceleração s -->
                         <div class="form-group">
-                            <label class="form-label">Aceleração 0-100</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.aceleracao}" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('acel-max-msg').style.display='block'; else document.getElementById('acel-max-msg').style.display='none';"/>
-                            <span id="acel-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 50 caracteres.</span>
+                            <label class="form-label">Aceleração 0–100</label>
+                            <div class="input-sufixo">
+                                <h:inputText value="#{adminBean.veiculoEdicao.aceleracao}"
+                                             styleClass="form-control" maxlength="4"
+                                             placeholder="7.2"
+                                             onkeydown="return filtrarDecimalPos(event);"
+                                             oninput="this.value=this.value.replace(/[^0-9.]/g,'').substring(0,4);"/>
+                                <span class="sufixo">s</span>
+                            </div>
                         </div>
+
+                        <!-- ── VALORES E DISPONIBILIDADE ──────────────────── -->
+                        <div class="form-section-title">Valores e Disponibilidade</div>
+
+                        <!-- Preço com máscara monetária -->
                         <div class="form-group">
-                            <label class="form-label">Tipo</label>
-                            <h:selectOneMenu value="#{adminBean.veiculoEdicao.tipo}" styleClass="form-control">
+                            <label class="form-label">Preço (R$)</label>
+                            <h:inputText id="inputPreco" value="#{adminBean.precoTexto}"
+                                         styleClass="form-control"
+                                         placeholder="R$ 0,00"
+                                         oninput="mascaraPreco(this);"/>
+                        </div>
+
+                        <!-- Tipo -->
+                        <div class="form-group">
+                            <label class="form-label">Tipo *</label>
+                            <h:selectOneMenu id="tipoSelect" value="#{adminBean.veiculoEdicao.tipo}"
+                                             styleClass="form-control"
+                                             onchange="atualizarBotaoVeiculo();">
                                 <f:selectItem itemLabel="Selecione..." itemValue=""/>
                                 <f:selectItems value="#{adminBean.tiposVeiculo}" var="t"
                                                itemLabel="#{t.descricao}" itemValue="#{t}"/>
                             </h:selectOneMenu>
                         </div>
+
+                        <!-- Destaque na Home -->
                         <div class="form-group">
                             <label class="form-label">Destaque na Home?</label>
-                            <h:selectBooleanCheckbox value="#{adminBean.veiculoEdicao.destaqueHome}" style="margin-top:12px; transform:scale(1.3)"/>
+                            <div style="padding-top:10px; display:flex; align-items:center; gap:8px">
+                                <h:selectBooleanCheckbox value="#{adminBean.veiculoEdicao.destaqueHome}"
+                                                         style="transform:scale(1.4)"/>
+                                <span style="font-size:0.85rem; color:#9A9A9A">Exibir na página inicial</span>
+                            </div>
                         </div>
+
+                        <!-- ── TEXTOS E MÍDIA ─────────────────────────────── -->
+                        <div class="form-section-title">Textos e Mídia</div>
+
+                        <!-- Descrição Curta com contador -->
                         <div class="form-group" style="grid-column:1/-1">
-                            <label class="form-label">Descrição curta</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.descricao}" styleClass="form-control" maxlength="255" oninput="if(this.value.length >= 255) document.getElementById('desc-max-msg').style.display='block'; else document.getElementById('desc-max-msg').style.display='none';" placeholder="Frase de impacto do modelo"/>
-                            <span id="desc-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 255 caracteres.</span>
+                            <label class="form-label">
+                                Descrição Curta
+                                <span id="desc-contador" class="char-counter">200 restantes</span>
+                            </label>
+                            <h:inputText id="inputDescCurta" value="#{adminBean.veiculoEdicao.descricao}"
+                                         styleClass="form-control" maxlength="200"
+                                         placeholder="Frase de impacto do modelo"
+                                         oninput="contarDescricao(this);"/>
                         </div>
+
+                        <!-- Descrição Completa -->
                         <div class="form-group" style="grid-column:1/-1">
-                            <label class="form-label">Descrição completa</label>
-                            <h:inputTextarea value="#{adminBean.veiculoEdicao.descricaoLonga}" styleClass="form-control" rows="4"/>
+                            <label class="form-label">Descrição Completa</label>
+                            <h:inputTextarea value="#{adminBean.veiculoEdicao.descricaoLonga}"
+                                             styleClass="form-control" rows="5" maxlength="4000"
+                                             placeholder="Descrição técnica e comercial detalhada do veículo (máx. 4.000 caracteres)"/>
                         </div>
+
+                        <!-- Imagem Principal -->
                         <div class="form-group" style="grid-column:1/-1">
-                            <label class="form-label">URL / Nome da imagem principal</label>
-                            <h:inputText value="#{adminBean.veiculoEdicao.imagemPrincipal}" styleClass="form-control" maxlength="255" oninput="if(this.value.length >= 255) document.getElementById('img-max-msg').style.display='block'; else document.getElementById('img-max-msg').style.display='none';" placeholder="modelo-principal.jpg"/>
-                            <span id="img-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">⚠️ Você atingiu o limite de 255 caracteres.</span>
+                            <label class="form-label">URL / Nome da Imagem Principal</label>
+                            <h:inputText value="#{adminBean.veiculoEdicao.imagemPrincipal}"
+                                         styleClass="form-control" maxlength="200"
+                                         placeholder="modelo-principal.jpg"/>
                         </div>
+
+                    </div><!-- /grid -->
+
+                    <div style="display:flex; gap:12px; margin-top:16px">
+                        <h:commandButton id="btnSalvarVeiculo" value="Salvar Veículo"
+                                         action="#{adminBean.salvarVeiculo}"
+                                         styleClass="btn btn-primary btn-salvar"/>
+                        <h:commandButton value="Cancelar" action="#{adminBean.cancelarEdicaoVeiculo}"
+                                         styleClass="btn btn-ghost" immediate="true"/>
                     </div>
-                    <div style="display:flex; gap:12px; margin-top:8px">
-                        <h:commandButton value="Salvar Veículo" action="#{adminBean.salvarVeiculo}" styleClass="btn btn-primary"/>
-                        <h:commandButton value="Cancelar" action="#{adminBean.cancelarEdicaoVeiculo}" styleClass="btn btn-ghost" immediate="true"/>
-                    </div>
+
+                    <script>atualizarBotaoVeiculo();</script>
                 </div>
             </h:panelGroup>
 
             <!-- Tabela de veículos -->
             <div class="card">
                 <table class="vrum-table">
-                    <thead><tr><th>Nome</th><th>Motor</th><th>Preço</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead>
+                    <thead>
+                        <tr><th>Nome</th><th>Motor</th><th>Preço</th><th>Tipo</th><th>Status</th><th>Ações</th></tr>
+                    </thead>
                     <tbody>
                         <ui:repeat value="#{adminBean.veiculos}" var="v">
                             <tr>
@@ -168,9 +540,11 @@
                                     </h:panelGroup>
                                 </td>
                                 <td style="display:flex; gap:8px">
-                                    <h:commandButton value="Editar" action="#{adminBean.editarVeiculo(v)}" styleClass="btn btn-ghost btn-sm" immediate="true"/>
-                                    <h:commandButton value="Remover" action="#{adminBean.excluirVeiculo(v)}" styleClass="btn btn-sm"
-                                                     style="background:#D62828; color:#FFF; border:none; border-radius:6px; cursor:pointer; padding:8px 16px; font-size:0.8rem"/>
+                                    <h:commandButton value="Editar" action="#{adminBean.editarVeiculo(v)}"
+                                                     styleClass="btn btn-ghost btn-sm" immediate="true"/>
+                                    <h:commandButton value="Remover" action="#{adminBean.excluirVeiculo(v)}"
+                                                     styleClass="btn btn-sm"
+                                                     style="background:#D62828;color:#FFF;border:none;border-radius:6px;cursor:pointer;padding:8px 16px;font-size:0.8rem"/>
                                 </td>
                             </tr>
                         </ui:repeat>
