@@ -136,6 +136,14 @@
                                 </h:outputText>
                             </div>
                         </h:panelGroup>
+                        <h:panelGroup rendered="#{not empty p.observacoesFabrica}">
+                            <div style="font-size:0.82rem; color:#9A9A9A">
+                                🏭 Atualização da fábrica:
+                                <span style="color:#FFF">
+                                    #{p.observacoesFabrica}
+                                </span>
+                            </div>
+                        </h:panelGroup>
                     </div>
 
                     <!-- Detalhes do veículo -->

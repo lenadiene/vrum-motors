@@ -73,6 +73,7 @@
                                 </h:outputText>
                             </div>
                             <h:commandButton value="Atualizar Status"
+                                             id="btnSelecionarPedido"
                                              action="#{fabricaBean.selecionarPedido(p)}"
                                              styleClass="btn btn-ghost btn-sm"/>
                         </div>
@@ -94,7 +95,7 @@
 
                         <div class="form-group">
                             <label class="form-label">Novo Status *</label>
-                            <h:selectOneMenu value="#{fabricaBean.novoStatus}" required="true" styleClass="form-control">
+                            <h:selectOneMenu id="selectStatus" value="#{fabricaBean.novoStatus}" required="true" styleClass="form-control">
                                 <f:selectItem itemLabel="Selecione..." itemValue=""/>
                                 <f:selectItems value="#{fabricaBean.statusPermitidos}"
                                                var="s" itemLabel="#{s.descricao}" itemValue="#{s}"/>
@@ -103,7 +104,7 @@
 
                         <div class="form-group">
                             <label class="form-label">Prazo de Entrega na Concessionária</label>
-                            <h:inputText value="#{fabricaBean.prazoEntrega}"
+                            <h:inputText id="prazoEntrega" value="#{fabricaBean.prazoEntrega}"
                                          styleClass="form-control"
                                          placeholder="dd/MM/yyyy"
                                          maxlength="10"
@@ -114,7 +115,7 @@
 
                         <div class="form-group">
                             <label class="form-label">Observações</label>
-                            <h:inputTextarea value="#{fabricaBean.observacoes}"
+                            <h:inputTextarea id="observacoes" value="#{fabricaBean.observacoes}"
                                              styleClass="form-control"
                                              rows="3"
                                              maxlength="500"
@@ -123,7 +124,8 @@
                             <span id="obs-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 500 caracteres.</span>
                         </div>
 
-                        <h:commandButton value="✅ Atualizar Status"
+                        <h:commandButton id="btnSalvarStatus"
+                                         value="✅ Atualizar Status"
                                          action="#{fabricaBean.atualizarStatus}"
                                          styleClass="btn btn-primary w-100"/>
                     </div>
