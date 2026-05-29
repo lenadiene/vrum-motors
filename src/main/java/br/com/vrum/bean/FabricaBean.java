@@ -33,6 +33,10 @@ public class FabricaBean implements Serializable {
 
     public void selecionarPedido(Pedido p) {
         this.pedidoSelecionado = service.buscarPorId(p.getId());
+
+        this.novoStatus = null;
+        this.prazoEntrega = pedidoSelecionado.getPrazoEntrega();
+        this.observacoes = pedidoSelecionado.getObservacoesFabrica();
     }
 
     public void atualizarStatus() {
@@ -45,13 +49,15 @@ public class FabricaBean implements Serializable {
         }
     }
 
-    public StatusPedido[] getStatusPermitidos() {
-        return new StatusPedido[]{
-            StatusPedido.EM_FABRICACAO,
-            StatusPedido.FABRICADO,
-            StatusPedido.ENVIADO_CIDADE
-        };
+    public List<StatusPedido> getStatusPermitidos() {
+        if (pedidoSelecionado == null) {
+            return List.of();
+        }
+
+        return service.obterStatusPermitidosFabricacao(
+                pedidoSelecionado.getStatus());
     }
+
 
     private void addErro(String msg) {
         FacesContext.getCurrentInstance().addMessage(null,

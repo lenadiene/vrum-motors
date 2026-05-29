@@ -48,16 +48,50 @@ public class PedidoService {
     /**
      * Admin fábrica atualiza status de fabricação
      */
-    public void atualizarStatusFabricacao(Pedido pedido, StatusPedido novoStatus, LocalDate prazoEntrega, String obs) {
-        if (novoStatus != StatusPedido.EM_FABRICACAO &&
-            novoStatus != StatusPedido.FABRICADO &&
-            novoStatus != StatusPedido.ENVIADO_CIDADE) {
-            throw new IllegalArgumentException("Status inválido para a fábrica: " + novoStatus);
+    public void atualizarStatusFabricacao(
+            Pedido pedido,
+            StatusPedido novoStatus,
+            LocalDate prazoEntrega,
+            String obs)
+    {
+        List<StatusPedido> permitidos = obterStatusPermitidosFabricacao(pedido.getStatus());
+
+        if (!permitidos.contains(novoStatus)) {
+            throw new IllegalArgumentException(
+                    "Transição inválida de status: "
+                            + pedido.getStatus().getDescricao()
+                            + " → "
+                            + novoStatus.getDescricao());
         }
+
         pedido.setStatus(novoStatus);
-        if (prazoEntrega != null) pedido.setPrazoEntrega(prazoEntrega);
-        if (obs != null && !obs.isEmpty()) pedido.setObservacoesFabrica(obs);
+
+        if (prazoEntrega != null) {
+            pedido.setPrazoEntrega(prazoEntrega);
+        }
+
+        if (obs != null && !obs.trim().isEmpty()) {
+            pedido.setObservacoesFabrica(obs);
+        }
+
         pedidoDAO.atualizar(pedido);
+    }
+
+    public List<StatusPedido> obterStatusPermitidosFabricacao(StatusPedido atual) {
+        switch (atual) {
+
+            case EM_NEGOCIACAO:
+                return List.of(StatusPedido.EM_FABRICACAO);
+
+            case EM_FABRICACAO:
+                return List.of(StatusPedido.FABRICADO);
+
+            case FABRICADO:
+                return List.of(StatusPedido.ENVIADO_CIDADE);
+
+            default:
+                return List.of();
+        }
     }
 
     /**

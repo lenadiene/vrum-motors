@@ -126,6 +126,11 @@
                                         <f:convertDateTime pattern="dd/MM/yyyy" type="localDate"/>
                                     </h:outputText>
                                 </span>
+                                <ui:fragment rendered="#{not empty p.observacoesFabrica}">
+                                    <span>
+                                        🏭 #{p.observacoesFabrica}
+                                    </span>
+                                </ui:fragment>
                             </h:panelGroup>
                         </div>
 
