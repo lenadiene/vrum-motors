@@ -73,23 +73,29 @@ public class GerPedidosBean implements Serializable {
 
     public void aplicarFiltro() {
         StatusPedido statusFiltro = (filtroStatusStr != null && !filtroStatusStr.isEmpty())
-                ? StatusPedido.valueOf(filtroStatusStr) : null;
+                ? StatusPedido.valueOf(filtroStatusStr)
+                : null;
 
         pedidosFiltrados = todosPedidos.stream()
                 .filter(p -> {
                     if (filtroVendedorId != null) {
                         if (filtroVendedorId.equals(-1L)) {
-                            if (p.getVendedor() != null) return false;
+                            if (p.getVendedor() != null)
+                                return false;
                         } else {
-                            if (p.getVendedor() == null || !filtroVendedorId.equals(p.getVendedor().getId())) return false;
+                            if (p.getVendedor() == null || !filtroVendedorId.equals(p.getVendedor().getId()))
+                                return false;
                         }
                     }
-                    if (filtroVeiculoId != null && !filtroVeiculoId.equals(p.getVeiculo().getId())) return false;
-                    if (statusFiltro != null && p.getStatus() != statusFiltro) return false;
+                    if (filtroVeiculoId != null && !filtroVeiculoId.equals(p.getVeiculo().getId()))
+                        return false;
+                    if (statusFiltro != null && p.getStatus() != statusFiltro)
+                        return false;
                     if (buscaCliente != null && !buscaCliente.trim().isEmpty()) {
                         String lower = buscaCliente.trim().toLowerCase();
                         String nome = p.getCliente().getNome();
-                        if (nome == null || !nome.toLowerCase().contains(lower)) return false;
+                        if (nome == null || !nome.toLowerCase().contains(lower))
+                            return false;
                     }
                     return true;
                 })
@@ -120,21 +126,51 @@ public class GerPedidosBean implements Serializable {
     }
 
     public void salvarPedido() {
-        if (pedidoSelecionado == null) return;
+        if (pedidoSelecionado == null)
+            return;
+
+        // 1. Segurança Server-Side: Verificar integridade da sessão do Gerente
+        if (gerente == null || gerente.getPerfil() != PerfilUsuario.GERENTE) {
+            addErro("Ação não permitida para o seu perfil de usuário.");
+            return;
+        }
+
         try {
-            if (editVendedorId == null) {
-                pedidoSelecionado.setVendedor(null);
-            } else {
-                Vendedor v = vendedores.stream()
+            Vendedor vendedorAlvo = null;
+            if (editVendedorId != null) {
+                vendedorAlvo = vendedores.stream()
                         .filter(vnd -> editVendedorId.equals(vnd.getId()))
                         .findFirst().orElse(null);
-                pedidoSelecionado.setVendedor(v);
+
+                // Critério 1: Validar se o vendedor pertence à concessionária do Gerente
+                if (vendedorAlvo == null || !vendedorAlvo.getConcessionaria().getId().equals(concessionaria.getId())) {
+                    addErro("Vendedor inválido ou não pertence a esta unidade.");
+                    return;
+                }
             }
 
+            StatusPedido novoStatus = null;
             if (editStatusStr != null && !editStatusStr.isEmpty()) {
-                pedidoSelecionado.setStatus(StatusPedido.valueOf(editStatusStr));
+                novoStatus = StatusPedido.valueOf(editStatusStr);
             }
 
+            // Critério 2: Validar regra de status vs vendedor associado
+            if (vendedorAlvo != null && novoStatus == StatusPedido.AGUARDANDO_ATENDIMENTO) {
+                addErro("Um pedido com vendedor associado não pode estar 'Aguardando Atendimento'. Altere o status.");
+                return;
+            }
+
+            if (vendedorAlvo == null && novoStatus != StatusPedido.AGUARDANDO_ATENDIMENTO
+                    && novoStatus != StatusPedido.CANCELADO) {
+                addErro("Pedidos em andamento precisam de um Vendedor Responsável.");
+                return;
+            }
+
+            // Se passar nas regras de negócio, atribui os campos e salva
+            pedidoSelecionado.setVendedor(vendedorAlvo);
+            if (novoStatus != null) {
+                pedidoSelecionado.setStatus(novoStatus);
+            }
             pedidoSelecionado.setPrazoFabricacao(editPrazoFabricacao);
             pedidoSelecionado.setFormaPagamento(editFormaPagamento);
 
@@ -189,7 +225,8 @@ public class GerPedidosBean implements Serializable {
                 return;
             }
             String contentType = (anexo.getTipoArquivo() != null && !anexo.getTipoArquivo().isBlank())
-                    ? anexo.getTipoArquivo() : "application/octet-stream";
+                    ? anexo.getTipoArquivo()
+                    : "application/octet-stream";
             jakarta.faces.context.ExternalContext ec = fc.getExternalContext();
             ec.responseReset();
             ec.setResponseContentType(contentType);
@@ -197,10 +234,11 @@ public class GerPedidosBean implements Serializable {
             ec.setResponseHeader("Content-Disposition",
                     "attachment; filename=\"" + anexo.getNomeArquivo() + "\"");
             try (FileInputStream in = new FileInputStream(file);
-                 OutputStream out = ec.getResponseOutputStream()) {
+                    OutputStream out = ec.getResponseOutputStream()) {
                 byte[] buf = new byte[8192];
                 int read;
-                while ((read = in.read(buf)) != -1) out.write(buf, 0, read);
+                while ((read = in.read(buf)) != -1)
+                    out.write(buf, 0, read);
             }
             fc.responseComplete();
         } catch (Exception e) {
@@ -223,29 +261,103 @@ public class GerPedidosBean implements Serializable {
     }
 
     // Getters & Setters
-    public Gerente getGerente() { return gerente; }
-    public Concessionaria getConcessionaria() { return concessionaria; }
-    public List<Vendedor> getVendedores() { return vendedores; }
-    public List<Veiculo> getVeiculos() { return veiculos; }
-    public List<Pedido> getPedidosFiltrados() { return pedidosFiltrados; }
-    public Long getFiltroVendedorId() { return filtroVendedorId; }
-    public void setFiltroVendedorId(Long id) { this.filtroVendedorId = id; }
-    public Long getFiltroVeiculoId() { return filtroVeiculoId; }
-    public void setFiltroVeiculoId(Long id) { this.filtroVeiculoId = id; }
-    public String getFiltroStatusStr() { return filtroStatusStr; }
-    public void setFiltroStatusStr(String s) { this.filtroStatusStr = s; }
-    public String getBuscaCliente() { return buscaCliente; }
-    public void setBuscaCliente(String s) { this.buscaCliente = s; }
-    public Pedido getPedidoSelecionado() { return pedidoSelecionado; }
-    public List<Anexo> getAnexosPedidoSelecionado() { return anexosPedidoSelecionado; }
-    public Long getEditVendedorId() { return editVendedorId; }
-    public void setEditVendedorId(Long id) { this.editVendedorId = id; }
-    public String getEditStatusStr() { return editStatusStr; }
-    public void setEditStatusStr(String s) { this.editStatusStr = s; }
-    public LocalDate getEditPrazoFabricacao() { return editPrazoFabricacao; }
-    public void setEditPrazoFabricacao(LocalDate d) { this.editPrazoFabricacao = d; }
-    public String getEditFormaPagamento() { return editFormaPagamento; }
-    public void setEditFormaPagamento(String s) { this.editFormaPagamento = s; }
-    public Part getArquivoAnexo() { return arquivoAnexo; }
-    public void setArquivoAnexo(Part p) { this.arquivoAnexo = p; }
+    public Gerente getGerente() {
+        return gerente;
+    }
+
+    public Concessionaria getConcessionaria() {
+        return concessionaria;
+    }
+
+    public List<Vendedor> getVendedores() {
+        return vendedores;
+    }
+
+    public List<Veiculo> getVeiculos() {
+        return veiculos;
+    }
+
+    public List<Pedido> getPedidosFiltrados() {
+        return pedidosFiltrados;
+    }
+
+    public Long getFiltroVendedorId() {
+        return filtroVendedorId;
+    }
+
+    public void setFiltroVendedorId(Long id) {
+        this.filtroVendedorId = id;
+    }
+
+    public Long getFiltroVeiculoId() {
+        return filtroVeiculoId;
+    }
+
+    public void setFiltroVeiculoId(Long id) {
+        this.filtroVeiculoId = id;
+    }
+
+    public String getFiltroStatusStr() {
+        return filtroStatusStr;
+    }
+
+    public void setFiltroStatusStr(String s) {
+        this.filtroStatusStr = s;
+    }
+
+    public String getBuscaCliente() {
+        return buscaCliente;
+    }
+
+    public void setBuscaCliente(String s) {
+        this.buscaCliente = s;
+    }
+
+    public Pedido getPedidoSelecionado() {
+        return pedidoSelecionado;
+    }
+
+    public List<Anexo> getAnexosPedidoSelecionado() {
+        return anexosPedidoSelecionado;
+    }
+
+    public Long getEditVendedorId() {
+        return editVendedorId;
+    }
+
+    public void setEditVendedorId(Long id) {
+        this.editVendedorId = id;
+    }
+
+    public String getEditStatusStr() {
+        return editStatusStr;
+    }
+
+    public void setEditStatusStr(String s) {
+        this.editStatusStr = s;
+    }
+
+    public LocalDate getEditPrazoFabricacao() {
+        return editPrazoFabricacao;
+    }
+
+    public void setEditPrazoFabricacao(LocalDate d) {
+        this.editPrazoFabricacao = d;
+    }
+
+    public String getEditFormaPagamento() {
+        return editFormaPagamento;
+    }
+
+    public void setEditFormaPagamento(String s) {
+        this.editFormaPagamento = s;
+    }
+
+    public Part getArquivoAnexo() {
+        return arquivoAnexo;
+    }
+
+    public void setArquivoAnexo(Part p) {
+        this.arquivoAnexo = p;
+    }
 }
