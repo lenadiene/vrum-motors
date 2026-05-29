@@ -57,6 +57,7 @@ public class VrumMotorsSeleniumTest {
         public static void setupDriver() {
                 WebDriverManager.chromedriver().setup();
                 ChromeOptions options = new ChromeOptions();
+                // options.setBinary("/usr/bin/google-chrome-unstable");
                 options.addArguments("--start-maximized");
                 // options.addArguments("--headless"); // descomente para rodar sem abrir janela
                 driver = new ChromeDriver(options);
