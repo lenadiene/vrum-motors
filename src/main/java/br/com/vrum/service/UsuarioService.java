@@ -81,4 +81,8 @@ public class UsuarioService {
     public boolean cpfJaExiste(String cpf, Long idExcluir) {
         return usuarioDAO.cpfJaExiste(cpf, idExcluir);
     }
+
+    public boolean telefoneJaExiste(String telefone, Long idExcluir) {
+        return usuarioDAO.telefoneJaExiste(telefone, idExcluir);
+    }
 }

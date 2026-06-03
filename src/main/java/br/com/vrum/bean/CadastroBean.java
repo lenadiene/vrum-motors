@@ -112,6 +112,11 @@ public class CadastroBean implements Serializable {
             addErro("Nome inválido. Use apenas letras, espaços e hífens.");
             return false;
         }
+        // Três ou mais letras iguais consecutivas
+        if (nome.matches("(?i).*(.)\\1{2,}.*")) {
+            addErro("Nome inválido. Não são permitidas três letras iguais seguidas.");
+            return false;
+        }
 
         // E-mail
         String email = cliente.getEmail() == null ? "" : cliente.getEmail().trim();
@@ -134,8 +139,8 @@ public class CadastroBean implements Serializable {
             addErro("Telefone é obrigatório.");
             return false;
         }
-        if (telefone.length() > 20) {
-            addErro("Telefone não pode ultrapassar 20 caracteres.");
+        if (telefone.length() > 15) {
+            addErro("Telefone não pode ultrapassar 15 caracteres.");
             return false;
         }
         // Apenas dígitos, espaços, parênteses, hífens e +
@@ -175,6 +180,14 @@ public class CadastroBean implements Serializable {
             addErro("CPF não pode ultrapassar 14 caracteres.");
             return false;
         }
+        if (!validarCPF(cpf)) {
+            addErro("CPF inválido. Verifique os dígitos informados.");
+            return false;
+        }
+
+        // Normaliza CPF e telefone para dígitos puros (comparação e armazenamento consistentes)
+        String cpfDigits = cpf.replaceAll("\\D", "");
+        String telDigits = telefone.replaceAll("\\D", "");
 
         // E-mail duplicado (apenas para novos cadastros)
         if (cliente.getId() == null && usuarioService.buscarPorEmail(email) != null) {
@@ -183,18 +196,37 @@ public class CadastroBean implements Serializable {
         }
 
         // CPF duplicado (apenas para novos cadastros)
-        if (cliente.getId() == null && usuarioService.cpfJaExiste(cpf, null)) {
+        if (cliente.getId() == null && usuarioService.cpfJaExiste(cpfDigits, null)) {
             addErro("CPF já cadastrado. Verifique os dados ou faça login.");
             return false;
         }
 
-        // Normaliza valores (salva sem espaços desnecessários)
+        // Telefone duplicado (apenas para novos cadastros)
+        if (cliente.getId() == null && usuarioService.telefoneJaExiste(telDigits, null)) {
+            addErro("Telefone já cadastrado. Use outro número ou faça login.");
+            return false;
+        }
+
+        // Salva valores normalizados
         cliente.setNome(nome);
         cliente.setEmail(email);
-        cliente.setTelefone(telefone);
-        cliente.setCpf(cpf);
+        cliente.setTelefone(telDigits);
+        cliente.setCpf(cpfDigits);
 
         return true;
+    }
+
+    private boolean validarCPF(String cpf) {
+        String d = cpf.replaceAll("\\D", "");
+        if (d.length() != 11 || d.matches("(\\d)\\1{10}")) return false;
+        int soma = 0, r;
+        for (int i = 0; i < 9; i++) soma += (d.charAt(i) - '0') * (10 - i);
+        r = soma % 11;
+        if ((d.charAt(9) - '0') != (r < 2 ? 0 : 11 - r)) return false;
+        soma = 0;
+        for (int i = 0; i < 10; i++) soma += (d.charAt(i) - '0') * (11 - i);
+        r = soma % 11;
+        return (d.charAt(10) - '0') == (r < 2 ? 0 : 11 - r);
     }
 
     private void addErro(String msg) {
