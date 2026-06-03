@@ -135,6 +135,7 @@ body {
     color: var(--vrum-white);
 }
 .btn-primary:hover { background: var(--vrum-red-dk); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(214,40,40,0.4); }
+.btn-primary:disabled { background: #5A5A5A; color: #9A9A9A; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .btn-outline {
     background: transparent;

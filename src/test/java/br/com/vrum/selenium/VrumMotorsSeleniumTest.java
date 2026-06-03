@@ -4,6 +4,7 @@ import java.time.Duration;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
@@ -1113,86 +1114,84 @@ public class VrumMotorsSeleniumTest {
                 System.out.println("✅ TC_VAL02 — E-mail com formato inválido exibe aviso");
         }
 
-        // =========================================================
-        // TC40 — CAD07: CPF já existente exibe erro na etapa 1
-        // =========================================================
-        @Test
-        public void tc40_cadastroCpfDuplicadoExibeErro() {
-                // Passo 1: registrar um usuário com CPF único via fluxo completo
-                driver.get(HOME_URL);
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
-                aguardar(1000);
+    // =========================================================
+    // TC40 — CAD07: CPF já existente exibe erro na etapa 1
+    // =========================================================
+    @Test
+    public void tc40_cadastroCpfDuplicadoExibeErro() {
+        String cpfUnico = gerarCPFValido();
 
-                WebElement btnComprar1 = wait.until(ExpectedConditions.elementToBeClickable(
-                                By.xpath("//input[@value='Comprar']")));
-                btnComprar1.click();
-                wait.until(ExpectedConditions.urlContains("cadastro"));
-                aguardar(500);
+        // Passo 1: registrar um usuário com CPF válido único via fluxo completo
+        driver.get(HOME_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+        aguardar(500);
 
-                long ts = System.currentTimeMillis();
-                String emailUnico1 = "cpfteste1" + ts + "@teste.com";
-                String cpfUnico = String.format("%011d", ts % 100000000000L);
+        WebElement btnComprar1 = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@value='Comprar']")));
+        btnComprar1.click();
+        wait.until(ExpectedConditions.urlContains("cadastro"));
+        aguardar(500);
 
-                WebElement inputNome1 = wait.until(ExpectedConditions.elementToBeClickable(
-                                By.id("cadastroForm:nome")));
-                inputNome1.sendKeys("Cliente CPF Um");
-                driver.findElement(By.id("cadastroForm:emailCad")).sendKeys(emailUnico1);
-                driver.findElement(By.id("cadastroForm:telefone")).sendKeys("(81) 99999-0010");
-                driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
-                new Select(driver.findElement(By.cssSelector("#cadastroForm select"))).selectByIndex(1);
-                driver.findElement(By.id("cadastroForm:cpf")).sendKeys(cpfUnico);
+        String emailUnico1 = "cpfteste1" + System.currentTimeMillis() + "@teste.com";
 
-                aguardar(500);
-                driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
-                aguardar(1000);
+        WebElement inputNome1 = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome1.sendKeys("Cliente CPF Um");
+        driver.findElement(By.id("cadastroForm:emailCad")).sendKeys(emailUnico1);
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys(gerarTelefone());
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select"))).selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf")).sendKeys(cpfUnico);
 
-                WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
-                                By.xpath("//input[contains(@value,'Confirmar')] | //button[contains(text(),'Confirmar')]")));
-                btnConfirmar.click();
-                aguardar(2000);
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1000);
 
-                // Garante que o usuário foi salvo no banco
-                wait.until(ExpectedConditions.visibilityOfElementLocated(
-                                By.xpath("//*[contains(text(),'PEDIDO REALIZADO')]")));
+        WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Confirmar')] | //button[contains(text(),'Confirmar')]")));
+        btnConfirmar.click();
+        aguardar(2000);
 
-                // Passo 2: logout e tentar cadastrar com o mesmo CPF mas e-mail diferente
-                driver.get(BASE_URL + "/logout");
-                wait.until(ExpectedConditions.urlContains("login"));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(),'PEDIDO REALIZADO')]")));
 
-                driver.get(HOME_URL);
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
-                aguardar(500);
+        // Passo 2: logout e tentar cadastrar com o mesmo CPF mas dados diferentes
+        driver.get(BASE_URL + "/logout");
+        wait.until(ExpectedConditions.urlContains("login"));
 
-                WebElement btnComprar2 = wait.until(ExpectedConditions.elementToBeClickable(
-                                By.xpath("//input[@value='Comprar']")));
-                btnComprar2.click();
-                wait.until(ExpectedConditions.urlContains("cadastro"));
-                aguardar(500);
+        driver.get(HOME_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+        aguardar(500);
 
-                String emailUnico2 = "cpfteste2" + System.currentTimeMillis() + "@teste.com";
+        WebElement btnComprar2 = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@value='Comprar']")));
+        btnComprar2.click();
+        wait.until(ExpectedConditions.urlContains("cadastro"));
+        aguardar(500);
 
-                WebElement inputNome2 = wait.until(ExpectedConditions.elementToBeClickable(
-                                By.id("cadastroForm:nome")));
-                inputNome2.sendKeys("Cliente CPF Dois");
-                driver.findElement(By.id("cadastroForm:emailCad")).sendKeys(emailUnico2);
-                driver.findElement(By.id("cadastroForm:telefone")).sendKeys("(81) 99999-0011");
-                driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
-                new Select(driver.findElement(By.cssSelector("#cadastroForm select"))).selectByIndex(1);
-                driver.findElement(By.id("cadastroForm:cpf")).sendKeys(cpfUnico); // mesmo CPF!
+        WebElement inputNome2 = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome2.sendKeys("Cliente CPF Dois");
+        driver.findElement(By.id("cadastroForm:emailCad"))
+                .sendKeys("cpfteste2" + System.currentTimeMillis() + "@teste.com");
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys(gerarTelefone());
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select"))).selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf")).sendKeys(cpfUnico);
 
-                aguardar(500);
-                driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
-                aguardar(1000);
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1000);
 
-                WebElement msgErro = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                                By.cssSelector(".msg-error")));
-                assertTrue("Deve exibir erro de CPF duplicado",
-                                msgErro.getText().toLowerCase().contains("cpf") ||
-                                                msgErro.getText().toLowerCase().contains("cadastrado"));
+        WebElement msgErro = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".msg-error")));
+        assertTrue("Deve exibir erro de CPF duplicado",
+                msgErro.getText().toLowerCase().contains("cpf") ||
+                msgErro.getText().toLowerCase().contains("cadastrado"));
 
-                tirarScreenshot("tc40_cpf_duplicado");
-                System.out.println("✅ TC_CAD07 — CPF duplicado exibe erro na etapa 1: " + msgErro.getText());
-        }
+        tirarScreenshot("tc40_cpf_duplicado");
+        System.out.println("✅ TC_CAD07 — CPF duplicado exibe erro: " + msgErro.getText());
+    }
 
         // =========================================================
         // TC41 — BUS01: Busca por nome existente filtra veículos
@@ -1657,96 +1656,96 @@ public class VrumMotorsSeleniumTest {
          * =========================================================
          * TESTES TC51 E TC52 COMENTADOS TEMPORARIAMENTE PARA A SPRINT
          * =========================================================
-         * 
+         *
          * // TC51 — US-11 (Validação): Sistema bloqueia envio sem pagamento
-         * 
+         *
          * @Test
          * public void tc51_us11_validacao_EnviarFabricaSemPagamento() {
          * fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
          * wait.until(ExpectedConditions.urlContains("/vendedor/"));
-         * 
+         *
          * java.util.List<WebElement> botoesGerenciar = driver.findElements(
          * By.xpath("//input[contains(@value,'Gerenciar')]"));
-         * 
+         *
          * if (botoesGerenciar.isEmpty()) {
          * System.out.
          * println("⚠️ TC51 ignorado: Nenhum pedido EM_NEGOCIACAO para testar validação."
          * );
          * return;
          * }
-         * 
+         *
          * botoesGerenciar.get(0).click();
          * aguardar(1500);
-         * 
+         *
          * // Limpa o campo de pagamento para forçar o erro
          * WebElement inputPagamento =
          * wait.until(ExpectedConditions.visibilityOfElementLocated(
          * By.xpath("//input[contains(@placeholder,'Financiamento')]")));
          * inputPagamento.clear();
-         * 
+         *
          * WebElement btnEnviarFabrica = driver.findElement(
          * By.xpath("//input[contains(@value,'Enviar para Fabricação')]"));
          * btnEnviarFabrica.click();
          * aguardar(1500);
-         * 
+         *
          * // Como colocamos o required="true", a mensagem de erro deve aparecer!
          * WebElement msgErro =
          * wait.until(ExpectedConditions.visibilityOfElementLocated(
          * By.cssSelector(".msg-error")));
          * assertTrue("Deve barrar envio sem forma de pagamento",
          * msgErro.isDisplayed());
-         * 
+         *
          * tirarScreenshot("tc51_validacao_pagamento_vazio");
          * System.out.
          * println("✅ TC51 (US-11 Validação) — Sistema bloqueou envio sem pagamento (Trava funcionando!)"
          * );
          * }
-         * 
+         *
          * // TC52 — US-11 (Caminho Feliz): Enviar para fabricação com sucesso
-         * 
+         *
          * @Test
          * public void tc52_us11_enviarParaFabricacao_Sucesso() {
          * fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
          * wait.until(ExpectedConditions.urlContains("/vendedor/"));
-         * 
+         *
          * java.util.List<WebElement> botoesGerenciar = driver.findElements(
          * By.xpath("//input[contains(@value,'Gerenciar')]"));
-         * 
+         *
          * if (botoesGerenciar.isEmpty()) {
          * System.out.
          * println("⚠️ TC52 ignorado: Nenhum pedido EM_NEGOCIACAO para testar envio.");
          * return;
          * }
-         * 
+         *
          * botoesGerenciar.get(0).click();
          * aguardar(1500);
-         * 
+         *
          * // Preenche Forma de Pagamento
          * WebElement inputPagamento =
          * wait.until(ExpectedConditions.visibilityOfElementLocated(
          * By.xpath("//input[contains(@placeholder,'Financiamento')]")));
          * inputPagamento.clear();
          * inputPagamento.sendKeys("Pix à Vista");
-         * 
+         *
          * // Preenche Prazo de Fabricação
          * WebElement inputPrazo = driver.findElement(
          * By.xpath("//input[contains(@placeholder,'dd/MM/yyyy')]"));
          * inputPrazo.clear();
          * inputPrazo.sendKeys("15/06/2026");
-         * 
+         *
          * aguardar(500);
-         * 
+         *
          * WebElement btnEnviarFabrica = driver.findElement(
          * By.xpath("//input[contains(@value,'Enviar para Fabricação')]"));
          * btnEnviarFabrica.click();
-         * 
+         *
          * aguardar(1500);
-         * 
+         *
          * WebElement msgSucesso =
          * wait.until(ExpectedConditions.visibilityOfElementLocated(
          * By.cssSelector(".msg-success")));
          * assertTrue("Mensagem de sucesso deve aparecer", msgSucesso.isDisplayed());
-         * 
+         *
          * tirarScreenshot("tc52_enviar_fabricacao");
          * System.out.
          * println("✅ TC52 (US-11) — Pedido enviado para fabricação com sucesso");
@@ -1887,4 +1886,302 @@ public class VrumMotorsSeleniumTest {
 
                 System.out.println("✅ TC41 — Fluxo do Gerente finalizado com sucesso!");
         }
+
+    // =========================================================
+    // TC55 — Tela de cadastro é pública (sem login)
+    // =========================================================
+    @Test
+    public void tc55_telaCadastroEPublica() {
+        driver.get(CADASTRO_URL);
+
+        // Não deve redirecionar ao login
+        aguardar(1000);
+        assertFalse("Cadastro não deve redirecionar ao login",
+                driver.getCurrentUrl().contains("login"));
+
+        // Formulário deve estar presente
+        WebElement form = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.id("cadastroForm")));
+        assertNotNull("Formulário de cadastro deve existir", form);
+
+        // Campo de nome deve estar visível
+        WebElement inputNome = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.id("cadastroForm:nome")));
+        assertTrue("Campo nome deve estar visível", inputNome.isDisplayed());
+
+        tirarScreenshot("tc55_cadastro_publico");
+        System.out.println("✅ TC55 — Tela de cadastro é pública (sem login)");
+    }
+
+    // =========================================================
+    // TC56 — Todos os botões Comprar levam à tela de cadastro
+    // =========================================================
+    @Test
+    public void tc56_todosComprarLevaoCadastro() {
+        driver.get(HOME_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+
+        int total = driver.findElements(By.xpath("//input[@value='Comprar']")).size();
+        assertTrue("Deve haver ao menos um botão Comprar", total > 0);
+
+        for (int i = 0; i < total; i++) {
+            driver.get(HOME_URL);
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+            aguardar(500);
+
+            java.util.List<WebElement> botoes = driver.findElements(
+                    By.xpath("//input[@value='Comprar']"));
+            botoes.get(i).click();
+
+            wait.until(ExpectedConditions.urlContains("cadastro"));
+            assertTrue("Botão Comprar #" + (i + 1) + " deve levar ao cadastro",
+                    driver.getCurrentUrl().contains("cadastro"));
+
+            System.out.println("   ✔ Botão Comprar #" + (i + 1) + " → " + driver.getCurrentUrl());
+        }
+
+        tirarScreenshot("tc56_comprar_botoes");
+        System.out.println("✅ TC56 — Todos os " + total + " botões Comprar levam ao cadastro");
+    }
+
+    // =========================================================
+    // TC57 — Cor hex funciona na etapa 2 (confirmar compra)
+    // =========================================================
+    @Test
+    public void tc57_corHexFuncionaNaEtapa2() {
+        // Acessa home e clica em Comprar (cliente logado vai direto para etapa 2)
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        driver.get(HOME_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+        aguardar(500);
+
+        WebElement btnComprar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@value='Comprar']")));
+        btnComprar.click();
+        wait.until(ExpectedConditions.urlContains("cadastro"));
+        aguardar(1000);
+
+        // Etapa 2 deve estar visível com o painel do veículo selecionado
+        WebElement colorPicker = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.id("corPicker")));
+        assertNotNull("Seletor de cor deve existir na etapa 2", colorPicker);
+
+        // Define cor via JavaScript (pickers nativos não são controláveis pelo Selenium)
+        String corEscolhida = "#D62828";
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].value = arguments[1]; " +
+                "arguments[0].dispatchEvent(new Event('input'));",
+                colorPicker, corEscolhida);
+        aguardar(500);
+
+        // Verifica que o campo hex foi sincronizado
+        WebElement hexInput = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("[id$='corHex']")));
+        String hexValue = hexInput.getAttribute("value");
+        assertTrue("Campo hex deve conter a cor selecionada",
+                corEscolhida.equalsIgnoreCase(hexValue));
+
+        tirarScreenshot("tc57_cor_hex_etapa2");
+        System.out.println("✅ TC57 — Cor hex sincronizada na etapa 2: " + hexValue);
+    }
+
+    // =========================================================
+    // TC58 — Outros perfis não acessam meus-pedidos do cliente
+    // =========================================================
+    @Test
+    public void tc58_outrosPerfisNaoAcessamMeusPedidos() {
+        String meusPedidosUrl = BASE_URL + "/pages/cliente/meus-pedidos.xhtml";
+        String[][] perfis = {
+            {EMAIL_ADMIN,    SENHA_ADMIN,    "admin"},
+            {EMAIL_GERENTE,  SENHA_GERENTE,  "gerente"},
+            {EMAIL_VENDEDOR, SENHA_VENDEDOR, "vendedor"},
+            {EMAIL_FABRICA,  SENHA_FABRICA,  "fabrica"}
+        };
+
+        for (String[] perfil : perfis) {
+            fazerLogin(perfil[0], perfil[1]);
+            driver.get(meusPedidosUrl);
+            aguardar(1000);
+
+            boolean bloqueado = !driver.getCurrentUrl().contains("meus-pedidos");
+            assertTrue("Perfil '" + perfil[2] + "' não deve acessar meus-pedidos", bloqueado);
+            System.out.println("   ✔ " + perfil[2] + " bloqueado → " + driver.getCurrentUrl());
+
+            driver.get(BASE_URL + "/logout");
+            wait.until(ExpectedConditions.urlContains("login"));
+        }
+
+        tirarScreenshot("tc58_perfis_bloqueados");
+        System.out.println("✅ TC58 — Admin/Gerente/Vendedor/Fábrica bloqueados de meus-pedidos");
+    }
+
+    // =========================================================
+    // TC59 — Pedido novo aparece em meus-pedidos após cadastro
+    // =========================================================
+    @Test
+    public void tc59_pedidoNovoAparece() {
+        driver.get(HOME_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+        aguardar(500);
+
+        WebElement btnComprar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@value='Comprar']")));
+        btnComprar.click();
+        wait.until(ExpectedConditions.urlContains("cadastro"));
+        aguardar(500);
+
+        // Etapa 1
+        WebElement inputNome = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome.sendKeys("Cliente Pedido Teste");
+        driver.findElement(By.id("cadastroForm:emailCad"))
+                .sendKeys("pedidoteste" + System.currentTimeMillis() + "@teste.com");
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys(gerarTelefone());
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select"))).selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf")).sendKeys(gerarCPFValido());
+
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1500);
+
+        // Etapa 2 — confirmar
+        WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Confirmar')] | //button[contains(text(),'Confirmar')]")));
+        btnConfirmar.click();
+        aguardar(2000);
+
+        // Etapa 3 — sucesso
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(),'PEDIDO REALIZADO')]")));
+
+        // Clica em "Acompanhar Pedido" → meus-pedidos
+        WebElement btnAcompanhar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Acompanhar')] | //button[contains(text(),'Acompanhar')]")));
+        btnAcompanhar.click();
+
+        wait.until(ExpectedConditions.urlContains("meus-pedidos"));
+        aguardar(1000);
+
+        // Deve haver ao menos um pedido na página
+        WebElement mainContent = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".main-content")));
+        String conteudo = mainContent.getText();
+        assertFalse("Meus pedidos não deve estar vazio após cadastro", conteudo.isEmpty());
+
+        tirarScreenshot("tc59_pedido_aparece");
+        System.out.println("✅ TC59 — Pedido aparece em meus-pedidos após cadastro");
+    }
+
+    // =========================================================
+    // TC60 — Sessão isolada: cliente B não vê dados do cliente A
+    // =========================================================
+    @Test
+    public void tc60_isolamentoDeSessaoEntreClientes() {
+        // Login do cliente A (padrão do sistema)
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+        String paginaClienteA = driver.getCurrentUrl();
+
+        // Logout do cliente A
+        driver.get(BASE_URL + "/logout");
+        wait.until(ExpectedConditions.urlContains("login"));
+
+        // Registra cliente B via fluxo completo
+        driver.get(HOME_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+        aguardar(500);
+
+        WebElement btnComprar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@value='Comprar']")));
+        btnComprar.click();
+        wait.until(ExpectedConditions.urlContains("cadastro"));
+        aguardar(500);
+
+        WebElement inputNome = wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("cadastroForm:nome")));
+        inputNome.sendKeys("Cliente B Isolamento");
+        driver.findElement(By.id("cadastroForm:emailCad"))
+                .sendKeys("clienteB" + System.currentTimeMillis() + "@teste.com");
+        driver.findElement(By.id("cadastroForm:telefone")).sendKeys(gerarTelefone());
+        driver.findElement(By.id("cadastroForm:senha")).sendKeys("senha123");
+        new Select(driver.findElement(By.cssSelector("#cadastroForm select"))).selectByIndex(1);
+        driver.findElement(By.id("cadastroForm:cpf")).sendKeys(gerarCPFValido());
+
+        aguardar(500);
+        driver.findElement(By.xpath("//input[contains(@value,'Continuar')]")).click();
+        aguardar(1500);
+
+        WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Confirmar')] | //button[contains(text(),'Confirmar')]")));
+        btnConfirmar.click();
+        aguardar(2000);
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(),'PEDIDO REALIZADO')]")));
+
+        // Cliente B vai para meus-pedidos — não deve ver página do cliente A
+        driver.get(BASE_URL + "/pages/cliente/meus-pedidos.xhtml");
+        wait.until(ExpectedConditions.urlContains("meus-pedidos"));
+        aguardar(1000);
+
+        // Tenta acessar diretamente a sessão do cliente A (sem re-login)
+        // O sistema deve servir apenas dados do cliente B (sessão ativa)
+        WebElement mainContent = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".main-content")));
+        String texto = mainContent.getText();
+
+        // Verifica que o nome do cliente A (João Cliente) não está na página do cliente B
+        assertFalse("Cliente B não deve ver dados do Cliente A",
+                texto.contains("João Cliente"));
+
+        // Garante que a sessão está ativa para o cliente B, não A
+        assertTrue("Deve estar na página de meus-pedidos do cliente B",
+                driver.getCurrentUrl().contains("meus-pedidos"));
+
+        tirarScreenshot("tc60_isolamento_sessao");
+        System.out.println("✅ TC60 — Sessão isolada: cliente B não vê dados do cliente A");
+    }
+
+    // =========================================================
+    // HELPERS ADICIONAIS
+    // =========================================================
+
+    /** Gera um CPF matematicamente válido (11 dígitos, dígitos verificadores corretos). */
+    private String gerarCPFValido() {
+        java.util.Random rand = new java.util.Random(System.nanoTime());
+        int[] d = new int[11];
+        // Gera 9 dígitos base, evitando sequências repetidas (ex: 11111111111)
+        do {
+            for (int i = 0; i < 9; i++) d[i] = rand.nextInt(10);
+        } while (todosIguais(d));
+
+        // Primeiro dígito verificador
+        int soma = 0;
+        for (int i = 0; i < 9; i++) soma += d[i] * (10 - i);
+        int r = soma % 11;
+        d[9] = r < 2 ? 0 : 11 - r;
+
+        // Segundo dígito verificador
+        soma = 0;
+        for (int i = 0; i < 10; i++) soma += d[i] * (11 - i);
+        r = soma % 11;
+        d[10] = r < 2 ? 0 : 11 - r;
+
+        return String.format("%d%d%d%d%d%d%d%d%d%d%d",
+                d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10]);
+    }
+
+    private boolean todosIguais(int[] d) {
+        for (int i = 1; i < 9; i++) if (d[i] != d[0]) return false;
+        return true;
+    }
+
+    /** Gera um número de telefone único no formato de máscara esperado. */
+    private String gerarTelefone() {
+        long n = System.nanoTime() % 100000000L;
+        return String.format("(81) 9%04d-%04d", n / 10000, n % 10000);
+    }
 }

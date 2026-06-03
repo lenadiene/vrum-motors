@@ -2,7 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
 
 <h:head>
     <meta charset="UTF-8"/>
@@ -30,6 +31,16 @@
                 if (/[^a-zA-ZÀ-ÿ\s\-'.]/.test(e.key)) {
                     e.preventDefault();
                     vrumMostrarAviso('nome-invalido-msg');
+                    return;
+                }
+                var campo = e.target;
+                var pos = campo.selectionStart;
+                var val = campo.value;
+                if (pos >= 2
+                    &amp;&amp; val[pos-1].toLowerCase() === e.key.toLowerCase()
+                    &amp;&amp; val[pos-2].toLowerCase() === e.key.toLowerCase()) {
+                    e.preventDefault();
+                    vrumMostrarAviso('nome-repetido-msg');
                 }
             }
         }
@@ -44,52 +55,96 @@
                 campo.value = depois;
                 vrumMostrarAviso('nome-invalido-msg');
             }
+            var semTriplo = depois.replace(/(.)\1{2,}/gi, '$1$1');
+            if (semTriplo !== depois) {
+                campo.value = semTriplo;
+                vrumMostrarAviso('nome-repetido-msg');
+            }
             vrumLimite(campo, 'nome-max-msg', 100);
         }
 
         /* ── TELEFONE ───────────────────────────────────────────── */
+        function vrumTelefoneMascara(campo) {
+            var d = campo.value.replace(/\D/g, '').substring(0, 11);
+            if (d.length === 0) { campo.value = ''; return; }
+            var m = '(' + d.substring(0, 2);
+            if (d.length > 2) {
+                m += ') ';
+                if (d.length &lt;= 10) {
+                    m += d.substring(2, 6);
+                    if (d.length > 6) m += '-' + d.substring(6, 10);
+                } else {
+                    m += d.substring(2, 7);
+                    if (d.length > 7) m += '-' + d.substring(7, 11);
+                }
+            }
+            campo.value = m;
+        }
         function vrumTelefoneTecla(e) {
             if (e.key.length === 1 &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey &amp;&amp; !e.altKey) {
-                if (/[^\d\s()\-+.]/.test(e.key)) {
+                if (/\D/.test(e.key)) {
                     e.preventDefault();
                     vrumMostrarAviso('telefone-invalido-msg');
                 }
             }
         }
         function vrumTelefoneInput(campo) {
-            var antes = campo.value;
-            var depois = antes.replace(/[^\d\s()\-+.]/g, '');
-            if (depois !== antes) {
-                campo.value = depois;
-                vrumMostrarAviso('telefone-invalido-msg');
-            }
-            vrumLimite(campo, 'telefone-max-msg', 20);
+            vrumTelefoneMascara(campo);
         }
 
         /* ── CPF ────────────────────────────────────────────────── */
+        function vrumCPFMascara(campo) {
+            var d = campo.value.replace(/\D/g, '').substring(0, 11);
+            if (d.length === 0) { campo.value = ''; return; }
+            var m = d.substring(0, 3);
+            if (d.length > 3) m += '.' + d.substring(3, 6);
+            if (d.length > 6) m += '.' + d.substring(6, 9);
+            if (d.length > 9) m += '-' + d.substring(9, 11);
+            campo.value = m;
+        }
         function vrumCPFTecla(e) {
             if (e.key.length === 1 &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey &amp;&amp; !e.altKey) {
-                if (/[^\d.\-]/.test(e.key)) {
+                if (/\D/.test(e.key)) {
                     e.preventDefault();
                     vrumMostrarAviso('cpf-invalido-msg');
                 }
             }
         }
         function vrumCPFInput(campo) {
-            var antes = campo.value;
-            var depois = antes.replace(/[^\d.\-]/g, '');
-            if (depois !== antes) {
-                campo.value = depois;
-                vrumMostrarAviso('cpf-invalido-msg');
-            }
-            vrumLimite(campo, 'cpf-max-msg', 14);
+            vrumCPFMascara(campo);
+        }
+        function vrumValidarCPF(cpf) {
+            var d = cpf.replace(/\D/g, '');
+            if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+            var soma = 0, i, r;
+            for (i = 0; i &lt; 9; i++) soma += parseInt(d[i]) * (10 - i);
+            r = soma % 11;
+            if (parseInt(d[9]) !== (r &lt; 2 ? 0 : 11 - r)) return false;
+            soma = 0;
+            for (i = 0; i &lt; 10; i++) soma += parseInt(d[i]) * (11 - i);
+            r = soma % 11;
+            return parseInt(d[10]) === (r &lt; 2 ? 0 : 11 - r);
+        }
+        function vrumCPFBlur(campo) {
+            var msg = document.getElementById('cpf-formato-msg');
+            if (!msg) return;
+            var v = campo.value.trim();
+            if (v.length === 0) { msg.style.display = 'none'; return; }
+            msg.style.display = vrumValidarCPF(v) ? 'none' : 'block';
         }
 
         /* ── NOME BLUR ──────────────────────────────────────────── */
         function vrumNomeBlur(campo) {
-            var msg = document.getElementById('nome-vazio-msg');
-            if (!msg) return;
-            msg.style.display = campo.value.trim().length &lt; 2 ? 'block' : 'none';
+            var msgVazio = document.getElementById('nome-vazio-msg');
+            var msgRepetido = document.getElementById('nome-repetido-msg');
+            if (msgVazio) msgVazio.style.display = campo.value.trim().length &lt; 2 ? 'block' : 'none';
+            if (msgRepetido) msgRepetido.style.display = /(.)\1{2,}/i.test(campo.value) ? 'block' : 'none';
+        }
+
+        /* ── COR ────────────────────────────────────────────────── */
+        function vrumCorChange(picker) {
+            var hexInput = document.querySelector('[id$="corHex"]');
+            if (hexInput) hexInput.value = picker.value;
         }
 
         /* ── E-MAIL BLUR ────────────────────────────────────────── */
@@ -101,6 +156,44 @@
             if (v.length === 0) { msg.style.display = 'none'; return; }
             msg.style.display = emailRegex.test(v) ? 'none' : 'block';
         }
+
+        /* ── HABILITAR BOTÃO ─────────────────────────────────────── */
+        function vrumVerificarFormulario() {
+            var btn = document.querySelector('[id$="btnContinuar"]');
+            if (!btn) return;
+            var nome    = document.querySelector('[id$=":nome"]');
+            var email   = document.querySelector('[id$=":emailCad"]');
+            var cpf     = document.querySelector('[id$=":cpf"]');
+            var tel     = document.querySelector('[id$=":telefone"]');
+            var senha   = document.querySelector('[id$=":senha"]');
+            var concess = document.querySelector('[id$=":concessSel"]');
+            var nomeVal   = nome    ? nome.value.trim()              : '';
+            var emailVal  = email   ? email.value.trim()             : '';
+            var cpfVal    = cpf     ? cpf.value.trim()               : '';
+            var telDigits = tel     ? tel.value.replace(/\D/g, '')   : '';
+            var senhaVal  = senha   ? senha.value                    : '';
+            var ccessVal  = concess ? concess.value                  : '';
+            var ok = nomeVal.length >= 2
+                &amp;&amp; /^[a-zA-ZÀ-ÿ\s\-'.]+$/.test(nomeVal)
+                &amp;&amp; !/(.)\1{2,}/i.test(nomeVal)
+                &amp;&amp; emailRegex.test(emailVal)
+                &amp;&amp; vrumValidarCPF(cpfVal)
+                &amp;&amp; (telDigits.length === 10 || telDigits.length === 11)
+                &amp;&amp; senhaVal.length >= 6
+                &amp;&amp; ccessVal !== '';
+            btn.disabled = !ok;
+            btn.style.background  = ok ? '' : '#5A5A5A';
+            btn.style.color       = ok ? '' : '#9A9A9A';
+            btn.style.cursor      = ok ? '' : 'not-allowed';
+            btn.style.boxShadow   = ok ? '' : 'none';
+            btn.style.transform   = ok ? '' : 'none';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            vrumVerificarFormulario();
+            document.addEventListener('input',  vrumVerificarFormulario, true);
+            document.addEventListener('change', vrumVerificarFormulario, true);
+            document.addEventListener('blur',   vrumVerificarFormulario, true);
+        });
     </script>
 </h:head>
 
@@ -151,7 +244,7 @@
                                          styleClass="form-control"
                                          maxlength="100"
                                          onkeydown="vrumNomeTecla(event)"
-                                         oninput="vrumNomeInput(this)"
+                                         pt:oninput="vrumNomeInput(this)"
                                          onblur="vrumNomeBlur(this)"
                                          placeholder="João da Silva">
                                 <f:validateLength minimum="2" maximum="100"/>
@@ -159,6 +252,7 @@
                             <h:message for="nome" style="color:#FF6B6B; font-size:0.8rem; display:block; margin-top:4px;"/>
                             <span id="nome-invalido-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Apenas letras, espaços e hífens são permitidos no nome.</span>
                             <span id="nome-vazio-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Nome deve ter ao menos 2 caracteres e não pode ser só espaços.</span>
+                            <span id="nome-repetido-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Nome inválido. Não são permitidas três letras iguais seguidas.</span>
                             <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Limite de 100 caracteres atingido.</span>
                         </div>
                         <div class="form-group">
@@ -168,7 +262,7 @@
                                          requiredMessage="E-mail é obrigatório."
                                          styleClass="form-control"
                                          maxlength="150"
-                                         oninput="vrumLimite(this,'email-max-msg',150)"
+                                         pt:oninput="vrumLimite(this,'email-max-msg',150)"
                                          onblur="vrumEmailBlur(this)"
                                          placeholder="joao@email.com">
                                 <f:validateLength minimum="5" maximum="150"/>
@@ -185,13 +279,14 @@
                                          styleClass="form-control"
                                          maxlength="14"
                                          onkeydown="vrumCPFTecla(event)"
-                                         oninput="vrumCPFInput(this)"
+                                         pt:oninput="vrumCPFInput(this)"
+                                         onblur="vrumCPFBlur(this)"
                                          placeholder="000.000.000-00">
                                 <f:validateLength maximum="14"/>
                             </h:inputText>
                             <h:message for="cpf" style="color:#FF6B6B; font-size:0.8rem; display:block; margin-top:4px;"/>
-                            <span id="cpf-invalido-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">CPF aceita apenas dígitos, pontos e hífen.</span>
-                            <span id="cpf-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Limite de 14 caracteres atingido.</span>
+                            <span id="cpf-invalido-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">CPF aceita apenas dígitos.</span>
+                            <span id="cpf-formato-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">CPF inválido. Verifique os dígitos informados.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Telefone / WhatsApp *</label>
@@ -199,15 +294,14 @@
                                          required="#{cadastroBean.etapa == 1}"
                                          requiredMessage="Telefone é obrigatório."
                                          styleClass="form-control"
-                                         maxlength="20"
+                                         maxlength="15"
                                          onkeydown="vrumTelefoneTecla(event)"
-                                         oninput="vrumTelefoneInput(this)"
+                                         pt:oninput="vrumTelefoneInput(this)"
                                          placeholder="(81) 99999-9999">
-                                <f:validateLength minimum="8" maximum="20"/>
+                                <f:validateLength minimum="8" maximum="15"/>
                             </h:inputText>
                             <h:message for="telefone" style="color:#FF6B6B; font-size:0.8rem; display:block; margin-top:4px;"/>
-                            <span id="telefone-invalido-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Telefone aceita apenas números e símbolos como (), - e +.</span>
-                            <span id="telefone-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Limite de 20 caracteres atingido.</span>
+                            <span id="telefone-invalido-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Telefone aceita apenas números.</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Senha *</label>
@@ -217,7 +311,7 @@
                                            styleClass="form-control"
                                            redisplay="true"
                                            maxlength="50"
-                                           oninput="vrumLimite(this,'senha-max-msg',50)"
+                                           pt:oninput="vrumLimite(this,'senha-max-msg',50)"
                                            onkeyup="vrumLimite(this,'senha-max-msg',50)"
                                            placeholder="Mínimo 6 caracteres">
                                 <f:validateLength minimum="6" maximum="50"/>
@@ -227,7 +321,7 @@
                         </div>
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Sua Cidade / Concessionária *</label>
-                            <h:selectOneMenu value="#{cadastroBean.concessionariaId}"
+                            <h:selectOneMenu id="concessSel" value="#{cadastroBean.concessionariaId}"
                                              required="#{cadastroBean.etapa == 1}" styleClass="form-control">
                                 <f:selectItem itemLabel="Selecione sua cidade..." itemValue="#{null}"/>
                                 <f:selectItems value="#{cadastroBean.concessionarias}"
@@ -237,7 +331,7 @@
                             </h:selectOneMenu>
                         </div>
                     </div>
-                    <h:commandButton value="Continuar →"
+                    <h:commandButton id="btnContinuar" value="Continuar →"
                                      action="#{cadastroBean.avancarEtapa}"
                                      styleClass="btn btn-primary w-100 mt-16"/>
                 </div>
@@ -263,12 +357,18 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Cor desejada (opcional)</label>
-                            <h:inputText value="#{cadastroBean.corEscolhida}"
-                                         styleClass="form-control"
-                                         maxlength="30"
-                                         oninput="if(this.value.length >= 30) document.getElementById('cor-max-msg').style.display='block'; else document.getElementById('cor-max-msg').style.display='none';"
-                                         placeholder="Ex: Preto, Prata, Branco..."/>
-                            <span id="cor-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 30 caracteres.</span>
+                            <div style="display:flex; gap:10px; align-items:center; margin-top:4px">
+                                <input type="color" id="corPicker"
+                                       oninput="vrumCorChange(this)"
+                                       style="width:48px; height:40px; border:2px solid #3A3A3A; border-radius:6px; cursor:pointer; padding:2px; background:#1A1A1A"/>
+                                <h:inputText id="corHex" value="#{cadastroBean.corEscolhida}"
+                                             styleClass="form-control"
+                                             maxlength="7"
+                                             readonly="readonly"
+                                             style="font-family:monospace; flex:1; cursor:pointer"
+                                             onclick="document.getElementById('corPicker').click()"
+                                             placeholder="Clique para escolher uma cor"/>
+                            </div>
                         </div>
                     </h:panelGroup>
 

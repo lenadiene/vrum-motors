@@ -2,12 +2,19 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
 
 <h:head>
     <meta charset="UTF-8"/>
     <title>Novo Pedido — Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <script type="text/javascript">
+        function vrumCorChangeNP(picker) {
+            var hexInput = document.querySelector('[id$="corHexNP"]');
+            if (hexInput) hexInput.value = picker.value;
+        }
+    </script>
 </h:head>
 
 <h:body>
@@ -98,10 +105,19 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Cor desejada *</label>
-                            <h:inputText value="#{novoPedidoBean.corEscolhida}"
-                                         styleClass="form-control"
-                                         placeholder="Ex: Preto Meia-Noite, Branco Pérola..."
-                                         maxlength="50" required="true"/>
+                            <div style="display:flex; gap:10px; align-items:center; margin-top:4px">
+                                <input type="color" id="corPickerNP"
+                                       oninput="vrumCorChangeNP(this)"
+                                       style="width:48px; height:40px; border:2px solid #3A3A3A; border-radius:6px; cursor:pointer; padding:2px; background:#1A1A1A"/>
+                                <h:inputText id="corHexNP" value="#{novoPedidoBean.corEscolhida}"
+                                             styleClass="form-control"
+                                             maxlength="7"
+                                             readonly="readonly"
+                                             style="font-family:monospace; flex:1; cursor:pointer"
+                                             onclick="document.getElementById('corPickerNP').click()"
+                                             placeholder="Clique para escolher uma cor"
+                                             required="true"/>
+                            </div>
                         </div>
                     </div>
 
