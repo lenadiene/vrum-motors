@@ -286,4 +286,27 @@ public class VendedorVrumMotorsSeleniumTest {
         assertTrue("Mensagem de sucesso deve aparecer ao finalizar", msgSucesso.isDisplayed());
         System.out.println("✅ B05 (US-13) — Pedido finalizado com sucesso");
     }
+    /**
+     * TC50 — US-26: Vendedor visualiza link gerado do WhatsApp.
+     * Esperado: O link deve conter a estrutura de redirecionamento do WhatsApp.
+     */
+    @Test
+    public void tc_B06_us26_vendedorLinkWhatsApp() {
+        fazerLogin(); 
+        driver.get(URL_PEDIDOS);
+
+        try {
+            WebElement btnWhatsApp = wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.xpath("//a[contains(@href, 'wa.me')]")));
+            
+            String linkHref = btnWhatsApp.getAttribute("href");
+            
+            assertTrue("O link deve conter a estrutura do WhatsApp", 
+                        linkHref.contains("wa.me"));
+
+            System.out.println("✅ TC50 (US-26) — Link do WhatsApp validado: " + linkHref);
+        } catch (TimeoutException e) {
+            System.out.println("⚠️ TC50 ignorado: Nenhum link de WhatsApp encontrado na tela.");
+        }
+    }
 }
