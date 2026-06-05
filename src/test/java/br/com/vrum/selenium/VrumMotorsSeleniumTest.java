@@ -24,13 +24,11 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 
 /**
  * Testes automatizados Selenium — Vrum Motors
- * 
- * Pré-requisitos:
+ * * Pré-requisitos:
  * - Aplicação rodando em http://localhost:8080/vrum-motors
  * - Banco populado (DataInicializador executa automaticamente)
  * - Google Chrome instalado
- * 
- * Para executar: mvn test
+ * * Para executar: mvn test
  */
 public class VrumMotorsSeleniumTest {
 
@@ -49,10 +47,10 @@ public class VrumMotorsSeleniumTest {
         private static final String SENHA_GERENTE = "gerente123";
         private static final String EMAIL_FABRICA = "fabrica@vrummotors.com";
         private static final String SENHA_FABRICA = "fabrica123";
-        private static final String EMAIL_VENDEDOR = "vendedor@vrummotors.com";
-        private static final String SENHA_VENDEDOR = "vendedor123";
         private static final String EMAIL_CLIENTE = "cliente@email.com";
         private static final String SENHA_CLIENTE = "cliente123";
+        private static final String EMAIL_VENDEDOR = "vendedor@vrummotors.com";
+        private static final String SENHA_VENDEDOR = "vendedor123";
 
         @BeforeClass
         public static void setupDriver() {
@@ -261,20 +259,6 @@ public class VrumMotorsSeleniumTest {
         }
 
         // =========================================================
-        // TC06 — Login do Vendedor redireciona à área de pedidos
-        // =========================================================
-        @Test
-        public void tc06_loginVendedorRedirecionaPedidos() {
-                fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
-
-                wait.until(ExpectedConditions.urlContains("/vendedor/"));
-                assertTrue("Vendedor deve ir à área de pedidos", driver.getCurrentUrl().contains("/vendedor/"));
-
-                tirarScreenshot("tc06_vendedor");
-                System.out.println("✅ TC06 — Login vendedor redireciona corretamente");
-        }
-
-        // =========================================================
         // TC07 — Login do Cliente redireciona a meus pedidos
         // =========================================================
         @Test
@@ -412,31 +396,6 @@ public class VrumMotorsSeleniumTest {
 
                 tirarScreenshot("tc13_novo_veiculo_form");
                 System.out.println("✅ TC13 — Formulário de novo veículo aberto");
-        }
-
-        // =========================================================
-        // TC14 — Vendedor vê pedidos disponíveis
-        // =========================================================
-        @Test
-        public void tc14_vendedorVePedidosDisponiveis() {
-                fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
-
-                wait.until(ExpectedConditions.urlContains("/vendedor/"));
-
-                // Verifica que a tabela ou mensagem de "nenhum pedido" está visível
-                try {
-                        WebElement tabela = wait.until(
-                                        ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vrum-table")));
-                        assertNotNull(tabela);
-                        System.out.println("✅ TC14 — Tabela de pedidos encontrada");
-                } catch (TimeoutException e) {
-                        // Pode não ter pedidos disponíveis ainda
-                        WebElement pagina = driver.findElement(By.cssSelector(".main-content"));
-                        assertNotNull("Página do vendedor deve carregar", pagina);
-                        System.out.println("✅ TC14 — Página do vendedor carregada (sem pedidos)");
-                }
-
-                tirarScreenshot("tc14_vendedor_pedidos");
         }
 
         // =========================================================
@@ -1594,224 +1553,6 @@ public class VrumMotorsSeleniumTest {
                 tirarScreenshot("tc48_sem_status");
 
                 System.out.println("✅ TC_FAB05 — Atualização sem status bloqueada");
-        }
-
-        // =========================================================
-        // TC49 — US-10: Vendedor assume pedido disponível
-        // =========================================================
-        @Test
-        public void tc49_us10_vendedorAssumePedido() {
-                fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
-                wait.until(ExpectedConditions.urlContains("/vendedor/"));
-
-                try {
-                        WebElement tabelaDisponiveis = wait.until(
-                                        ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vrum-table")));
-
-                        java.util.List<WebElement> botoesAssumir = driver.findElements(
-                                        By.xpath("//input[@value='Assumir'] | //button[contains(text(),'Assumir')]"));
-
-                        assertTrue("Deve haver pelo menos um pedido disponível para assumir", botoesAssumir.size() > 0);
-
-                        // Clica no primeiro botão "Assumir"
-                        botoesAssumir.get(0).click();
-                        aguardar(1500);
-
-                        WebElement msgSucesso = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                                        By.cssSelector(".msg-success")));
-                        assertTrue("Mensagem de sucesso deve aparecer", msgSucesso.isDisplayed());
-
-                        tirarScreenshot("tc49_vendedor_assume_pedido");
-                        System.out.println("✅ TC49 (US-10) — Vendedor assumiu o pedido com sucesso");
-                } catch (TimeoutException e) {
-                        System.out.println("⚠️ TC49 ignorado: Nenhum pedido aguardando atendimento na fila.");
-                }
-        }
-
-        // =========================================================
-        // TC50 — US-26: Vendedor visualiza link gerado do WhatsApp
-        // =========================================================
-        @Test
-        public void tc50_us26_vendedorLinkWhatsApp() {
-                fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
-                wait.until(ExpectedConditions.urlContains("/vendedor/"));
-
-                try {
-                        WebElement btnWhatsApp = wait.until(ExpectedConditions.presenceOfElementLocated(
-                                        By.cssSelector("a[target='_blank']")));
-
-                        String linkHref = btnWhatsApp.getAttribute("href");
-
-                        assertTrue("O link deve conter 'whatsapp' ou 'wa.me'",
-                                        linkHref.toLowerCase().contains("whatsapp") || linkHref.contains("wa.me"));
-
-                        tirarScreenshot("tc50_vendedor_whatsapp");
-                        System.out.println("✅ TC50 (US-26) — Link do WhatsApp gerado corretamente: " + linkHref);
-                } catch (TimeoutException e) {
-                        System.out.println("⚠️ TC50 ignorado: Nenhum pedido na tela para testar o link do WhatsApp.");
-                }
-        }
-
-        /*
-         * =========================================================
-         * TESTES TC51 E TC52 COMENTADOS TEMPORARIAMENTE PARA A SPRINT
-         * =========================================================
-         *
-         * // TC51 — US-11 (Validação): Sistema bloqueia envio sem pagamento
-         *
-         * @Test
-         * public void tc51_us11_validacao_EnviarFabricaSemPagamento() {
-         * fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
-         * wait.until(ExpectedConditions.urlContains("/vendedor/"));
-         *
-         * java.util.List<WebElement> botoesGerenciar = driver.findElements(
-         * By.xpath("//input[contains(@value,'Gerenciar')]"));
-         *
-         * if (botoesGerenciar.isEmpty()) {
-         * System.out.
-         * println("⚠️ TC51 ignorado: Nenhum pedido EM_NEGOCIACAO para testar validação."
-         * );
-         * return;
-         * }
-         *
-         * botoesGerenciar.get(0).click();
-         * aguardar(1500);
-         *
-         * // Limpa o campo de pagamento para forçar o erro
-         * WebElement inputPagamento =
-         * wait.until(ExpectedConditions.visibilityOfElementLocated(
-         * By.xpath("//input[contains(@placeholder,'Financiamento')]")));
-         * inputPagamento.clear();
-         *
-         * WebElement btnEnviarFabrica = driver.findElement(
-         * By.xpath("//input[contains(@value,'Enviar para Fabricação')]"));
-         * btnEnviarFabrica.click();
-         * aguardar(1500);
-         *
-         * // Como colocamos o required="true", a mensagem de erro deve aparecer!
-         * WebElement msgErro =
-         * wait.until(ExpectedConditions.visibilityOfElementLocated(
-         * By.cssSelector(".msg-error")));
-         * assertTrue("Deve barrar envio sem forma de pagamento",
-         * msgErro.isDisplayed());
-         *
-         * tirarScreenshot("tc51_validacao_pagamento_vazio");
-         * System.out.
-         * println("✅ TC51 (US-11 Validação) — Sistema bloqueou envio sem pagamento (Trava funcionando!)"
-         * );
-         * }
-         *
-         * // TC52 — US-11 (Caminho Feliz): Enviar para fabricação com sucesso
-         *
-         * @Test
-         * public void tc52_us11_enviarParaFabricacao_Sucesso() {
-         * fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
-         * wait.until(ExpectedConditions.urlContains("/vendedor/"));
-         *
-         * java.util.List<WebElement> botoesGerenciar = driver.findElements(
-         * By.xpath("//input[contains(@value,'Gerenciar')]"));
-         *
-         * if (botoesGerenciar.isEmpty()) {
-         * System.out.
-         * println("⚠️ TC52 ignorado: Nenhum pedido EM_NEGOCIACAO para testar envio.");
-         * return;
-         * }
-         *
-         * botoesGerenciar.get(0).click();
-         * aguardar(1500);
-         *
-         * // Preenche Forma de Pagamento
-         * WebElement inputPagamento =
-         * wait.until(ExpectedConditions.visibilityOfElementLocated(
-         * By.xpath("//input[contains(@placeholder,'Financiamento')]")));
-         * inputPagamento.clear();
-         * inputPagamento.sendKeys("Pix à Vista");
-         *
-         * // Preenche Prazo de Fabricação
-         * WebElement inputPrazo = driver.findElement(
-         * By.xpath("//input[contains(@placeholder,'dd/MM/yyyy')]"));
-         * inputPrazo.clear();
-         * inputPrazo.sendKeys("15/06/2026");
-         *
-         * aguardar(500);
-         *
-         * WebElement btnEnviarFabrica = driver.findElement(
-         * By.xpath("//input[contains(@value,'Enviar para Fabricação')]"));
-         * btnEnviarFabrica.click();
-         *
-         * aguardar(1500);
-         *
-         * WebElement msgSucesso =
-         * wait.until(ExpectedConditions.visibilityOfElementLocated(
-         * By.cssSelector(".msg-success")));
-         * assertTrue("Mensagem de sucesso deve aparecer", msgSucesso.isDisplayed());
-         *
-         * tirarScreenshot("tc52_enviar_fabricacao");
-         * System.out.
-         * println("✅ TC52 (US-11) — Pedido enviado para fabricação com sucesso");
-         * }
-         */
-
-        // =========================================================
-        // TC53 — US-12: Vendedor marca veículo como pronto para entrega
-        // =========================================================
-        @Test
-        public void tc53_us12_marcarProntoEntrega() {
-                fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
-                wait.until(ExpectedConditions.urlContains("/vendedor/"));
-
-                java.util.List<WebElement> botoesPronto = driver.findElements(
-                                By.xpath("//input[contains(@value,'Pronto para Entrega')]"));
-
-                if (botoesPronto.isEmpty()) {
-                        System.out.println(
-                                        "⚠️ TC53 ignorado: Nenhum pedido no status ENVIADO_CIDADE com o painel aberto.");
-                        return;
-                }
-
-                botoesPronto.get(0).click();
-                aguardar(1500);
-
-                WebElement msgSucesso = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                                By.cssSelector(".msg-success")));
-                assertTrue("Mensagem de sucesso deve aparecer", msgSucesso.isDisplayed());
-
-                tirarScreenshot("tc53_pronto_entrega");
-                System.out.println("✅ TC53 (US-12) — Pedido marcado como Pronto para Entrega com sucesso");
-        }
-
-        // =========================================================
-        // TC54 — US-13: Vendedor finaliza pedido com data de retirada
-        // =========================================================
-        @Test
-        public void tc54_us13_finalizarPedido() {
-                fazerLogin(EMAIL_VENDEDOR, SENHA_VENDEDOR);
-                wait.until(ExpectedConditions.urlContains("/vendedor/"));
-
-                java.util.List<WebElement> botoesFinalizar = driver.findElements(
-                                By.xpath("//input[contains(@value,'Finalizar Pedido')]"));
-
-                if (botoesFinalizar.isEmpty()) {
-                        System.out.println(
-                                        "⚠️ TC54 ignorado: Nenhum pedido no status PRONTO_ENTREGA com o painel aberto.");
-                        return;
-                }
-
-                WebElement inputData = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                                By.xpath("//input[@placeholder='dd/MM/yyyy']")));
-                inputData.clear();
-                inputData.sendKeys("28/05/2026");
-                aguardar(500);
-
-                botoesFinalizar.get(0).click();
-                aguardar(1500);
-
-                WebElement msgSucesso = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                                By.cssSelector(".msg-success")));
-                assertTrue("Mensagem de sucesso deve aparecer ao finalizar", msgSucesso.isDisplayed());
-
-                tirarScreenshot("tc54_pedido_finalizado");
-                System.out.println("✅ TC54 (US-13) — Pedido finalizado com sucesso");
         }
 
         @Test

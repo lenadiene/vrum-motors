@@ -31,14 +31,13 @@
 
     <main class="main-content">
         <div class="page-header">
-            <h1>Gestão de Pedidos</h1>
+            <h1>Gestão de Pedido</h1>
             <p>Concessionária: #{vendedorBean.vendedor.concessionaria.nome}</p>
         </div>
 
         <h:form enctype="multipart/form-data">
-            <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
+            <h:messages globalOnly="false" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
 
-            <!-- FILA DISPONÍVEL -->
             <div class="card">
                 <div class="card-header">
                     Fila de Pedidos Disponíveis
@@ -88,7 +87,6 @@
                 </h:panelGroup>
             </div>
 
-            <!-- MEUS PEDIDOS -->
             <div class="card">
                 <div class="card-header">Meus Pedidos em Andamento</div>
 
@@ -134,7 +132,6 @@
                             </h:panelGroup>
                         </div>
 
-                        <!-- Ações conforme status -->
                         <div style="display:flex; gap:10px; flex-wrap:wrap">
                             <a href="#{vendedorBean.gerarLinkWhatsapp(p)}" target="_blank"
                                class="btn btn-ghost btn-sm">💬 WhatsApp</a>
@@ -147,7 +144,6 @@
                 </ui:repeat>
             </div>
 
-            <!-- PAINEL DE GESTÃO DO PEDIDO SELECIONADO -->
             <h:panelGroup rendered="#{vendedorBean.pedidoSelecionado != null}">
                 <div class="card" style="border:2px solid #D62828">
                     <div class="card-header" style="color:#D62828">
@@ -156,7 +152,6 @@
 
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px">
 
-                        <!-- Info do pedido -->
                         <div>
                             <p style="font-size:0.8rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px">Detalhes do Pedido</p>
                             <table style="width:100%; font-size:0.87rem; border-collapse:collapse">
@@ -195,11 +190,9 @@
                             </table>
                         </div>
 
-                        <!-- Ações -->
                         <div>
                             <p style="font-size:0.8rem; color:#9A9A9A; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px">Ações</p>
 
-                            <!-- Enviar para fabricação (inclui upload do contrato) -->
                             <h:panelGroup rendered="#{vendedorBean.pedidoSelecionado.status.name() == 'EM_NEGOCIACAO'}">
                                 <div style="margin-bottom:16px">
                                     <div class="form-group">
@@ -207,17 +200,19 @@
                                         <h:inputText value="#{vendedorBean.formaPagamento}"
                                                      styleClass="form-control"
                                                      placeholder="Financiamento, À Vista..."
+                                                     maxlength="50"
                                                      required="true"
                                                      requiredMessage="A forma de pagamento é obrigatória!"/>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Prazo de Fabricação</label>
-                                        <h:inputText value="#{vendedorBean.prazoFabricacao}"
+                                        <label class="form-label">Prazo de Fabricação (em dias)</label>
+                                        <h:inputText value="#{vendedorBean.prazoEmDias}"
                                                      styleClass="form-control"
-                                                     placeholder="dd/MM/yyyy"
-                                                     converter="localDateConverter"
+                                                     placeholder="Ex: 90, 120"
                                                      required="true"
-                                                     requiredMessage="O prazo de fabricação é obrigatório!"/>
+                                                     requiredMessage="O prazo de fabricação é obrigatório!"
+                                                     maxlength="4"
+                                                     oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Contrato (opcional)</label>
@@ -230,7 +225,6 @@
                                 </div>
                             </h:panelGroup>
 
-                            <!-- Marcar pronto para entrega -->
                             <h:panelGroup rendered="#{vendedorBean.pedidoSelecionado.status.name() == 'ENVIADO_CIDADE'}">
                                 <div style="margin-bottom:16px">
                                     <p style="color:#9A9A9A; font-size:0.85rem; margin-bottom:12px">O veículo chegou na loja?</p>
@@ -240,7 +234,6 @@
                                 </div>
                             </h:panelGroup>
 
-                            <!-- Finalizar pedido -->
                             <h:panelGroup rendered="#{vendedorBean.pedidoSelecionado.status.name() == 'PRONTO_ENTREGA'}">
                                 <div style="margin-bottom:16px">
                                     <div class="form-group">
@@ -258,7 +251,6 @@
                                 </div>
                             </h:panelGroup>
 
-                            <!-- Status sem ação disponível -->
                             <h:panelGroup rendered="#{vendedorBean.pedidoSelecionado.status.name() == 'EM_FABRICACAO'
                                                    or vendedorBean.pedidoSelecionado.status.name() == 'FABRICADO'
                                                    or vendedorBean.pedidoSelecionado.status.name() == 'FINALIZADO'
@@ -277,4 +269,3 @@
 </div>
 </h:body>
 </html>
-

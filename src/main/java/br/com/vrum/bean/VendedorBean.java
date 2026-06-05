@@ -9,6 +9,7 @@ import jakarta.inject.Named;
 import jakarta.faces.view.ViewScoped;
 import jakarta.faces.context.FacesContext;
 import jakarta.servlet.http.Part;
+import jakarta.inject.Inject; 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -32,14 +33,17 @@ public class VendedorBean implements Serializable {
     private Pedido pedidoSelecionado;
     private List<Anexo> anexosPedidoSelecionado = Collections.emptyList();
 
-    private LocalDate prazoFabricacao;
+    // Variaveis de tela
+    private Integer prazoEmDias; 
     private LocalDate prazoEntrega;
     private LocalDate dataRetirada;
     private String formaPagamento;
     private String observacao;
     private Part arquivoAnexo;
 
-    private final PedidoService service = new PedidoService();
+
+    @Inject
+    private PedidoService service;
 
     @PostConstruct
     public void init() {
@@ -70,15 +74,26 @@ public class VendedorBean implements Serializable {
         this.pedidoSelecionado = service.buscarPorId(pedido.getId());
         this.anexosPedidoSelecionado = service.listarAnexos(pedidoSelecionado);
         this.formaPagamento = pedidoSelecionado.getFormaPagamento();
-        this.prazoFabricacao = pedidoSelecionado.getPrazoFabricacao();
+        
+        
+        this.prazoEmDias = null;
         this.arquivoAnexo = null;
     }
 
     public void enviarParaFabricacao() {
         try {
-            service.enviarParaFabricacao(pedidoSelecionado, prazoFabricacao, formaPagamento);
-        } catch (Exception e) {
+            LocalDate dataCalculada = null;
+            if (this.prazoEmDias != null) {
+                dataCalculada = LocalDate.now().plusDays(this.prazoEmDias);
+            }
+
+            service.enviarParaFabricacao(pedidoSelecionado, dataCalculada, formaPagamento);
+            
+        } catch (IllegalArgumentException | IllegalStateException e) {
             addErro(e.getMessage());
+            return;
+        } catch (Exception e) {
+            addErro("Ocorreu um erro inesperado: " + e.getMessage());
             return;
         }
 
@@ -98,7 +113,10 @@ public class VendedorBean implements Serializable {
         carregarPedidos();
         pedidoSelecionado = service.buscarPorId(pedidoSelecionado.getId());
         anexosPedidoSelecionado = service.listarAnexos(pedidoSelecionado);
+        
         arquivoAnexo = null;
+        formaPagamento = null;
+        prazoEmDias = null; 
     }
 
     public void marcarProntoEntrega() {
@@ -201,8 +219,11 @@ public class VendedorBean implements Serializable {
     public Pedido getPedidoSelecionado() { return pedidoSelecionado; }
     public void setPedidoSelecionado(Pedido p) { this.pedidoSelecionado = p; }
     public List<Anexo> getAnexosPedidoSelecionado() { return anexosPedidoSelecionado; }
-    public LocalDate getPrazoFabricacao() { return prazoFabricacao; }
-    public void setPrazoFabricacao(LocalDate d) { this.prazoFabricacao = d; }
+    
+    
+    public Integer getPrazoEmDias() { return prazoEmDias; }
+    public void setPrazoEmDias(Integer d) { this.prazoEmDias = d; }
+    
     public LocalDate getPrazoEntrega() { return prazoEntrega; }
     public void setPrazoEntrega(LocalDate d) { this.prazoEntrega = d; }
     public LocalDate getDataRetirada() { return dataRetirada; }
