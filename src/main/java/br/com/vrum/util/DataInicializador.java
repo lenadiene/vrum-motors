@@ -8,7 +8,6 @@ import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import java.beans.Introspector;
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * Roda ao subir a aplicação e insere dados iniciais se o banco estiver vazio.
@@ -24,75 +23,89 @@ public class DataInicializador implements ServletContextListener {
             ConcessionariaDAO concDAO = new ConcessionariaDAO();
             VeiculoDAO veiculoDAO = new VeiculoDAO();
 
-            // Só inicializa se não houver usuários
-            List<?> usuarios = usuarioDAO.listarTodos();
-            if (!usuarios.isEmpty()) return;
-
-            System.out.println(">>> Vrum Motors: inicializando dados de exemplo...");
+            System.out.println(">>> Vrum Motors: garantindo dados de exemplo...");
 
             // ---- Admin Empresa ----
-            AdminEmpresa admin = new AdminEmpresa();
-            admin.setNome("Administrador Vrum");
-            admin.setEmail("admin@vrummotors.com");
-            admin.setSenha(SenhaUtil.hashSenha("admin123"));
-            admin.setTelefone("81900000001");
-            usuarioDAO.salvar(admin);
+            if (usuarioDAO.buscarPorEmail("admin@vrummotors.com") == null) {
+                AdminEmpresa admin = new AdminEmpresa();
+                admin.setNome("Administrador Vrum");
+                admin.setEmail("admin@vrummotors.com");
+                admin.setSenha(SenhaUtil.hashSenha("admin123"));
+                admin.setTelefone("81900000001");
+                usuarioDAO.salvar(admin);
+            }
 
             // ---- Admin Fábrica ----
-            AdminFabrica fabrica = new AdminFabrica();
-            fabrica.setNome("Carlos Fábrica");
-            fabrica.setEmail("fabrica@vrummotors.com");
-            fabrica.setSenha(SenhaUtil.hashSenha("fabrica123"));
-            fabrica.setTelefone("81900000002");
-            usuarioDAO.salvar(fabrica);
+            if (usuarioDAO.buscarPorEmail("fabrica@vrummotors.com") == null) {
+                AdminFabrica fabrica = new AdminFabrica();
+                fabrica.setNome("Carlos Fábrica");
+                fabrica.setEmail("fabrica@vrummotors.com");
+                fabrica.setSenha(SenhaUtil.hashSenha("fabrica123"));
+                fabrica.setTelefone("81900000002");
+                usuarioDAO.salvar(fabrica);
+            }
 
             // ---- Concessionárias ----
-            Concessionaria recife = new Concessionaria();
-            recife.setNome("Vrum Motors Recife");
-            recife.setCidade("Recife");
-            recife.setEstado("PE");
-            recife.setEndereco("Av. Boa Viagem, 1000");
-            recife.setTelefone("8132000001");
-            concDAO.salvar(recife);
+            Concessionaria recife = concDAO.buscarPorCidade("Recife");
+            if (recife == null) {
+                recife = new Concessionaria();
+                recife.setNome("Vrum Motors Recife");
+                recife.setCidade("Recife");
+                recife.setEstado("PE");
+                recife.setEndereco("Av. Boa Viagem, 1000");
+                recife.setTelefone("8132000001");
+                concDAO.salvar(recife);
+            }
 
-            Concessionaria sp = new Concessionaria();
-            sp.setNome("Vrum Motors São Paulo");
-            sp.setCidade("São Paulo");
-            sp.setEstado("SP");
-            sp.setEndereco("Av. Paulista, 2000");
-            sp.setTelefone("1132000001");
-            concDAO.salvar(sp);
+            Concessionaria sp = concDAO.buscarPorCidade("São Paulo");
+            if (sp == null) {
+                sp = new Concessionaria();
+                sp.setNome("Vrum Motors São Paulo");
+                sp.setCidade("São Paulo");
+                sp.setEstado("SP");
+                sp.setEndereco("Av. Paulista, 2000");
+                sp.setTelefone("1132000001");
+                concDAO.salvar(sp);
+            }
 
             // ---- Gerente Recife ----
-            Gerente gerente = new Gerente();
-            gerente.setNome("Roberto Gerente");
-            gerente.setEmail("gerente.recife@vrummotors.com");
-            gerente.setSenha(SenhaUtil.hashSenha("gerente123"));
-            gerente.setTelefone("81911110001");
-            gerente.setConcessionaria(recife);
-            usuarioDAO.salvar(gerente);
+            if (usuarioDAO.buscarPorEmail("gerente.recife@vrummotors.com") == null) {
+                Gerente gerente = new Gerente();
+                gerente.setNome("Roberto Gerente");
+                gerente.setEmail("gerente.recife@vrummotors.com");
+                gerente.setSenha(SenhaUtil.hashSenha("gerente123"));
+                gerente.setTelefone("81911110001");
+                gerente.setConcessionaria(recife);
+                usuarioDAO.salvar(gerente);
+            }
 
             // ---- Vendedor Recife ----
-            Vendedor vendedor = new Vendedor();
-            vendedor.setNome("Ana Vendedora");
-            vendedor.setEmail("vendedor@vrummotors.com");
-            vendedor.setSenha(SenhaUtil.hashSenha("vendedor123"));
-            vendedor.setTelefone("81922220001");
-            vendedor.setConcessionaria(recife);
-            usuarioDAO.salvar(vendedor);
+            if (usuarioDAO.buscarPorEmail("vendedor@vrummotors.com") == null) {
+                Vendedor vendedor = new Vendedor();
+                vendedor.setNome("Ana Vendedora");
+                vendedor.setEmail("vendedor@vrummotors.com");
+                vendedor.setSenha(SenhaUtil.hashSenha("vendedor123"));
+                vendedor.setTelefone("81922220001");
+                vendedor.setConcessionaria(recife);
+                usuarioDAO.salvar(vendedor);
+            }
 
             // ---- Cliente exemplo ----
-            Cliente cliente = new Cliente();
-            cliente.setNome("João Cliente");
-            cliente.setEmail("cliente@email.com");
-            cliente.setSenha(SenhaUtil.hashSenha("cliente123"));
-            cliente.setTelefone("81933330001");
-            cliente.setCidade("Recife");
-            cliente.setEstado("PE");
-            usuarioDAO.salvar(cliente);
+            if (usuarioDAO.buscarPorEmail("cliente@email.com") == null) {
+                Cliente cliente = new Cliente();
+                cliente.setNome("João Cliente");
+                cliente.setEmail("cliente@email.com");
+                cliente.setSenha(SenhaUtil.hashSenha("cliente123"));
+                cliente.setTelefone("81933330001");
+                cliente.setCidade("Recife");
+                cliente.setEstado("PE");
+                usuarioDAO.salvar(cliente);
+            }
 
             // ---- Veículos ----
-            criarVeiculos(veiculoDAO);
+            if (veiculoDAO.listarTodos().isEmpty()) {
+                criarVeiculos(veiculoDAO);
+            }
 
             System.out.println(">>> Dados iniciais inseridos com sucesso!");
             System.out.println(">>> Logins: admin@vrummotors.com / admin123");

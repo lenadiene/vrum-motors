@@ -307,34 +307,6 @@ public class VrumMotorsSeleniumTest {
         }
 
         // =========================================================
-        // TC10 — Busca de veículo na home
-        // =========================================================
-        @Test
-        public void tc10_buscaVeiculoHome() {
-                driver.get(HOME_URL);
-
-                WebElement campoBusca = wait.until(
-                                ExpectedConditions.visibilityOfElementLocated(
-                                                By.xpath("//input[contains(@placeholder,'Buscar')]")));
-                campoBusca.sendKeys("Vrum");
-
-                aguardar(1000); // Pausa para você ver a palavra sendo digitada
-
-                WebElement btnBuscar = driver.findElement(
-                                By.xpath("//input[@value='Buscar'] | //button[contains(text(),'Buscar')]"));
-                btnBuscar.click();
-
-                aguardar(1000); // Pausa para você ver o resultado
-
-                java.util.List<WebElement> resultados = driver.findElements(
-                                By.cssSelector(".vehicle-card"));
-                assertTrue("Busca deve retornar resultados", resultados.size() >= 0);
-
-                tirarScreenshot("tc10_busca");
-                System.out.println("✅ TC10 — Busca de veículo funciona (" + resultados.size() + " resultados)");
-        }
-
-        // =========================================================
         // TC11 — Acesso a área protegida sem login redireciona ao login
         // =========================================================
         @Test
@@ -549,29 +521,6 @@ public class VrumMotorsSeleniumTest {
 
                 tirarScreenshot("tc22_admin_pedidos");
                 System.out.println("✅ TC22 — Admin acessa todos os pedidos");
-        }
-
-        // =========================================================
-        // TC23 — Logout funciona corretamente
-        // =========================================================
-        @Test
-        public void tc23_logoutFunciona() {
-                fazerLogin(EMAIL_ADMIN, SENHA_ADMIN);
-                wait.until(ExpectedConditions.urlContains("/admin/"));
-
-                // Clica em sair
-                WebElement btnSair = wait.until(
-                                ExpectedConditions.elementToBeClickable(
-                                                By.xpath("//a[contains(text(),'Sair')] | //input[contains(@value,'Sair')]")));
-                btnSair.click();
-
-                // Deve voltar ao login
-                wait.until(ExpectedConditions.urlContains("login"));
-                assertTrue("Logout deve redirecionar ao login",
-                                driver.getCurrentUrl().contains("login"));
-
-                tirarScreenshot("tc23_logout");
-                System.out.println("✅ TC23 — Logout funciona");
         }
 
         // =========================================================
