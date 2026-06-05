@@ -656,6 +656,13 @@ select.form-control option { background: var(--vrum-gray); }
     margin-bottom: 10px;
 }
 
+.field-error {
+    display: none;
+    color: #FF6B6B;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
 /* ---- STATS CARDS ---- */
 .stats-grid {
     display: grid;

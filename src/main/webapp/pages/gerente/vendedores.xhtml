@@ -2,9 +2,95 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
 <h:head><meta charset="UTF-8"/><title>Vendedores — Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <script type="text/javascript">
+        //<![CDATA[
+        var vrumEmailRegex = /^[\w.%+\-]+@[\w.\-]+\.[A-Za-z]{2,}$/;
+
+        function vrumMensagem(id, texto) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = texto || '';
+            el.style.display = texto ? 'block' : 'none';
+        }
+
+        function vrumSomenteNumeros(e) {
+            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && /\D/.test(e.key)) {
+                e.preventDefault();
+                vrumMensagem('telefone-validation-msg', 'Use apenas números no telefone.');
+                return false;
+            }
+            return true;
+        }
+
+        function vrumValidarVendedor() {
+            var nome = document.querySelector('[id$=":nome"]');
+            var email = document.querySelector('[id$=":email"]');
+            var telefone = document.querySelector('[id$=":telefone"]');
+            var senha = document.querySelector('[id$=":senha"]');
+            var btn = document.querySelector('[id$=":btnSalvar"]');
+            if (!nome || !email || !telefone || !senha || !btn) return;
+
+            var ok = true;
+            var nomeValor = nome.value.trim();
+            var emailValor = email.value.trim();
+            var telefoneValor = telefone.value.replace(/\D/g, '');
+            var senhaValor = senha.value.trim();
+            var senhaObrigatoria = senha.getAttribute('data-required') === 'true';
+
+            if (nomeValor.length > 0 && nomeValor.length < 2) {
+                vrumMensagem('nome-validation-msg', 'Informe pelo menos 2 caracteres.');
+                ok = false;
+            } else if (nomeValor.length >= 100) {
+                vrumMensagem('nome-validation-msg', 'Você atingiu o limite de 100 caracteres.');
+            } else {
+                vrumMensagem('nome-validation-msg', '');
+            }
+
+            if (emailValor.length > 0 && !vrumEmailRegex.test(emailValor)) {
+                vrumMensagem('email-validation-msg', 'Informe um e-mail válido.');
+                ok = false;
+            } else if (emailValor.length >= 150) {
+                vrumMensagem('email-validation-msg', 'Você atingiu o limite de 150 caracteres.');
+            } else {
+                vrumMensagem('email-validation-msg', '');
+            }
+
+            if (telefoneValor.length > 0 && (telefoneValor.length < 10 || telefoneValor.length > 11)) {
+                vrumMensagem('telefone-validation-msg', 'Informe DDD e 10 ou 11 dígitos.');
+                ok = false;
+            } else {
+                vrumMensagem('telefone-validation-msg', '');
+            }
+
+            if (senhaValor.length > 0 && senhaValor.length < 6) {
+                vrumMensagem('senha-validation-msg', 'A senha deve ter pelo menos 6 caracteres.');
+                ok = false;
+            } else if (senhaValor.length >= 50) {
+                vrumMensagem('senha-validation-msg', 'Você atingiu o limite de 50 caracteres.');
+            } else {
+                vrumMensagem('senha-validation-msg', '');
+            }
+
+            ok = ok
+                && nomeValor.length >= 2
+                && vrumEmailRegex.test(emailValor)
+                && (telefoneValor.length === 0 || telefoneValor.length === 10 || telefoneValor.length === 11)
+                && (!senhaObrigatoria || senhaValor.length >= 6);
+
+            btn.disabled = !ok;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('input', vrumValidarVendedor, true);
+            document.addEventListener('blur', vrumValidarVendedor, true);
+            vrumValidarVendedor();
+        });
+        //]]>
+    </script>
 </h:head>
 <h:body>
 <div class="app-layout">
@@ -39,27 +125,56 @@
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
                         <div class="form-group">
                             <label class="form-label">Nome *</label>
-                            <h:inputText value="#{gerenteBean.vendedorEdicao.nome}" required="true" styleClass="form-control" maxlength="100" oninput="if(this.value.length >= 100) document.getElementById('nome-max-msg').style.display='block'; else document.getElementById('nome-max-msg').style.display='none';"/>
-                            <span id="nome-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
+                            <h:inputText id="nome" value="#{gerenteBean.vendedorEdicao.nome}" required="true"
+                                         requiredMessage="Informe o nome do vendedor."
+                                         validatorMessage="O nome deve ter entre 2 e 100 caracteres."
+                                         styleClass="form-control" maxlength="100"
+                                         oninput="vrumValidarVendedor()" onblur="vrumValidarVendedor()">
+                                <f:validateLength minimum="2" maximum="100"/>
+                            </h:inputText>
+                            <span id="nome-validation-msg" class="field-error"></span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail *</label>
-                            <h:inputText value="#{gerenteBean.vendedorEdicao.email}" required="true" styleClass="form-control" maxlength="100" oninput="if(this.value.length >= 100) document.getElementById('email-max-msg').style.display='block'; else document.getElementById('email-max-msg').style.display='none';"/>
-                            <span id="email-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
+                            <h:inputText id="email" value="#{gerenteBean.vendedorEdicao.email}" required="true"
+                                         requiredMessage="Informe o e-mail do vendedor."
+                                         validatorMessage="Informe um e-mail válido com no máximo 150 caracteres."
+                                         styleClass="form-control" maxlength="150"
+                                         oninput="vrumValidarVendedor()" onblur="vrumValidarVendedor()">
+                                <f:validateLength maximum="150"/>
+                                <f:validateRegex pattern="^[\w.%+\-]+@[\w.\-]+\.[A-Za-z]{2,}$"/>
+                            </h:inputText>
+                            <span id="email-validation-msg" class="field-error"></span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Telefone</label>
-                            <h:inputText value="#{gerenteBean.vendedorEdicao.telefone}" styleClass="form-control" maxlength="20" oninput="if(this.value.length >= 20) document.getElementById('telefone-max-msg').style.display='block'; else document.getElementById('telefone-max-msg').style.display='none';"/>
-                            <span id="telefone-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 20 caracteres.</span>
+                            <h:inputText id="telefone" value="#{gerenteBean.vendedorEdicao.telefone}"
+                                         validatorMessage="Informe um telefone com DDD e 10 ou 11 dígitos."
+                                         styleClass="form-control" maxlength="11"
+                                         placeholder="81999999999"
+                                         onkeydown="return vrumSomenteNumeros(event)"
+                                         oninput="vrumValidarVendedor()" onblur="vrumValidarVendedor()">
+                                <f:validateRegex pattern="^$|\d{10,11}$"/>
+                            </h:inputText>
+                            <span id="telefone-validation-msg" class="field-error"></span>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Senha *</label>
-                            <h:inputSecret value="#{gerenteBean.senhaVendedor}" required="true" styleClass="form-control" maxlength="50" oninput="if(this.value.length >= 50) document.getElementById('senha-max-msg').style.display='block'; else document.getElementById('senha-max-msg').style.display='none';"/>
-                            <span id="senha-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 50 caracteres.</span>
+                            <label class="form-label">Senha #{gerenteBean.vendedorEdicao.id == null ? '*' : '(deixe em branco para manter)'}</label>
+                            <h:inputSecret id="senha" value="#{gerenteBean.senhaVendedor}"
+                                           required="#{gerenteBean.vendedorEdicao.id == null}"
+                                           requiredMessage="Informe a senha do novo vendedor."
+                                           validatorMessage="A senha deve ter entre 6 e 50 caracteres."
+                                           styleClass="form-control" maxlength="50"
+                                           redisplay="true"
+                                           pt:data-required="#{gerenteBean.vendedorEdicao.id == null}"
+                                           oninput="vrumValidarVendedor()" onblur="vrumValidarVendedor()">
+                                <f:validateLength maximum="50"/>
+                            </h:inputSecret>
+                            <span id="senha-validation-msg" class="field-error"></span>
                         </div>
                     </div>
                     <div style="display:flex; gap:12px; margin-top:8px">
-                        <h:commandButton value="Salvar" action="#{gerenteBean.salvarVendedor}" styleClass="btn btn-primary"/>
+                        <h:commandButton id="btnSalvar" value="Salvar" action="#{gerenteBean.salvarVendedor}" styleClass="btn btn-primary"/>
                         <h:commandButton value="Cancelar" action="#{gerenteBean.cancelarEdicaoVendedor}" styleClass="btn btn-ghost" immediate="true"/>
                     </div>
                 </div>

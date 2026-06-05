@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
-    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+    xmlns:f="http://xmlns.jcp.org/jsf/core" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
 
 <h:head>
     <meta charset="UTF-8" />
@@ -37,7 +38,7 @@
                     #{gerPedidosBean.concessionaria.cidade}/#{gerPedidosBean.concessionaria.estado}</p>
             </div>
 
-            <h:form enctype="multipart/form-data">
+            <h:form id="pedidoForm" enctype="multipart/form-data">
                 <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success"
                     style="margin-bottom:16px" />
 
@@ -47,7 +48,7 @@
 
                         <div class="form-group" style="margin:0">
                             <label class="form-label">Vendedor</label>
-                            <h:selectOneMenu value="#{gerPedidosBean.filtroVendedorId}" styleClass="form-control">
+                            <h:selectOneMenu id="filtroVendedor" value="#{gerPedidosBean.filtroVendedorId}" styleClass="form-control">
                                 <f:selectItem itemLabel="Todos os vendedores" itemValue="" />
                                 <f:selectItem itemLabel="— Sem vendedor —" itemValue="-1" />
                                 <f:selectItems value="#{gerPedidosBean.vendedores}" var="v" itemLabel="#{v.nome}"
@@ -57,7 +58,7 @@
 
                         <div class="form-group" style="margin:0">
                             <label class="form-label">Veículo</label>
-                            <h:selectOneMenu value="#{gerPedidosBean.filtroVeiculoId}" styleClass="form-control">
+                            <h:selectOneMenu id="filtroVeiculo" value="#{gerPedidosBean.filtroVeiculoId}" styleClass="form-control">
                                 <f:selectItem itemLabel="Todos os veículos" itemValue="" />
                                 <f:selectItems value="#{gerPedidosBean.veiculos}" var="v" itemLabel="#{v.nome}"
                                     itemValue="#{v.id}" />
@@ -66,7 +67,7 @@
 
                         <div class="form-group" style="margin:0">
                             <label class="form-label">Status</label>
-                            <h:selectOneMenu value="#{gerPedidosBean.filtroStatusStr}" styleClass="form-control">
+                            <h:selectOneMenu id="filtroStatus" value="#{gerPedidosBean.filtroStatusStr}" styleClass="form-control">
                                 <f:selectItem itemLabel="Todos os status" itemValue="" />
                                 <f:selectItems value="#{gerPedidosBean.statusPedidoValues}" var="s"
                                     itemLabel="#{s.descricao}" itemValue="#{s.name()}" />
@@ -75,14 +76,17 @@
 
                         <div class="form-group" style="margin:0">
                             <label class="form-label">Buscar cliente</label>
-                            <h:inputText value="#{gerPedidosBean.buscaCliente}" styleClass="form-control"
-                                placeholder="Nome do cliente..." />
+                            <h:inputText id="buscaCliente" value="#{gerPedidosBean.buscaCliente}" styleClass="form-control"
+                                maxlength="100" placeholder="Nome do cliente..."
+                                validatorMessage="A busca por cliente deve ter no máximo 100 caracteres.">
+                                <f:validateLength maximum="100" />
+                            </h:inputText>
                         </div>
                     </div>
                     <div style="display:flex; gap:8px">
-                        <h:commandButton value="🔍 Filtrar" action="#{gerPedidosBean.aplicarFiltro}"
+                        <h:commandButton id="btnFiltrar" value="🔍 Filtrar" action="#{gerPedidosBean.aplicarFiltro}"
                             styleClass="btn btn-primary btn-sm" />
-                        <h:commandButton value="✕ Limpar" action="#{gerPedidosBean.limparFiltros}"
+                        <h:commandButton id="btnLimpar" value="✕ Limpar" action="#{gerPedidosBean.limparFiltros}"
                             styleClass="btn btn-ghost btn-sm" />
                     </div>
                 </div>
@@ -208,7 +212,7 @@
 
                                 <div class="form-group">
                                     <label class="form-label">Vendedor Responsável</label>
-                                    <h:selectOneMenu value="#{gerPedidosBean.editVendedorId}"
+                                    <h:selectOneMenu id="editVendedor" value="#{gerPedidosBean.editVendedorId}"
                                         styleClass="form-control js-edit-vendedor" onchange="validarPedidoFrontend()">
                                         <f:selectItem itemLabel="— Sem vendedor —" itemValue="" />
                                         <f:selectItems value="#{gerPedidosBean.vendedores}" var="v"
@@ -218,7 +222,8 @@
 
                                 <div class="form-group">
                                     <label class="form-label">Status</label>
-                                    <h:selectOneMenu value="#{gerPedidosBean.editStatusStr}"
+                                    <h:selectOneMenu id="editStatus" value="#{gerPedidosBean.editStatusStr}"
+                                        required="true" requiredMessage="Selecione o status do pedido."
                                         styleClass="form-control js-edit-status" onchange="validarPedidoFrontend()">
                                         <f:selectItems value="#{gerPedidosBean.statusPedidoValues}" var="s"
                                             itemLabel="#{s.descricao}" itemValue="#{s.name()}" />
@@ -227,22 +232,38 @@
 
                                 <div class="form-group">
                                     <label class="form-label">Prazo de Fabricação</label>
-                                    <h:inputText value="#{gerPedidosBean.editPrazoFabricacao}" styleClass="form-control"
-                                        placeholder="dd/MM/yyyy" converter="localDateConverter" />
+                                    <h:inputText id="editPrazoFabricacao" value="#{gerPedidosBean.editPrazoFabricacao}"
+                                        styleClass="form-control js-edit-prazo" maxlength="10"
+                                        placeholder="dd/MM/aaaa" converter="localDateConverter"
+                                        converterMessage="Informe uma data válida no formato dd/MM/aaaa."
+                                        validatorMessage="O prazo de fabricação deve estar no formato dd/MM/aaaa."
+                                        pt:pattern="\d{2}/\d{2}/\d{4}"
+                                        oninput="validarPedidoFrontend()" onblur="validarPedidoFrontend()" />
+                                    <span id="prazo-validation-msg" class="field-error"></span>
                                 </div>
 
                                 <div class="form-group">
                                     <label class="form-label">Forma de Pagamento</label>
-                                    <h:inputText value="#{gerPedidosBean.editFormaPagamento}" styleClass="form-control"
-                                        placeholder="Financiamento, À Vista..." />
+                                    <h:inputText id="editFormaPagamento" value="#{gerPedidosBean.editFormaPagamento}"
+                                        styleClass="form-control js-edit-pagamento" maxlength="100"
+                                        placeholder="Financiamento, À Vista..."
+                                        validatorMessage="A forma de pagamento deve ter no máximo 100 caracteres."
+                                        oninput="validarPedidoFrontend()" onblur="validarPedidoFrontend()">
+                                        <f:validateLength maximum="100" />
+                                    </h:inputText>
+                                    <span id="pagamento-validation-msg" class="field-error"></span>
                                 </div>
 
                                 <div class="form-group">
                                     <label class="form-label">Adicionar Anexo</label>
-                                    <h:inputFile value="#{gerPedidosBean.arquivoAnexo}" styleClass="form-control" />
+                                    <h:inputFile id="arquivoAnexo" value="#{gerPedidosBean.arquivoAnexo}"
+                                        styleClass="form-control js-edit-anexo"
+                                        pt:accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                                        onchange="validarPedidoFrontend()" />
+                                    <span id="anexo-validation-msg" class="field-error"></span>
                                 </div>
 
-                                <h:commandButton value="💾 Salvar Pedido" action="#{gerPedidosBean.salvarPedido}"
+                                <h:commandButton id="btnSalvarPedido" value="💾 Salvar Pedido" action="#{gerPedidosBean.salvarPedido}"
                                     styleClass="btn btn-primary w-100 js-btn-salvar" />
                             </div>
 
@@ -251,12 +272,16 @@
                                 function validarPedidoFrontend() {
                                     const selectVendedor = document.querySelector('.js-edit-vendedor');
                                     const selectStatus = document.querySelector('.js-edit-status');
+                                    const inputPrazo = document.querySelector('.js-edit-prazo');
+                                    const inputPagamento = document.querySelector('.js-edit-pagamento');
+                                    const inputAnexo = document.querySelector('.js-edit-anexo');
                                     const btnSalvar = document.querySelector('.js-btn-salvar');
 
                                     if (!selectVendedor || !selectStatus || !btnSalvar) return;
 
                                     const temVendedor = selectVendedor.value !== "";
                                     const status = selectStatus.value;
+                                    let formularioValido = true;
 
                                     let msgBox = document.getElementById('js-error-msg');
                                     if (!msgBox) {
@@ -273,14 +298,51 @@
                                     btnSalvar.disabled = false;
                                     btnSalvar.style.opacity = '1';
                                     btnSalvar.style.cursor = 'pointer';
+                                    setFieldMsg('prazo-validation-msg', '');
+                                    setFieldMsg('pagamento-validation-msg', '');
+                                    setFieldMsg('anexo-validation-msg', '');
 
                                     if (temVendedor && status === 'AGUARDANDO_ATENDIMENTO') {
                                         msgBox.innerHTML = '⚠️ Um pedido com Vendedor não pode estar "Aguardando Atendimento".';
-                                        desativarBotao(btnSalvar);
+                                        formularioValido = false;
                                     } else if (!temVendedor && status !== 'AGUARDANDO_ATENDIMENTO' && status !== 'CANCELADO') {
                                         msgBox.innerHTML = '⚠️ O status "' + selectStatus.options[selectStatus.selectedIndex].text + '" exige um Vendedor.';
+                                        formularioValido = false;
+                                    }
+
+                                    if (inputPrazo && inputPrazo.value.trim() !== '' && !/^\d{2}\/\d{2}\/\d{4}$/.test(inputPrazo.value.trim())) {
+                                        setFieldMsg('prazo-validation-msg', 'Use o formato dd/MM/aaaa.');
+                                        formularioValido = false;
+                                    }
+
+                                    if (inputPagamento && inputPagamento.value.length >= 100) {
+                                        setFieldMsg('pagamento-validation-msg', 'Você atingiu o limite de 100 caracteres.');
+                                    }
+
+                                    if (inputAnexo && inputAnexo.files && inputAnexo.files.length > 0) {
+                                        const arquivo = inputAnexo.files[0];
+                                        const nome = arquivo.name.toLowerCase();
+                                        const extensaoOk = nome.endsWith('.pdf') || nome.endsWith('.jpg') || nome.endsWith('.jpeg') || nome.endsWith('.png');
+                                        const tamanhoOk = arquivo.size <= 5 * 1024 * 1024;
+                                        if (!extensaoOk) {
+                                            setFieldMsg('anexo-validation-msg', 'Use apenas PDF, JPG ou PNG.');
+                                            formularioValido = false;
+                                        } else if (!tamanhoOk) {
+                                            setFieldMsg('anexo-validation-msg', 'O anexo deve ter no máximo 5 MB.');
+                                            formularioValido = false;
+                                        }
+                                    }
+
+                                    if (!formularioValido) {
                                         desativarBotao(btnSalvar);
                                     }
+                                }
+
+                                function setFieldMsg(id, texto) {
+                                    const el = document.getElementById(id);
+                                    if (!el) return;
+                                    el.textContent = texto || '';
+                                    el.style.display = texto ? 'block' : 'none';
                                 }
 
                                 function desativarBotao(btn) {
