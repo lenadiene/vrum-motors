@@ -1,16 +1,20 @@
 package br.com.vrum.selenium;
 
+import java.io.File;
 import java.time.Duration;
 import java.util.List;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import org.junit.Assume;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -18,6 +22,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -31,6 +36,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
  * - Banco populado pelo DataInicializador
  * - Google Chrome instalado
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GerentePaginasSeleniumTest {
 
     private static WebDriver driver;
@@ -159,6 +165,214 @@ public class GerentePaginasSeleniumTest {
                 driver.findElement(By.id("prazo-validation-msg")).isDisplayed());
     }
 
+    @Test
+    public void tc03_vendedoresCriaVendedorValidoFluxoFeliz() {
+        fazerLoginGerente();
+        abrirNovoVendedor();
+
+        long ts = System.currentTimeMillis();
+        String nome = "Selenium Gerente " + ts;
+        String email = "selenium_gerente_" + ts + "@teste.com";
+        String telefone = "819" + String.format("%08d", ts % 100000000L);
+
+        preencherVendedor(nome, email, telefone, "senha123");
+
+        WebElement salvar = driver.findElement(By.id("vendedorForm:btnSalvar"));
+        assertFalse("Botao salvar deve ficar habilitado com vendedor valido", botaoDesabilitado(salvar));
+        salvar.click();
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".msg-success")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(text(),'" + email + "')]")));
+    }
+
+    @Test
+    public void tc04_vendedoresNomeMuitoLongoRespeitaMaxlength() {
+        fazerLoginGerente();
+        abrirNovoVendedor();
+
+        WebElement nome = driver.findElement(By.id("vendedorForm:nome"));
+        nome.sendKeys(repetir("A", 150));
+        dispararInput(nome);
+
+        assertEquals("Campo nome deve truncar em 100 caracteres", 100, nome.getAttribute("value").length());
+        assertTrue("Mensagem de limite do nome deve aparecer",
+                driver.findElement(By.id("nome-validation-msg")).isDisplayed());
+    }
+
+    @Test
+    public void tc05_vendedoresTelefoneBloqueiaLetrasELimitaDigitos() {
+        fazerLoginGerente();
+        abrirNovoVendedor();
+
+        WebElement telefone = driver.findElement(By.id("vendedorForm:telefone"));
+        telefone.sendKeys("abc123456789012345");
+        dispararInput(telefone);
+
+        String valor = telefone.getAttribute("value");
+        assertTrue("Telefone deve manter somente numeros", valor.matches("\\d*"));
+        assertTrue("Telefone deve respeitar maxlength=11", valor.length() <= 11);
+    }
+
+    @Test
+    public void tc06_vendedoresCancelarFechaFormulario() {
+        fazerLoginGerente();
+        abrirNovoVendedor();
+
+        WebElement cancelar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Cancelar')] | //button[contains(text(),'Cancelar')]")));
+        cancelar.click();
+
+        wait.until(driver -> driver.findElements(By.id("vendedorForm:nome")).isEmpty());
+    }
+
+    @Test
+    public void tc07_vendedoresSubmitForcadoEmailInvalidoExibeErro() {
+        fazerLoginGerente();
+        abrirNovoVendedor();
+
+        preencherVendedor("Vendedor Email Invalido", "email-invalido", "81999999991", "senha123");
+        WebElement salvar = driver.findElement(By.id("vendedorForm:btnSalvar"));
+
+        js.executeScript("arguments[0].disabled=false; arguments[0].click();", salvar);
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".msg-error")));
+        assertTrue("Deve permanecer na tela de vendedores",
+                driver.getCurrentUrl().contains("/gerente/vendedores"));
+    }
+
+    @Test
+    public void tc08_vendedoresEditarNaoExigeSenha() {
+        fazerLoginGerente();
+        driver.get(VENDEDORES_URL);
+        wait.until(ExpectedConditions.urlContains("/gerente/vendedores"));
+
+        List<WebElement> botoesEditar = driver.findElements(By.xpath(
+                "//input[contains(@value,'Editar')] | //button[contains(text(),'Editar')]"));
+        Assume.assumeTrue("Nao ha vendedores cadastrados para testar edicao", !botoesEditar.isEmpty());
+
+        botoesEditar.get(0).click();
+        WebElement senha = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("vendedorForm:senha")));
+
+        assertEquals("false", senha.getAttribute("data-required"));
+        assertTrue("Label deve indicar que a senha pode ficar em branco",
+                driver.getPageSource().contains("deixe em branco para manter"));
+    }
+
+    @Test
+    public void tc09_pedidosFiltroBuscaClienteLimitaCemELimpar() {
+        fazerLoginGerente();
+        driver.get(PEDIDOS_URL);
+
+        WebElement busca = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("pedidoForm:buscaCliente")));
+        busca.sendKeys(repetir("A", 150));
+        assertEquals("Busca deve truncar em 100 caracteres", 100, busca.getAttribute("value").length());
+
+        driver.findElement(By.id("pedidoForm:btnLimpar")).click();
+        wait.until(ExpectedConditions.attributeToBe(By.id("pedidoForm:buscaCliente"), "value", ""));
+    }
+
+    @Test
+    public void tc10_pedidosRegraSemVendedorStatusEmNegociacaoBloqueia() {
+        fazerLoginGerente();
+        abrirPrimeiroPedidoParaEdicao();
+
+        selecionarPorValor("pedidoForm:editVendedor", "");
+        selecionarPorValor("pedidoForm:editStatus", "EM_NEGOCIACAO");
+
+        WebElement salvar = driver.findElement(By.id("pedidoForm:btnSalvarPedido"));
+        assertTrue("Status em andamento sem vendedor deve bloquear salvar", botaoDesabilitado(salvar));
+        assertTrue("Mensagem deve explicar exigencia de vendedor",
+                driver.findElement(By.id("js-error-msg")).getText().contains("exige um Vendedor"));
+    }
+
+    @Test
+    public void tc11_pedidosRegraComVendedorAguardandoBloqueia() {
+        fazerLoginGerente();
+        abrirPrimeiroPedidoParaEdicao();
+
+        Select vendedor = new Select(driver.findElement(By.id("pedidoForm:editVendedor")));
+        Assume.assumeTrue("Nao ha vendedor disponivel para associar ao pedido",
+                vendedor.getOptions().size() > 1);
+        vendedor.selectByIndex(1);
+        dispararChange(driver.findElement(By.id("pedidoForm:editVendedor")));
+
+        selecionarPorValor("pedidoForm:editStatus", "AGUARDANDO_ATENDIMENTO");
+
+        WebElement salvar = driver.findElement(By.id("pedidoForm:btnSalvarPedido"));
+        assertTrue("Pedido com vendedor nao pode ficar aguardando atendimento", botaoDesabilitado(salvar));
+        assertTrue("Mensagem deve explicar conflito de vendedor/status",
+                driver.findElement(By.id("js-error-msg")).getText().contains("Aguardando Atendimento"));
+    }
+
+    @Test
+    public void tc12_pedidosAnexoTxtBloqueado() throws Exception {
+        fazerLoginGerente();
+        abrirPrimeiroPedidoParaEdicao();
+
+        File arquivoTxt = File.createTempFile("selenium-anexo-gerente", ".txt");
+        WebElement anexo = driver.findElement(By.id("pedidoForm:arquivoAnexo"));
+        anexo.sendKeys(arquivoTxt.getAbsolutePath());
+        dispararChange(anexo);
+
+        assertTrue("Anexo TXT deve bloquear salvar",
+                botaoDesabilitado(driver.findElement(By.id("pedidoForm:btnSalvarPedido"))));
+        assertTrue("Mensagem de anexo invalido deve aparecer",
+                driver.findElement(By.id("anexo-validation-msg")).isDisplayed());
+    }
+
+    @Test
+    public void tc13_pedidosFormaPagamentoRespeitaMaxlength() {
+        fazerLoginGerente();
+        abrirPrimeiroPedidoParaEdicao();
+
+        WebElement pagamento = driver.findElement(By.id("pedidoForm:editFormaPagamento"));
+        pagamento.clear();
+        pagamento.sendKeys(repetir("P", 150));
+        dispararInput(pagamento);
+
+        assertEquals("Forma de pagamento deve truncar em 100 caracteres",
+                100, pagamento.getAttribute("value").length());
+        assertTrue("Mensagem de limite da forma de pagamento deve aparecer",
+                driver.findElement(By.id("pagamento-validation-msg")).isDisplayed());
+    }
+
+    @Test
+    public void tc14_pedidosDataFormatoValidoNaoMostraErro() {
+        fazerLoginGerente();
+        abrirPrimeiroPedidoParaEdicao();
+
+        WebElement prazo = driver.findElement(By.id("pedidoForm:editPrazoFabricacao"));
+        prazo.clear();
+        prazo.sendKeys("31/12/2026");
+        dispararInput(prazo);
+
+        assertFalse("Data valida nao deve mostrar mensagem de formato",
+                driver.findElement(By.id("prazo-validation-msg")).isDisplayed());
+    }
+
+    @Test
+    public void tc15_pedidosFecharEdicaoRemoveFormulario() {
+        fazerLoginGerente();
+        abrirPrimeiroPedidoParaEdicao();
+
+        WebElement fechar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Fechar')] | //button[contains(text(),'Fechar')]")));
+        fechar.click();
+
+        wait.until(driver -> driver.findElements(By.id("pedidoForm:editPrazoFabricacao")).isEmpty());
+    }
+
+    @Test
+    public void tc16_acessoDiretoSemLoginRedirecionaParaLogin() {
+        driver.manage().deleteAllCookies();
+        driver.get(VENDEDORES_URL);
+        wait.until(ExpectedConditions.urlContains("login"));
+
+        driver.manage().deleteAllCookies();
+        driver.get(PEDIDOS_URL);
+        wait.until(ExpectedConditions.urlContains("login"));
+    }
+
     private void fazerLoginGerente() {
         driver.get(LOGIN_URL);
         WebElement email = wait.until(ExpectedConditions.elementToBeClickable(By.id("loginForm:email")));
@@ -171,8 +385,60 @@ public class GerentePaginasSeleniumTest {
         wait.until(ExpectedConditions.urlContains("/gerente/"));
     }
 
+    private void abrirNovoVendedor() {
+        driver.get(VENDEDORES_URL);
+        wait.until(ExpectedConditions.urlContains("/gerente/vendedores"));
+        WebElement novo = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Novo Vendedor')] | //button[contains(text(),'Novo Vendedor')]")));
+        novo.click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("vendedorForm:nome")));
+    }
+
+    private void preencherVendedor(String nome, String email, String telefone, String senha) {
+        preencherCampo("vendedorForm:nome", nome);
+        preencherCampo("vendedorForm:email", email);
+        preencherCampo("vendedorForm:telefone", telefone);
+        preencherCampo("vendedorForm:senha", senha);
+    }
+
+    private void preencherCampo(String id, String valor) {
+        WebElement campo = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(id)));
+        campo.clear();
+        campo.sendKeys(valor);
+        dispararInput(campo);
+    }
+
+    private void abrirPrimeiroPedidoParaEdicao() {
+        driver.get(PEDIDOS_URL);
+        wait.until(ExpectedConditions.urlContains("/gerente/pedidos"));
+        List<WebElement> botoesEditar = driver.findElements(By.xpath(
+                "//table[contains(@class,'vrum-table')]//input[contains(@value,'Editar')] | //table[contains(@class,'vrum-table')]//button[contains(text(),'Editar')]"));
+        Assume.assumeTrue("Nao ha pedidos cadastrados para testar edicao", !botoesEditar.isEmpty());
+
+        botoesEditar.get(0).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("pedidoForm:editPrazoFabricacao")));
+    }
+
+    private void selecionarPorValor(String id, String valor) {
+        WebElement select = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id(id)));
+        new Select(select).selectByValue(valor);
+        dispararChange(select);
+    }
+
     private void dispararInput(WebElement element) {
         js.executeScript("arguments[0].dispatchEvent(new Event('input', {bubbles:true}))", element);
         js.executeScript("arguments[0].dispatchEvent(new Event('blur', {bubbles:true}))", element);
+    }
+
+    private void dispararChange(WebElement element) {
+        js.executeScript("arguments[0].dispatchEvent(new Event('change', {bubbles:true}))", element);
+    }
+
+    private boolean botaoDesabilitado(WebElement button) {
+        return Boolean.parseBoolean(button.getAttribute("disabled"));
+    }
+
+    private String repetir(String valor, int vezes) {
+        return new String(new char[vezes]).replace("\0", valor);
     }
 }
