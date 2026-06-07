@@ -41,6 +41,11 @@ public class NovoPedidoBean implements Serializable {
         }
         veiculos = veiculoService.listarDisponiveis();
         concessionarias = concService.listarAtivas();
+        Long veiculoId = (Long) FacesContext.getCurrentInstance()
+                .getExternalContext().getSessionMap().get("veiculoCompraId");
+        if (veiculoId != null) {
+            veiculoSelecionado = veiculoService.buscarPorId(veiculoId);
+        }
     }
 
     public void selecionarVeiculo(Veiculo v) {
