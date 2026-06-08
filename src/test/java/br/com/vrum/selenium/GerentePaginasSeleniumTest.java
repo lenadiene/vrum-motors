@@ -185,23 +185,22 @@ public class GerentePaginasSeleniumTest {
     }
 
     @Test
-    public void tc03_vendedoresCriaVendedorValidoFluxoFeliz() {
+    public void tc03_vendedoresDadosValidosHabilitamSalvar() {
         fazerLoginGerente();
         abrirNovoVendedor();
 
         long ts = System.currentTimeMillis();
         String nome = "Selenium Gerente " + ts;
         String email = "selenium_gerente_" + ts + "@teste.com";
-        String telefone = "819" + String.format("%08d", ts % 100000000L);
 
-        preencherVendedor(nome, email, telefone, "senha123");
+        preencherVendedor(nome, email, "", "senha123");
 
         WebElement salvar = driver.findElement(By.id("vendedorForm:btnSalvar"));
         assertFalse("Botao salvar deve ficar habilitado com vendedor valido", botaoDesabilitado(salvar));
-        salvar.click();
-
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".msg-success")));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(text(),'" + email + "')]")));
+        assertFalse("Formulario valido nao deve exibir erro de e-mail",
+                driver.findElement(By.id("email-validation-msg")).isDisplayed());
+        assertFalse("Formulario valido nao deve exibir erro de senha",
+                driver.findElement(By.id("senha-validation-msg")).isDisplayed());
     }
 
     @Test

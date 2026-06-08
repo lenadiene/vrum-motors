@@ -117,7 +117,8 @@
             </h:form>
         </div>
         <h:form id="vendedorForm">
-            <h:messages globalOnly="false" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
+            <h:messages globalOnly="false" showSummary="false" showDetail="true"
+                        errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
 
             <h:panelGroup rendered="#{gerenteBean.vendedorEdicao != null}">
                 <div class="card" style="border:2px solid #D62828; margin-bottom:24px">
