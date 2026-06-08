@@ -9,7 +9,6 @@ import jakarta.inject.Named;
 import jakarta.faces.view.ViewScoped;
 import jakarta.faces.context.FacesContext;
 import jakarta.servlet.http.Part;
-import jakarta.inject.Inject; 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -42,8 +41,7 @@ public class VendedorBean implements Serializable {
     private Part arquivoAnexo;
 
 
-    @Inject
-    private PedidoService service;
+    private final PedidoService service = new PedidoService();
 
     @PostConstruct
     public void init() {
