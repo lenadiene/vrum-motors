@@ -75,32 +75,13 @@ public class GerentePaginasSeleniumTest {
 
     @After
     public void logout() {
-        if (driver == null) {
-            return;
-        }
-
         try {
-            if (driver.getWindowHandles().isEmpty()) {
-                return;
-            }
-            WebElement sair = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//a[contains(text(),'Sair')] | //input[contains(@value,'Sair')] | //button[contains(text(),'Sair')]")));
-            sair.click();
-            wait.until(ExpectedConditions.or(
-                    ExpectedConditions.urlContains("login"),
-                    ExpectedConditions.urlContains("home")));
-        } catch (NoSuchWindowException e) {
-            return;
+            ((ChromeDriver) driver).executeCdpCommand("Network.clearBrowserCookies", new java.util.HashMap<>());
+            driver.get("about:blank");
+            aguardar(500);
         } catch (Exception e) {
-            try {
-                if (!driver.getWindowHandles().isEmpty()) {
-                    driver.manage().deleteAllCookies();
-                }
-            } catch (NoSuchWindowException ignored) {
-                // A janela pode ja ter sido fechada ao final do cenario.
-            } catch (WebDriverException ignored) {
-                // Cleanup nao deve falhar o teste quando a sessao do navegador caiu.
-            }
+            try { driver.manage().deleteAllCookies(); } catch (Exception ignored) {}
+            try { driver.get("about:blank"); } catch (Exception ignored) {}
         }
     }
 
@@ -114,7 +95,7 @@ public class GerentePaginasSeleniumTest {
 
         WebElement novo = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//input[contains(@value,'Novo Vendedor')] | //button[contains(text(),'Novo Vendedor')]")));
-        novo.click();
+        js.executeScript("arguments[0].click();", novo);
 
         WebElement nome = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("vendedorForm:nome")));
         WebElement email = driver.findElement(By.id("vendedorForm:email"));
@@ -286,7 +267,8 @@ public class GerentePaginasSeleniumTest {
         assertEquals("Busca deve truncar em 100 caracteres", 100, busca.getAttribute("value").length());
 
         driver.findElement(By.id("pedidoForm:btnLimpar")).click();
-        wait.until(ExpectedConditions.attributeToBe(By.id("pedidoForm:buscaCliente"), "value", ""));
+        WebElement buscaAposLimpar = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("pedidoForm:buscaCliente")));
+        assertEquals("Busca deve estar vazia apos limpar", "", buscaAposLimpar.getAttribute("value"));
     }
 
     @Test
@@ -395,11 +377,12 @@ public class GerentePaginasSeleniumTest {
         driver.get(LOGIN_URL);
         WebElement email = wait.until(ExpectedConditions.elementToBeClickable(By.id("loginForm:email")));
         WebElement senha = wait.until(ExpectedConditions.elementToBeClickable(By.id("loginForm:senha")));
-        email.clear();
-        email.sendKeys(EMAIL_GERENTE);
-        senha.clear();
-        senha.sendKeys(SENHA_GERENTE);
-        driver.findElement(By.cssSelector("input[type='submit'], button[type='submit']")).click();
+        aguardar(300);
+        email.click(); email.clear(); email.sendKeys(EMAIL_GERENTE);
+        aguardar(300);
+        senha.click(); senha.clear(); senha.sendKeys(SENHA_GERENTE);
+        aguardar(500);
+        driver.findElement(By.cssSelector("#loginForm input[type='submit'], #loginForm button[type='submit']")).click();
         wait.until(ExpectedConditions.urlContains("/gerente/"));
     }
 
@@ -408,7 +391,7 @@ public class GerentePaginasSeleniumTest {
         wait.until(ExpectedConditions.urlContains("/gerente/vendedores"));
         WebElement novo = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//input[contains(@value,'Novo Vendedor')] | //button[contains(text(),'Novo Vendedor')]")));
-        novo.click();
+        js.executeScript("arguments[0].click();", novo);
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("vendedorForm:nome")));
     }
 
@@ -458,5 +441,9 @@ public class GerentePaginasSeleniumTest {
 
     private String repetir(String valor, int vezes) {
         return new String(new char[vezes]).replace("\0", valor);
+    }
+
+    private void aguardar(int ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
     }
 }
