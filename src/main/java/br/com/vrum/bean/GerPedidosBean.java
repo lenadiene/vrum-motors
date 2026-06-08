@@ -98,6 +98,9 @@ public class GerPedidosBean implements Serializable {
             }
         }
 
+        final StatusPedido statusFiltroFinal = statusFiltro;
+        final String buscaClienteFiltro = buscaCliente;
+
         pedidosFiltrados = todosPedidos.stream()
                 .filter(p -> {
                     if (filtroVendedorId != null) {
@@ -111,10 +114,10 @@ public class GerPedidosBean implements Serializable {
                     }
                     if (filtroVeiculoId != null && !filtroVeiculoId.equals(p.getVeiculo().getId()))
                         return false;
-                    if (statusFiltro != null && p.getStatus() != statusFiltro)
+                    if (statusFiltroFinal != null && p.getStatus() != statusFiltroFinal)
                         return false;
-                    if (buscaCliente != null && !buscaCliente.trim().isEmpty()) {
-                        String lower = buscaCliente.trim().toLowerCase();
+                    if (buscaClienteFiltro != null && !buscaClienteFiltro.isEmpty()) {
+                        String lower = buscaClienteFiltro.toLowerCase();
                         String nome = p.getCliente().getNome();
                         if (nome == null || !nome.toLowerCase().contains(lower))
                             return false;
