@@ -1,8 +1,10 @@
 package br.com.vrum.util;
 
 import jakarta.faces.component.UIComponent;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.convert.Converter;
+import jakarta.faces.convert.ConverterException;
 import jakarta.faces.convert.FacesConverter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -18,7 +20,10 @@ public class LocalDateConverter implements Converter {
         try {
             return LocalDate.parse(value.trim(), FORMATTER);
         } catch (Exception e) {
-            return null;
+            throw new ConverterException(new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Data inválida",
+                    "Informe uma data válida no formato dd/MM/aaaa."));
         }
     }
 

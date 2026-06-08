@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Named("gerPedidosBean")
@@ -53,6 +54,11 @@ public class GerPedidosBean implements Serializable {
     private final ConcessionariaService concService = new ConcessionariaService();
     private final VeiculoService veiculoService = new VeiculoService();
 
+    private static final int MAX_BUSCA_CLIENTE = 100;
+    private static final int MAX_FORMA_PAGAMENTO = 100;
+    private static final int MAX_NOME_ANEXO = 200;
+    private static final long MAX_TAMANHO_ANEXO = 5 * 1024 * 1024;
+
     @PostConstruct
     public void init() {
         Object obj = FacesContext.getCurrentInstance()
@@ -72,9 +78,28 @@ public class GerPedidosBean implements Serializable {
     }
 
     public void aplicarFiltro() {
-        StatusPedido statusFiltro = (filtroStatusStr != null && !filtroStatusStr.isEmpty())
-                ? StatusPedido.valueOf(filtroStatusStr)
-                : null;
+        if (buscaCliente != null) {
+            buscaCliente = buscaCliente.trim();
+            if (buscaCliente.length() > MAX_BUSCA_CLIENTE) {
+                addErro("A busca por cliente deve ter no máximo 100 caracteres.");
+                pedidosFiltrados = new ArrayList<>(todosPedidos);
+                return;
+            }
+        }
+
+        StatusPedido statusFiltro = null;
+        if (filtroStatusStr != null && !filtroStatusStr.isEmpty()) {
+            try {
+                statusFiltro = StatusPedido.valueOf(filtroStatusStr);
+            } catch (IllegalArgumentException e) {
+                addErro("Filtro de status inválido.");
+                pedidosFiltrados = new ArrayList<>(todosPedidos);
+                return;
+            }
+        }
+
+        final StatusPedido statusFiltroFinal = statusFiltro;
+        final String buscaClienteFiltro = buscaCliente;
 
         pedidosFiltrados = todosPedidos.stream()
                 .filter(p -> {
@@ -89,10 +114,10 @@ public class GerPedidosBean implements Serializable {
                     }
                     if (filtroVeiculoId != null && !filtroVeiculoId.equals(p.getVeiculo().getId()))
                         return false;
-                    if (statusFiltro != null && p.getStatus() != statusFiltro)
+                    if (statusFiltroFinal != null && p.getStatus() != statusFiltroFinal)
                         return false;
-                    if (buscaCliente != null && !buscaCliente.trim().isEmpty()) {
-                        String lower = buscaCliente.trim().toLowerCase();
+                    if (buscaClienteFiltro != null && !buscaClienteFiltro.isEmpty()) {
+                        String lower = buscaClienteFiltro.toLowerCase();
                         String nome = p.getCliente().getNome();
                         if (nome == null || !nome.toLowerCase().contains(lower))
                             return false;
@@ -132,6 +157,10 @@ public class GerPedidosBean implements Serializable {
         // 1. Segurança Server-Side: Verificar integridade da sessão do Gerente
         if (gerente == null || gerente.getPerfil() != PerfilUsuario.GERENTE) {
             addErro("Ação não permitida para o seu perfil de usuário.");
+            return;
+        }
+
+        if (!validarCamposPedido()) {
             return;
         }
 
@@ -198,6 +227,100 @@ public class GerPedidosBean implements Serializable {
         } catch (Exception e) {
             addErro("Erro ao salvar: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
         }
+    }
+
+    private boolean validarCamposPedido() {
+        StatusPedido novoStatus = null;
+        if (editStatusStr == null || editStatusStr.trim().isEmpty()) {
+            addErro("Selecione o status do pedido.");
+            return false;
+        }
+
+        try {
+            novoStatus = StatusPedido.valueOf(editStatusStr);
+        } catch (IllegalArgumentException e) {
+            addErro("Status de pedido inválido.");
+            return false;
+        }
+
+        if (editPrazoFabricacao != null
+                && pedidoSelecionado.getDataPedido() != null
+                && editPrazoFabricacao.isBefore(pedidoSelecionado.getDataPedido().toLocalDate())) {
+            addErro("O prazo de fabricação não pode ser anterior à data do pedido.");
+            return false;
+        }
+
+        if (editFormaPagamento != null) {
+            editFormaPagamento = editFormaPagamento.trim();
+            if (editFormaPagamento.length() > MAX_FORMA_PAGAMENTO) {
+                addErro("A forma de pagamento deve ter no máximo 100 caracteres.");
+                return false;
+            }
+            if (editFormaPagamento.matches(".*[\\p{Cntrl}&&[^\r\n\t]].*")) {
+                addErro("A forma de pagamento contém caracteres inválidos.");
+                return false;
+            }
+            if (editFormaPagamento.isEmpty()) {
+                editFormaPagamento = null;
+            }
+        }
+
+        if (arquivoAnexo != null && arquivoAnexo.getSize() > 0 && !validarAnexo()) {
+            return false;
+        }
+
+        if (novoStatus == StatusPedido.AGUARDANDO_ATENDIMENTO && editVendedorId != null) {
+            addErro("Um pedido com vendedor associado não pode estar 'Aguardando Atendimento'. Altere o status.");
+            return false;
+        }
+
+        if (editVendedorId == null && novoStatus != StatusPedido.AGUARDANDO_ATENDIMENTO
+                && novoStatus != StatusPedido.CANCELADO) {
+            addErro("Pedidos em andamento precisam de um Vendedor Responsável.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean validarAnexo() {
+        if (arquivoAnexo.getSize() > MAX_TAMANHO_ANEXO) {
+            addErro("O anexo deve ter no máximo 5 MB.");
+            return false;
+        }
+
+        String nomeArquivo = Paths.get(arquivoAnexo.getSubmittedFileName()).getFileName().toString();
+        if (nomeArquivo.isBlank()) {
+            addErro("Selecione um arquivo válido para anexar.");
+            return false;
+        }
+        if (nomeArquivo.length() > MAX_NOME_ANEXO) {
+            addErro("O nome do anexo deve ter no máximo 200 caracteres.");
+            return false;
+        }
+
+        String lower = nomeArquivo.toLowerCase(Locale.ROOT);
+        boolean extensaoPermitida = lower.endsWith(".pdf")
+                || lower.endsWith(".jpg")
+                || lower.endsWith(".jpeg")
+                || lower.endsWith(".png");
+        if (!extensaoPermitida) {
+            addErro("Anexe apenas arquivos PDF, JPG ou PNG.");
+            return false;
+        }
+
+        String contentType = arquivoAnexo.getContentType();
+        if (contentType != null && !contentType.isBlank()) {
+            boolean tipoPermitido = contentType.equals("application/pdf")
+                    || contentType.equals("image/jpeg")
+                    || contentType.equals("image/png");
+            if (!tipoPermitido) {
+                addErro("Tipo de anexo inválido. Use PDF, JPG ou PNG.");
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void processarAnexo() throws Exception {
