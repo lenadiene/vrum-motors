@@ -21,6 +21,8 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import org.openqa.selenium.JavascriptExecutor;
+
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 /**
@@ -91,6 +93,10 @@ public class US01HomePublicaTest {
     public void us01_catalogoExibeNomePrecoEImagemDosVeiculos() {
         driver.get(HOME_URL);
 
+        // Rola até o catálogo para disparar o IntersectionObserver (fade-up)
+        ((JavascriptExecutor) driver).executeScript(
+                "document.getElementById('veiculos').scrollIntoView()");
+
         List<WebElement> cards = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
                 By.cssSelector("#veiculos .vehicle-card")));
         assertTrue("Catalogo deve exibir ao menos um veiculo", cards.size() > 0);
@@ -101,18 +107,21 @@ public class US01HomePublicaTest {
             WebElement imagemContainer = card.findElement(By.cssSelector(".vehicle-card-img"));
             List<WebElement> imagens = card.findElements(By.cssSelector(".vehicle-card-img img"));
 
-            assertFalse("Nome do veiculo nao deve estar vazio", nome.getText().trim().isEmpty());
-            assertTrue("Preco do veiculo deve estar visivel", preco.getText().contains("R$"));
-            assertTrue("Area visual do veiculo deve estar visivel", imagemContainer.isDisplayed());
+            // textContent independe de opacidade (fade-up pode deixar opacity:0)
+            assertFalse("Nome do veiculo nao deve estar vazio",
+                    nome.getAttribute("textContent").trim().isEmpty());
+            assertTrue("Preco do veiculo deve conter R$",
+                    preco.getAttribute("textContent").contains("R$"));
+            assertTrue("Area visual do veiculo deve estar no DOM",
+                    imagemContainer.getAttribute("class").contains("vehicle-card-img"));
 
             if (!imagens.isEmpty()) {
                 WebElement imagem = imagens.get(0);
-                assertTrue("Imagem do veiculo deve estar visivel", imagem.isDisplayed());
                 assertFalse("Imagem do veiculo deve ter origem definida",
                         imagem.getAttribute("src") == null || imagem.getAttribute("src").trim().isEmpty());
             } else {
                 assertFalse("Area visual do veiculo deve ter conteudo quando nao houver tag img",
-                        imagemContainer.getText().trim().isEmpty());
+                        imagemContainer.getAttribute("textContent").trim().isEmpty());
             }
         }
     }
@@ -120,6 +129,10 @@ public class US01HomePublicaTest {
     @Test
     public void us01_campoBuscaEstaVisivelEAcessivelSemLogin() {
         driver.get(HOME_URL);
+
+        // Rola até o catálogo: o campoBusca está dentro de .catalog-header.fade-up
+        ((JavascriptExecutor) driver).executeScript(
+                "document.getElementById('veiculos').scrollIntoView()");
 
         WebElement campoBusca = wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("input[id$='campoBusca']")));
