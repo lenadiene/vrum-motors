@@ -12,6 +12,11 @@
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>jakarta.faces.webapp.FacesServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
+        <multipart-config>
+            <max-file-size>10485760</max-file-size>
+            <max-request-size>20971520</max-request-size>
+            <file-size-threshold>1048576</file-size-threshold>
+        </multipart-config>
     </servlet>
 
     <servlet-mapping>
@@ -24,9 +29,10 @@
         <welcome-file>home.xhtml</welcome-file>
     </welcome-file-list>
 
-    <!-- Sessão: 30 minutos -->
+    <!-- Sessão: 30 minutos, somente cookie (sem URL rewriting) -->
     <session-config>
         <session-timeout>30</session-timeout>
+        <tracking-mode>COOKIE</tracking-mode>
     </session-config>
 
     <!-- Encoding UTF-8 -->
@@ -39,6 +45,12 @@
     <context-param>
         <param-name>jakarta.faces.STATE_SAVING_METHOD</param-name>
         <param-value>server</param-value>
+    </context-param>
+
+    <!-- Interpreta string vazia como null para campos não-obrigatórios (evita ConverterException em Long hidden inputs) -->
+    <context-param>
+        <param-name>jakarta.faces.INTERPRET_EMPTY_STRING_SUBMITTED_VALUES_AS_NULL</param-name>
+        <param-value>true</param-value>
     </context-param>
 
     <!-- Páginas de erro -->
