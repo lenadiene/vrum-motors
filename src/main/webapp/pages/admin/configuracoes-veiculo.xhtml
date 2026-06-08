@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <meta charset="UTF-8"/>
+    <title>Configurações de Veículos — Admin Vrum Motors</title>
+    <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <style>
+        .cfg-section {
+            margin-bottom: 32px;
+        }
+        .cfg-section-title {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            color: #D62828;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #D62828;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cfg-tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+            min-height: 36px;
+        }
+        .cfg-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #F0F0F0;
+            border: 1px solid rgba(0,0,0,0.10);
+            border-radius: 20px;
+            padding: 5px 14px 5px 14px;
+            font-size: 0.85rem;
+            color: #111;
+        }
+        .cfg-tag .cfg-remove {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #D62828;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+        .cfg-tag .cfg-remove:hover { color: #a01c1c; }
+        .cfg-add-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .cfg-add-row .form-control {
+            flex: 1;
+            max-width: 320px;
+        }
+        .cfg-empty {
+            color: #aaa;
+            font-size: 0.82rem;
+            font-style: italic;
+        }
+        .cfg-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 800px) {
+            .cfg-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</h:head>
+<h:body styleClass="light-theme">
+<div class="app-layout">
+
+    <aside class="sidebar">
+        <a href="#{request.contextPath}/home.xhtml" class="sidebar-logo">VRUM<span>.</span>MOTORS</a>
+        <div class="sidebar-user">
+            <div class="sidebar-user-name">#{loginBean.usuarioLogado.nome}</div>
+            <div class="sidebar-user-role">Administrador</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.xhtml">📊 Dashboard</a>
+            <a href="usuarios.xhtml">👥 Usuários</a>
+            <a href="concessionarias.xhtml">🏢 Concessionárias</a>
+            <a href="veiculos.xhtml" class="active">🚗 Veículos</a>
+            <a href="pedidos.xhtml">📦 Pedidos</a>
+        </nav>
+        <div class="sidebar-footer">
+            <h:form><h:commandLink action="#{loginBean.logout}" styleClass="btn btn-ghost btn-sm w-100">Sair</h:commandLink></h:form>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header d-flex justify-between align-center">
+            <div>
+                <h1>Configurações de Veículos</h1>
+                <p>Gerencie as opções dos seletores no formulário de veículos</p>
+            </div>
+            <h:form>
+                <h:commandButton value="← Voltar para Veículos"
+                                 action="#{configuracaoVeiculoBean.cancelar}"
+                                 styleClass="btn btn-ghost btn-sm"
+                                 immediate="true"/>
+            </h:form>
+        </div>
+
+        <h:form id="cfgForm">
+            <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success"
+                        style="margin-bottom:16px"/>
+
+            <div class="card">
+                <div class="cfg-grid">
+
+                    <!-- ── MOTOR ── -->
+                    <div class="cfg-section">
+                        <div class="cfg-section-title">⚙ Motor</div>
+                        <div class="cfg-tag-list">
+                            <h:panelGroup rendered="#{empty configuracaoVeiculoBean.opcoesMotor}">
+                                <span class="cfg-empty">Nenhuma opção cadastrada.</span>
+                            </h:panelGroup>
+                            <ui:repeat value="#{configuracaoVeiculoBean.opcoesMotor}" var="opt">
+                                <span class="cfg-tag">
+                                    #{opt}
+                                    <h:commandButton value="×"
+                                                     action="#{configuracaoVeiculoBean.removerMotor(opt)}"
+                                                     styleClass="cfg-remove"
+                                                     title="Remover"/>
+                                </span>
+                            </ui:repeat>
+                        </div>
+                        <div class="cfg-add-row">
+                            <h:inputText value="#{configuracaoVeiculoBean.novoMotor}"
+                                         styleClass="form-control"
+                                         placeholder="Ex: 1.8 Turbo"
+                                         maxlength="100"/>
+                            <h:commandButton value="+ Adicionar"
+                                             action="#{configuracaoVeiculoBean.adicionarMotor}"
+                                             styleClass="btn btn-primary btn-sm"/>
+                        </div>
+                    </div>
+
+                    <!-- ── COMBUSTÍVEL ── -->
+                    <div class="cfg-section">
+                        <div class="cfg-section-title">⛽ Combustível</div>
+                        <div class="cfg-tag-list">
+                            <h:panelGroup rendered="#{empty configuracaoVeiculoBean.opcoesCombustivel}">
+                                <span class="cfg-empty">Nenhuma opção cadastrada.</span>
+                            </h:panelGroup>
+                            <ui:repeat value="#{configuracaoVeiculoBean.opcoesCombustivel}" var="opt">
+                                <span class="cfg-tag">
+                                    #{opt}
+                                    <h:commandButton value="×"
+                                                     action="#{configuracaoVeiculoBean.removerCombustivel(opt)}"
+                                                     styleClass="cfg-remove"
+                                                     title="Remover"/>
+                                </span>
+                            </ui:repeat>
+                        </div>
+                        <div class="cfg-add-row">
+                            <h:inputText value="#{configuracaoVeiculoBean.novoCombustivel}"
+                                         styleClass="form-control"
+                                         placeholder="Ex: GNV"
+                                         maxlength="100"/>
+                            <h:commandButton value="+ Adicionar"
+                                             action="#{configuracaoVeiculoBean.adicionarCombustivel}"
+                                             styleClass="btn btn-primary btn-sm"/>
+                        </div>
+                    </div>
+
+                    <!-- ── TRANSMISSÃO ── -->
+                    <div class="cfg-section">
+                        <div class="cfg-section-title">🔧 Transmissão</div>
+                        <div class="cfg-tag-list">
+                            <h:panelGroup rendered="#{empty configuracaoVeiculoBean.opcoesTransmissao}">
+                                <span class="cfg-empty">Nenhuma opção cadastrada.</span>
+                            </h:panelGroup>
+                            <ui:repeat value="#{configuracaoVeiculoBean.opcoesTransmissao}" var="opt">
+                                <span class="cfg-tag">
+                                    #{opt}
+                                    <h:commandButton value="×"
+                                                     action="#{configuracaoVeiculoBean.removerTransmissao(opt)}"
+                                                     styleClass="cfg-remove"
+                                                     title="Remover"/>
+                                </span>
+                            </ui:repeat>
+                        </div>
+                        <div class="cfg-add-row">
+                            <h:inputText value="#{configuracaoVeiculoBean.novaTransmissao}"
+                                         styleClass="form-control"
+                                         placeholder="Ex: Dupla Embreagem"
+                                         maxlength="100"/>
+                            <h:commandButton value="+ Adicionar"
+                                             action="#{configuracaoVeiculoBean.adicionarTransmissao}"
+                                             styleClass="btn btn-primary btn-sm"/>
+                        </div>
+                    </div>
+
+                    <!-- ── TRAÇÃO ── -->
+                    <div class="cfg-section">
+                        <div class="cfg-section-title">🛞 Tração</div>
+                        <div class="cfg-tag-list">
+                            <h:panelGroup rendered="#{empty configuracaoVeiculoBean.opcoesTracao}">
+                                <span class="cfg-empty">Nenhuma opção cadastrada.</span>
+                            </h:panelGroup>
+                            <ui:repeat value="#{configuracaoVeiculoBean.opcoesTracao}" var="opt">
+                                <span class="cfg-tag">
+                                    #{opt}
+                                    <h:commandButton value="×"
+                                                     action="#{configuracaoVeiculoBean.removerTracao(opt)}"
+                                                     styleClass="cfg-remove"
+                                                     title="Remover"/>
+                                </span>
+                            </ui:repeat>
+                        </div>
+                        <div class="cfg-add-row">
+                            <h:inputText value="#{configuracaoVeiculoBean.novaTracao}"
+                                         styleClass="form-control"
+                                         placeholder="Ex: RWD (Traseira)"
+                                         maxlength="100"/>
+                            <h:commandButton value="+ Adicionar"
+                                             action="#{configuracaoVeiculoBean.adicionarTracao}"
+                                             styleClass="btn btn-primary btn-sm"/>
+                        </div>
+                    </div>
+
+                </div><!-- /cfg-grid -->
+
+                <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(0,0,0,0.08); display:flex; gap:12px; justify-content:flex-end">
+                    <h:commandButton value="Cancelar"
+                                     action="#{configuracaoVeiculoBean.cancelar}"
+                                     styleClass="btn btn-ghost"
+                                     immediate="true"/>
+                    <h:commandButton value="💾 Salvar e Voltar para Veículos"
+                                     action="#{configuracaoVeiculoBean.salvarEVoltar}"
+                                     styleClass="btn btn-primary"/>
+                </div>
+            </div>
+
+        </h:form>
+    </main>
+</div>
+</h:body>
+</html>
