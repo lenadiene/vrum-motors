@@ -17,7 +17,9 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchWindowException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -73,15 +75,32 @@ public class GerentePaginasSeleniumTest {
 
     @After
     public void logout() {
+        if (driver == null) {
+            return;
+        }
+
         try {
+            if (driver.getWindowHandles().isEmpty()) {
+                return;
+            }
             WebElement sair = wait.until(ExpectedConditions.elementToBeClickable(
                     By.xpath("//a[contains(text(),'Sair')] | //input[contains(@value,'Sair')] | //button[contains(text(),'Sair')]")));
             sair.click();
             wait.until(ExpectedConditions.or(
                     ExpectedConditions.urlContains("login"),
                     ExpectedConditions.urlContains("home")));
+        } catch (NoSuchWindowException e) {
+            return;
         } catch (Exception e) {
-            driver.manage().deleteAllCookies();
+            try {
+                if (!driver.getWindowHandles().isEmpty()) {
+                    driver.manage().deleteAllCookies();
+                }
+            } catch (NoSuchWindowException ignored) {
+                // A janela pode ja ter sido fechada ao final do cenario.
+            } catch (WebDriverException ignored) {
+                // Cleanup nao deve falhar o teste quando a sessao do navegador caiu.
+            }
         }
     }
 
