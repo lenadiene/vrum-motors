@@ -44,7 +44,8 @@ public class VrumClienteFluxoTest {
     private static final String HOME_URL     = BASE_URL + "/home.xhtml";
     private static final String LOGIN_URL    = BASE_URL + "/login.xhtml";
     private static final String CADASTRO_URL = BASE_URL + "/cadastro.xhtml";
-    private static final String PEDIDOS_URL  = BASE_URL + "/pages/cliente/meus-pedidos.xhtml";
+    private static final String PEDIDOS_URL      = BASE_URL + "/pages/cliente/meus-pedidos.xhtml";
+    private static final String NOVO_PEDIDO_URL  = BASE_URL + "/pages/cliente/novo-pedido.xhtml";
 
     private static final String EMAIL_CLIENTE  = "cliente@email.com";
     private static final String SENHA_CLIENTE  = "cliente123";
@@ -689,6 +690,259 @@ public class VrumClienteFluxoTest {
                 driver.getCurrentUrl().contains("meus-pedidos"));
 
         System.out.println("✅ CF22 — Sessão isolada: cliente B não vê dados do cliente A");
+    }
+
+    // =========================================================
+    // GRUPO 7 — ACESSO SEM AUTENTICAÇÃO
+    // =========================================================
+
+    /** CF23 — Acesso direto a meus-pedidos sem sessão redireciona ao login. */
+    @Test
+    public void cf23_semSessaoMeusPedidosRedirecionaLogin() {
+        driver.manage().deleteAllCookies();
+        driver.get(PEDIDOS_URL);
+        aguardar(1000);
+
+        assertTrue("Acesso sem sessão a meus-pedidos deve redirecionar ao login",
+                driver.getCurrentUrl().contains("login"));
+
+        System.out.println("✅ CF23 — Sem sessão, meus-pedidos redireciona ao login: " + driver.getCurrentUrl());
+    }
+
+    /** CF24 — Acesso direto a novo-pedido sem sessão redireciona ao login. */
+    @Test
+    public void cf24_semSessaoNovoPedidoRedirecionaLogin() {
+        driver.manage().deleteAllCookies();
+        driver.get(NOVO_PEDIDO_URL);
+        aguardar(1000);
+
+        assertTrue("Acesso sem sessão a novo-pedido deve redirecionar ao login",
+                driver.getCurrentUrl().contains("login"));
+
+        System.out.println("✅ CF24 — Sem sessão, novo-pedido redireciona ao login: " + driver.getCurrentUrl());
+    }
+
+    /** CF25 — Botão Sair na sidebar encerra sessão e impede acesso às páginas protegidas. */
+    @Test
+    public void cf25_botaoSairEncerraSession() {
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        WebElement btnSair = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//a[contains(text(),'Sair')] | //button[contains(text(),'Sair')]")));
+        btnSair.click();
+
+        wait.until(ExpectedConditions.or(
+                ExpectedConditions.urlContains("login"),
+                ExpectedConditions.urlContains("home")));
+
+        boolean redirecionouCorretamente = driver.getCurrentUrl().contains("login")
+                || driver.getCurrentUrl().contains("home");
+        assertTrue("Sair deve redirecionar ao login ou home", redirecionouCorretamente);
+
+        // Verifica que a sessão foi encerrada: meus-pedidos deve estar bloqueado
+        driver.get(PEDIDOS_URL);
+        aguardar(800);
+        assertFalse("Após logout, meus-pedidos não deve estar acessível",
+                driver.getCurrentUrl().contains("meus-pedidos"));
+
+        System.out.println("✅ CF25 — Botão Sair encerrou sessão corretamente: " + driver.getCurrentUrl());
+    }
+
+    // =========================================================
+    // GRUPO 8 — CONTEÚDO DE MEUS-PEDIDOS
+    // =========================================================
+
+    /** CF26 — Meus-pedidos exibe número do pedido e badge de status. */
+    @Test
+    public void cf26_meusPedidosExibeDadosDoPedido() {
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        driver.get(PEDIDOS_URL);
+        wait.until(ExpectedConditions.urlContains("meus-pedidos"));
+        aguardar(800);
+
+        // Deve haver ao menos um card de pedido com número
+        String paginaTexto = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".main-content"))).getText();
+        assertTrue("Meus-pedidos deve exibir número do pedido", paginaTexto.contains("Pedido #"));
+
+        // Badge de status deve estar presente e preenchido
+        WebElement badge = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".badge")));
+        assertFalse("Badge de status não deve estar vazio", badge.getText().trim().isEmpty());
+
+        System.out.println("✅ CF26 — Meus-pedidos exibe dados do pedido. Status: " + badge.getText());
+    }
+
+    /** CF27 — Sidebar exibe o nome do cliente logado. */
+    @Test
+    public void cf27_sidebarExibeNomeDoClienteLogado() {
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        driver.get(PEDIDOS_URL);
+        wait.until(ExpectedConditions.urlContains("meus-pedidos"));
+        aguardar(600);
+
+        WebElement nomeNaSidebar = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector(".sidebar-user-name")));
+        String nome = nomeNaSidebar.getText().trim();
+        assertFalse("Sidebar deve exibir o nome do cliente logado", nome.isEmpty());
+
+        System.out.println("✅ CF27 — Sidebar exibe nome do cliente: " + nome);
+    }
+
+    // =========================================================
+    // GRUPO 9 — FLUXO DE NOVO PEDIDO (cliente logado)
+    // =========================================================
+
+    /** CF28 — Cliente logado: botão Comprar na home redireciona para novo-pedido (não cadastro). */
+    @Test
+    public void cf28_clienteLogadoComprarVaiParaNovoPedido() {
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        driver.get(HOME_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));
+        aguardar(400);
+
+        WebElement btnComprar = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//input[@value='Comprar']")));
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", btnComprar);
+
+        wait.until(ExpectedConditions.or(
+                ExpectedConditions.urlContains("novo-pedido"),
+                ExpectedConditions.urlContains("cadastro")));
+        aguardar(600);
+
+        assertTrue("Cliente logado deve ir para novo-pedido ao clicar em Comprar",
+                driver.getCurrentUrl().contains("novo-pedido"));
+        assertFalse("Cliente logado não deve ser redirecionado para cadastro",
+                driver.getCurrentUrl().contains("cadastro"));
+
+        System.out.println("✅ CF28 — Cliente logado: Comprar → novo-pedido: " + driver.getCurrentUrl());
+    }
+
+    /** CF29 — Confirmar pedido em novo-pedido sem selecionar concessionária não finaliza. */
+    @Test
+    public void cf29_confirmarSemConcessionariaNaoFinaliza() {
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        driver.get(NOVO_PEDIDO_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("novoPedidoForm")));
+        aguardar(600);
+
+        // Seleciona o primeiro veículo para exibir o painel de confirmação
+        WebElement btnSelecionar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Selecionar')]")));
+        btnSelecionar.click();
+        aguardar(1200);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//*[contains(text(),'Veículo Selecionado')]")));
+
+        // Não seleciona concessionária — tenta confirmar diretamente
+        WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Confirmar')]")));
+        btnConfirmar.click();
+        aguardar(2000);
+
+        List<WebElement> sucesso = driver.findElements(
+                By.xpath("//*[contains(text(),'PEDIDO REALIZADO')]"));
+        boolean chegouEtapa3 = sucesso.stream().anyMatch(WebElement::isDisplayed);
+        assertFalse("Sem concessionária selecionada não deve finalizar o pedido", chegouEtapa3);
+
+        System.out.println("✅ CF29 — Confirmar sem concessionária não finaliza pedido");
+    }
+
+    /** CF30 — Confirmar pedido em novo-pedido sem escolher cor não finaliza. */
+    @Test
+    public void cf30_confirmarSemCorNaoFinaliza() {
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        driver.get(NOVO_PEDIDO_URL);
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("novoPedidoForm")));
+        aguardar(600);
+
+        // Seleciona o primeiro veículo
+        WebElement btnSelecionar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Selecionar')]")));
+        btnSelecionar.click();
+        aguardar(1200);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//*[contains(text(),'Veículo Selecionado')]")));
+
+        // Seleciona concessionária
+        WebElement selectConc = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("form[id='novoPedidoForm'] select")));
+        new Select(selectConc).selectByIndex(1);
+        aguardar(400);
+
+        // Garante que o campo de cor está vazio antes de confirmar
+        WebElement hexInput = driver.findElement(By.id("novoPedidoForm:corHexNP"));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].value = '';", hexInput);
+        aguardar(300);
+
+        WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[contains(@value,'Confirmar')]")));
+        btnConfirmar.click();
+        aguardar(2000);
+
+        List<WebElement> sucesso = driver.findElements(
+                By.xpath("//*[contains(text(),'PEDIDO REALIZADO')]"));
+        boolean chegouEtapa3 = sucesso.stream().anyMatch(WebElement::isDisplayed);
+        assertFalse("Sem cor escolhida não deve finalizar o pedido", chegouEtapa3);
+
+        System.out.println("✅ CF30 — Confirmar sem cor não finaliza pedido");
+    }
+
+    /** CF31 — Link "Novo Pedido" na sidebar navega para novo-pedido.xhtml. */
+    @Test
+    public void cf31_linkNovoPedidoNaSidebarNavegaCorretamente() {
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        driver.get(PEDIDOS_URL);
+        wait.until(ExpectedConditions.urlContains("meus-pedidos"));
+        aguardar(600);
+
+        WebElement linkNovoPedido = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//nav[contains(@class,'sidebar-nav')]//a[contains(text(),'Novo Pedido')]")));
+        linkNovoPedido.click();
+
+        wait.until(ExpectedConditions.urlContains("novo-pedido"));
+        assertTrue("Link 'Novo Pedido' na sidebar deve navegar para novo-pedido.xhtml",
+                driver.getCurrentUrl().contains("novo-pedido"));
+
+        System.out.println("✅ CF31 — Sidebar 'Novo Pedido' navega corretamente: " + driver.getCurrentUrl());
+    }
+
+    /** CF32 — Link "Meus Pedidos" na sidebar navega para meus-pedidos.xhtml. */
+    @Test
+    public void cf32_linkMeusPedidosNaSidebarNavegaCorretamente() {
+        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
+        wait.until(ExpectedConditions.urlContains("/cliente/"));
+
+        // Parte de novo-pedido para testar o link de volta
+        driver.get(NOVO_PEDIDO_URL);
+        wait.until(ExpectedConditions.urlContains("novo-pedido"));
+        aguardar(600);
+
+        WebElement linkMeusPedidos = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//nav[contains(@class,'sidebar-nav')]//a[contains(text(),'Meus Pedidos')]")));
+        linkMeusPedidos.click();
+
+        wait.until(ExpectedConditions.urlContains("meus-pedidos"));
+        assertTrue("Link 'Meus Pedidos' na sidebar deve navegar para meus-pedidos.xhtml",
+                driver.getCurrentUrl().contains("meus-pedidos"));
+
+        System.out.println("✅ CF32 — Sidebar 'Meus Pedidos' navega corretamente: " + driver.getCurrentUrl());
     }
 
     // =========================================================
