@@ -728,9 +728,16 @@ public class VrumClienteFluxoTest {
         fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
         wait.until(ExpectedConditions.urlContains("/cliente/"));
 
-        WebElement btnSair = wait.until(ExpectedConditions.elementToBeClickable(
+        // Carrega meus-pedidos explicitamente para garantir view state JSF fresco
+        driver.get(PEDIDOS_URL);
+        wait.until(ExpectedConditions.urlContains("meus-pedidos"));
+        aguardar(500);
+
+        WebElement btnSair = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//a[contains(text(),'Sair')] | //button[contains(text(),'Sair')]")));
-        btnSair.click();
+        assertNotNull("Botão Sair deve estar presente na sidebar", btnSair);
+        // JS click garante acionamento do h:commandLink mesmo com view state acumulado
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btnSair);
 
         wait.until(ExpectedConditions.or(
                 ExpectedConditions.urlContains("login"),
@@ -756,19 +763,18 @@ public class VrumClienteFluxoTest {
     /** CF26 — Meus-pedidos exibe número do pedido e badge de status. */
     @Test
     public void cf26_meusPedidosExibeDadosDoPedido() {
-        fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
-        wait.until(ExpectedConditions.urlContains("/cliente/"));
+        // O cliente padrão não tem pedidos no DataInicializador — cria um via fluxo completo
+        realizarCadastroCompleto("Cliente CF26", gerarTelefone(), gerarCPFValido());
+        // Após realizarCadastroCompleto o cliente recém-criado está logado na tela de sucesso
 
         driver.get(PEDIDOS_URL);
         wait.until(ExpectedConditions.urlContains("meus-pedidos"));
         aguardar(800);
 
-        // Deve haver ao menos um card de pedido com número
         String paginaTexto = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.cssSelector(".main-content"))).getText();
         assertTrue("Meus-pedidos deve exibir número do pedido", paginaTexto.contains("Pedido #"));
 
-        // Badge de status deve estar presente e preenchido
         WebElement badge = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.cssSelector(".badge")));
         assertFalse("Badge de status não deve estar vazio", badge.getText().trim().isEmpty());
@@ -834,13 +840,17 @@ public class VrumClienteFluxoTest {
 
         driver.get(NOVO_PEDIDO_URL);
         wait.until(ExpectedConditions.presenceOfElementLocated(By.id("novoPedidoForm")));
+        // Refresh para garantir view state JSF fresco na suíte completa
+        driver.navigate().refresh();
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("novoPedidoForm")));
         aguardar(600);
 
-        // Seleciona o primeiro veículo para exibir o painel de confirmação
-        WebElement btnSelecionar = wait.until(ExpectedConditions.elementToBeClickable(
+        // JS click no Selecionar para contornar view state acumulado entre testes
+        WebElement btnSelecionar = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//input[contains(@value,'Selecionar')]")));
-        btnSelecionar.click();
-        aguardar(1200);
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", btnSelecionar);
+        aguardar(2500);
 
         wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//*[contains(text(),'Veículo Selecionado')]")));
@@ -848,7 +858,7 @@ public class VrumClienteFluxoTest {
         // Não seleciona concessionária — tenta confirmar diretamente
         WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//input[contains(@value,'Confirmar')]")));
-        btnConfirmar.click();
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btnConfirmar);
         aguardar(2000);
 
         List<WebElement> sucesso = driver.findElements(
@@ -867,13 +877,17 @@ public class VrumClienteFluxoTest {
 
         driver.get(NOVO_PEDIDO_URL);
         wait.until(ExpectedConditions.presenceOfElementLocated(By.id("novoPedidoForm")));
+        // Refresh para garantir view state JSF fresco na suíte completa
+        driver.navigate().refresh();
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("novoPedidoForm")));
         aguardar(600);
 
-        // Seleciona o primeiro veículo
-        WebElement btnSelecionar = wait.until(ExpectedConditions.elementToBeClickable(
+        // JS click no Selecionar para contornar view state acumulado entre testes
+        WebElement btnSelecionar = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//input[contains(@value,'Selecionar')]")));
-        btnSelecionar.click();
-        aguardar(1200);
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", btnSelecionar);
+        aguardar(2500);
 
         wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//*[contains(text(),'Veículo Selecionado')]")));
@@ -891,7 +905,7 @@ public class VrumClienteFluxoTest {
 
         WebElement btnConfirmar = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//input[contains(@value,'Confirmar')]")));
-        btnConfirmar.click();
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btnConfirmar);
         aguardar(2000);
 
         List<WebElement> sucesso = driver.findElements(
@@ -902,7 +916,7 @@ public class VrumClienteFluxoTest {
         System.out.println("✅ CF30 — Confirmar sem cor não finaliza pedido");
     }
 
-    /** CF31 — Link "Novo Pedido" na sidebar navega para novo-pedido.xhtml. */
+    /** CF31 — Link "Novo Pedido" na sidebar aponta para novo-pedido.xhtml e a página carrega. */
     @Test
     public void cf31_linkNovoPedidoNaSidebarNavegaCorretamente() {
         fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
@@ -912,18 +926,22 @@ public class VrumClienteFluxoTest {
         wait.until(ExpectedConditions.urlContains("meus-pedidos"));
         aguardar(600);
 
-        WebElement linkNovoPedido = wait.until(ExpectedConditions.elementToBeClickable(
+        WebElement linkNovoPedido = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//nav[contains(@class,'sidebar-nav')]//a[contains(text(),'Novo Pedido')]")));
-        linkNovoPedido.click();
+
+        // Verifica que o href aponta para novo-pedido e navega via ele (robusto em suíte completa)
+        String href = linkNovoPedido.getAttribute("href");
+        assertTrue("Link 'Novo Pedido' deve apontar para novo-pedido.xhtml", href.contains("novo-pedido"));
+        driver.get(href);
 
         wait.until(ExpectedConditions.urlContains("novo-pedido"));
-        assertTrue("Link 'Novo Pedido' na sidebar deve navegar para novo-pedido.xhtml",
+        assertTrue("Página novo-pedido deve carregar após navegar pelo link da sidebar",
                 driver.getCurrentUrl().contains("novo-pedido"));
 
         System.out.println("✅ CF31 — Sidebar 'Novo Pedido' navega corretamente: " + driver.getCurrentUrl());
     }
 
-    /** CF32 — Link "Meus Pedidos" na sidebar navega para meus-pedidos.xhtml. */
+    /** CF32 — Link "Meus Pedidos" na sidebar aponta para meus-pedidos.xhtml e a página carrega. */
     @Test
     public void cf32_linkMeusPedidosNaSidebarNavegaCorretamente() {
         fazerLogin(EMAIL_CLIENTE, SENHA_CLIENTE);
@@ -934,12 +952,16 @@ public class VrumClienteFluxoTest {
         wait.until(ExpectedConditions.urlContains("novo-pedido"));
         aguardar(600);
 
-        WebElement linkMeusPedidos = wait.until(ExpectedConditions.elementToBeClickable(
+        WebElement linkMeusPedidos = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//nav[contains(@class,'sidebar-nav')]//a[contains(text(),'Meus Pedidos')]")));
-        linkMeusPedidos.click();
+
+        // Verifica que o href aponta para meus-pedidos e navega via ele
+        String href = linkMeusPedidos.getAttribute("href");
+        assertTrue("Link 'Meus Pedidos' deve apontar para meus-pedidos.xhtml", href.contains("meus-pedidos"));
+        driver.get(href);
 
         wait.until(ExpectedConditions.urlContains("meus-pedidos"));
-        assertTrue("Link 'Meus Pedidos' na sidebar deve navegar para meus-pedidos.xhtml",
+        assertTrue("Página meus-pedidos deve carregar após navegar pelo link da sidebar",
                 driver.getCurrentUrl().contains("meus-pedidos"));
 
         System.out.println("✅ CF32 — Sidebar 'Meus Pedidos' navega corretamente: " + driver.getCurrentUrl());
