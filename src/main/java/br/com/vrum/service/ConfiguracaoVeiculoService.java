@@ -37,6 +37,10 @@ public class ConfiguracaoVeiculoService {
     }
 
     public void popularInicial() {
+        salvarTipo(TipoConfiguracaoVeiculo.ANO, Arrays.asList(
+                "2025", "2026", "2027"));
+        salvarTipo(TipoConfiguracaoVeiculo.MARCA, Arrays.asList(
+                "Vrum"));
         salvarTipo(TipoConfiguracaoVeiculo.MOTOR, Arrays.asList(
                 "1.0", "1.0 Turbo", "1.3 Turbo", "1.4 Turbo", "1.5",
                 "1.6", "2.0", "2.0 Turbo", "3.0", "4.0", "Elétrico"));

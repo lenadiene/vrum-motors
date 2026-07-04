@@ -2,6 +2,7 @@ package br.com.vrum.util;
 
 import br.com.vrum.dao.*;
 import br.com.vrum.model.*;
+import br.com.vrum.service.ConfiguracaoVeiculoService;
 
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -105,6 +106,12 @@ public class DataInicializador implements ServletContextListener {
             // ---- Veículos ----
             if (veiculoDAO.listarTodos().isEmpty()) {
                 criarVeiculos(veiculoDAO);
+            }
+
+            // ---- Configurações de seletores ----
+            ConfiguracaoVeiculoService cfgService = new ConfiguracaoVeiculoService();
+            if (!cfgService.existeAlgum()) {
+                cfgService.popularInicial();
             }
 
             System.out.println(">>> Dados iniciais inseridos com sucesso!");

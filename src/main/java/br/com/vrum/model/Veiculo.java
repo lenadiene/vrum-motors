@@ -30,31 +30,31 @@ public class Veiculo implements Serializable {
     @Column(precision = 12, scale = 2)
     private BigDecimal preco;
 
-    @Column(length = 30)
+    @Column(length = 100)
     private String motor;
 
-    @Column(length = 20)
+    @Column(length = 50)
     private String potencia;
 
-    @Column(length = 20)
+    @Column(length = 50)
     private String torque;
 
-    @Column(length = 20)
+    @Column(length = 100)
     private String transmissao;
 
-    @Column(length = 20)
+    @Column(length = 100)
     private String combustivel;
 
-    @Column(length = 20)
+    @Column(length = 100)
     private String tracao;
 
-    @Column(length = 30)
+    @Column(length = 50)
     private String consumo;
 
-    @Column(length = 20)
+    @Column(length = 50)
     private String velocidadeMax;
 
-    @Column(length = 20)
+    @Column(length = 50)
     private String aceleracao;
 
     @Column(length = 50)

@@ -1,41 +1,73 @@
 /* =====================================================
    VRUM MOTORS — Global Stylesheet
    Fonte: Bebas Neue (títulos) + DM Sans (corpo)
-   Paleta: Vermelho #D62828, Preto #0D0D0D, Branco #F8F8F8
+   Paleta: Vermelho #D62828 · Prata Chrome · Branco #FAFAFA
    ===================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');
 
+/* ---- Variáveis de design — edite aqui para mudar todo o sistema ---- */
 :root {
-    --vrum-red:     #D62828;
-    --vrum-red-dk:  #A01C1C;
-    --vrum-black:   #0D0D0D;
-    --vrum-gray:    #1A1A1A;
-    --vrum-mid:     #2E2E2E;
-    --vrum-silver:  #9A9A9A;
-    --vrum-light:   #F0F0F0;
-    --vrum-white:   #FAFAFA;
-    --vrum-success: #2ECC71;
-    --vrum-warn:    #F39C12;
-    --vrum-info:    #3498DB;
-    --radius:       6px;
-    --shadow:       0 4px 20px rgba(0,0,0,0.35);
-    --transition:   all 0.25s ease;
+    /* Marca */
+    --red:              #D62828;
+    --red-dk:           #A01C1C;
+    --red-glow:         rgba(214, 40, 40, 0.15);
+
+    /* Prata / Chrome */
+    --silver:           #9A9AA8;
+    --silver-lt:        #C8C8D4;
+    --silver-shine:     #E8E8F0;
+
+    /* Superfícies (tema claro) */
+    --bg:               #FAFAFA;
+    --bg-card:          #FFFFFF;
+    --bg-alt:           #F5F5F5;
+    --bg-hover:         rgba(0, 0, 0, 0.03);
+
+    /* Sidebar — cinza prata claro */
+    --sidebar-bg:       #E8E8EE;
+    --sidebar-hover:    rgba(214, 40, 40, 0.08);
+    --sidebar-bdr:      rgba(0, 0, 0, 0.08);
+    --sidebar-txt:      #444444;
+    --sidebar-muted:    #888888;
+
+    /* Texto */
+    --txt:              #111111;
+    --txt-muted:        rgba(0, 0, 0, 0.50);
+    --txt-light:        #999999;
+
+    /* Bordas */
+    --bdr:              rgba(0, 0, 0, 0.08);
+    --bdr-md:           rgba(0, 0, 0, 0.13);
+
+    /* Sombras */
+    --shadow-sm:        0 1px 4px rgba(0, 0, 0, 0.07);
+    --shadow:           0 2px 16px rgba(0, 0, 0, 0.08);
+    --shadow-lg:        0 8px 32px rgba(0, 0, 0, 0.12);
+    --shadow-red:       0 6px 20px rgba(214, 40, 40, 0.35);
+
+    /* Feedback */
+    --success:          #2ECC71;
+    --warn:             #F39C12;
+    --info:             #3498DB;
+
+    --radius:           6px;
+    --transition:       all 0.25s ease;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: 'DM Sans', sans-serif;
-    background: var(--vrum-black);
-    color: var(--vrum-light);
+    background: var(--bg);
+    color: var(--txt);
     min-height: 100vh;
 }
 
 /* ---- NAVBAR ---- */
 .navbar {
-    background: rgba(13,13,13,0.97);
-    border-bottom: 2px solid var(--vrum-red);
+    background: var(--bg-card);
+    border-bottom: 2px solid var(--red);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -44,18 +76,18 @@ body {
     position: sticky;
     top: 0;
     z-index: 1000;
-    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm);
 }
 
 .navbar-logo {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 2rem;
     letter-spacing: 3px;
-    color: var(--vrum-white);
+    color: var(--txt);
     text-decoration: none;
 }
 
-.navbar-logo span { color: var(--vrum-red); }
+.navbar-logo span { color: var(--red); }
 
 .navbar-links {
     display: flex;
@@ -65,7 +97,7 @@ body {
 }
 
 .navbar-links a {
-    color: var(--vrum-silver);
+    color: var(--txt-muted);
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
@@ -73,12 +105,12 @@ body {
     transition: var(--transition);
 }
 
-.navbar-links a:hover { color: var(--vrum-red); }
+.navbar-links a:hover { color: var(--red); }
 
-/* ---- HERO ---- */
+/* ---- HERO (base — home sobrescreve com foto real) ---- */
 .hero {
     height: 90vh;
-    background: linear-gradient(135deg, #0D0D0D 0%, #1A0505 50%, #0D0D0D 100%);
+    background: linear-gradient(135deg, #111 0%, #1A0505 50%, #111 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -91,30 +123,32 @@ body {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(214,40,40,0.12) 0%, transparent 70%);
+    background: radial-gradient(ellipse 70% 60% at 50% 50%,
+        rgba(214, 40, 40, 0.12) 0%, transparent 70%);
+    pointer-events: none;
 }
 
 .hero-content { position: relative; z-index: 1; }
 
 .hero-title {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: clamp(4rem, 10vw, 9rem);
     line-height: 0.9;
     letter-spacing: 4px;
-    color: var(--vrum-white);
+    color: #FAFAFA;
 }
 
-.hero-title .accent { color: var(--vrum-red); }
+.hero-title .accent { color: var(--red); }
 
 .hero-subtitle {
     font-size: 1.1rem;
-    color: var(--vrum-silver);
+    color: var(--silver);
     margin: 24px 0 40px;
     letter-spacing: 2px;
     text-transform: uppercase;
 }
 
-/* ---- BUTTONS ---- */
+/* ---- BOTÕES ---- */
 .btn {
     display: inline-block;
     padding: 12px 32px;
@@ -131,47 +165,63 @@ body {
 }
 
 .btn-primary {
-    background: var(--vrum-red);
-    color: var(--vrum-white);
+    background: var(--red);
+    color: #fff;
 }
-.btn-primary:hover { background: var(--vrum-red-dk); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(214,40,40,0.4); }
-.btn-primary:disabled { background: #5A5A5A; color: #9A9A9A; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-primary:hover {
+    background: var(--red-dk);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-red);
+}
+.btn-primary:disabled,
+.btn-primary[disabled] {
+    background: #ccc;
+    color: #888;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
 
 .btn-outline {
     background: transparent;
-    color: var(--vrum-white);
-    border: 2px solid var(--vrum-white);
+    color: var(--txt);
+    border: 2px solid var(--bdr-md);
 }
-.btn-outline:hover { background: var(--vrum-white); color: var(--vrum-black); }
+.btn-outline:hover {
+    border-color: var(--txt);
+    background: var(--bg-hover);
+}
 
 .btn-ghost {
     background: transparent;
-    color: var(--vrum-red);
-    border: 2px solid var(--vrum-red);
+    color: var(--red);
+    border: 2px solid var(--red);
 }
-.btn-ghost:hover { background: var(--vrum-red); color: var(--vrum-white); }
+.btn-ghost:hover { background: var(--red); color: #fff; }
 
-.btn-sm { padding: 8px 20px; font-size: 0.8rem; }
-.btn-lg { padding: 16px 48px; font-size: 1rem; }
+.btn-sm  { padding: 8px 20px;  font-size: 0.8rem; }
+.btn-lg  { padding: 16px 48px; font-size: 1rem; }
 
-/* ---- SECTION ---- */
+/* ---- SEÇÃO ---- */
 .section { padding: 80px 40px; }
+
 .section-title {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 2.8rem;
     letter-spacing: 3px;
     margin-bottom: 8px;
-    color: var(--vrum-white);
+    color: var(--txt);
 }
-.section-title span { color: var(--vrum-red); }
+.section-title span { color: var(--red); }
+
 .section-line {
     width: 60px;
     height: 3px;
-    background: var(--vrum-red);
+    background: var(--red);
     margin-bottom: 48px;
 }
 
-/* ---- VEHICLE CARDS ---- */
+/* ---- CARDS DE VEÍCULO ---- */
 .vehicles-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -179,37 +229,49 @@ body {
 }
 
 .vehicle-card {
-    background: var(--vrum-gray);
-    border-radius: 10px;
+    background: var(--bg-card);
+    border-radius: 2px;
     overflow: hidden;
     transition: var(--transition);
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid var(--bdr);
     position: relative;
+    box-shadow: var(--shadow-sm);
 }
 
 .vehicle-card:hover {
-    transform: translateY(-6px);
-    border-color: var(--vrum-red);
-    box-shadow: 0 12px 40px rgba(214,40,40,0.2);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--bdr-md);
 }
 
 .vehicle-card-img {
     width: 100%;
     height: 220px;
     object-fit: cover;
-    background: var(--vrum-mid);
+    background: var(--bg-alt);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 4rem;
+    overflow: hidden;
+    position: relative;
 }
+
+.vehicle-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+    display: block;
+}
+.vehicle-card:hover .vehicle-card-img img { transform: scale(1.05); }
 
 .vehicle-card-badge {
     position: absolute;
     top: 16px;
     left: 16px;
-    background: var(--vrum-red);
-    color: white;
+    background: var(--red);
+    color: #fff;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 1px;
@@ -217,61 +279,59 @@ body {
     padding: 4px 12px;
     border-radius: 20px;
 }
-.badge-lancamento { background: #F39C12; }
+.badge-lancamento { background: var(--warn); }
 
 .vehicle-card-body { padding: 20px; }
 
 .vehicle-card-name {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 1.6rem;
     letter-spacing: 2px;
-    color: var(--vrum-white);
+    color: var(--txt);
 }
 
 .vehicle-card-price {
     font-size: 1.3rem;
     font-weight: 700;
-    color: var(--vrum-red);
+    color: var(--red);
     margin: 8px 0;
 }
 
 .vehicle-card-desc {
-    color: var(--vrum-silver);
+    color: var(--txt-muted);
     font-size: 0.85rem;
     line-height: 1.5;
     margin-bottom: 16px;
 }
 
-.vehicle-card-actions {
-    display: flex;
-    gap: 10px;
-}
+.vehicle-card-actions { display: flex; gap: 10px; }
 
 /* ---- LAUNCH BANNER ---- */
 .launch-section {
-    background: linear-gradient(135deg, #1A0505, #0D0D0D);
-    border-top: 1px solid rgba(214,40,40,0.3);
-    border-bottom: 1px solid rgba(214,40,40,0.3);
+    background: var(--bg-alt);
+    border-top: 1px solid var(--bdr);
+    border-bottom: 1px solid var(--bdr);
 }
 
 .launch-card {
     display: flex;
     gap: 48px;
     align-items: center;
-    background: var(--vrum-gray);
-    border-radius: 12px;
+    background: var(--bg-card);
+    border-radius: var(--radius);
     overflow: hidden;
-    border: 1px solid rgba(214,40,40,0.25);
+    border: 1px solid var(--bdr-md);
     padding: 40px;
     margin-bottom: 32px;
+    box-shadow: var(--shadow);
 }
 
 .launch-card-img {
     width: 380px;
     flex-shrink: 0;
     height: 260px;
-    background: var(--vrum-mid);
-    border-radius: 8px;
+    background: var(--bg-alt);
+    border-radius: var(--radius);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -280,8 +340,8 @@ body {
 
 .launch-tag {
     display: inline-block;
-    background: var(--vrum-red);
-    color: white;
+    background: var(--red);
+    color: #fff;
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 2px;
@@ -292,10 +352,10 @@ body {
 }
 
 .launch-title {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 3rem;
     letter-spacing: 3px;
-    color: var(--vrum-white);
+    color: var(--txt);
     line-height: 1;
     margin-bottom: 12px;
 }
@@ -309,27 +369,27 @@ body {
 
 .launch-spec {
     text-align: center;
-    background: rgba(255,255,255,0.04);
-    border-radius: 6px;
+    background: var(--bg-alt);
+    border-radius: var(--radius);
     padding: 10px 16px;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--bdr);
 }
 
 .launch-spec-val {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 1.4rem;
-    color: var(--vrum-red);
+    color: var(--red);
     letter-spacing: 1px;
 }
 
 .launch-spec-label {
     font-size: 0.7rem;
-    color: var(--vrum-silver);
+    color: var(--txt-light);
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-/* ---- DASHBOARD / INTERNAL LAYOUT ---- */
+/* ---- LAYOUT INTERNO (sidebar + conteúdo) ---- */
 .app-layout {
     display: flex;
     min-height: 100vh;
@@ -337,8 +397,8 @@ body {
 
 .sidebar {
     width: 240px;
-    background: var(--vrum-gray);
-    border-right: 1px solid rgba(255,255,255,0.06);
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-bdr);
     display: flex;
     flex-direction: column;
     padding: 0;
@@ -350,31 +410,31 @@ body {
 }
 
 .sidebar-logo {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 1.6rem;
     letter-spacing: 3px;
-    color: var(--vrum-white);
+    color: var(--txt);
     padding: 24px 28px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid var(--sidebar-bdr);
     text-decoration: none;
     display: block;
 }
-.sidebar-logo span { color: var(--vrum-red); }
+.sidebar-logo span { color: var(--red); }
 
 .sidebar-user {
     padding: 20px 28px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid var(--sidebar-bdr);
 }
 
 .sidebar-user-name {
     font-weight: 700;
     font-size: 0.95rem;
-    color: var(--vrum-white);
+    color: var(--txt);
 }
 
 .sidebar-user-role {
     font-size: 0.75rem;
-    color: var(--vrum-red);
+    color: var(--red);
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-top: 2px;
@@ -391,7 +451,7 @@ body {
     align-items: center;
     gap: 12px;
     padding: 12px 28px;
-    color: var(--vrum-silver);
+    color: var(--sidebar-txt);
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
@@ -401,14 +461,14 @@ body {
 
 .sidebar-nav a:hover,
 .sidebar-nav a.active {
-    color: var(--vrum-white);
-    background: rgba(214,40,40,0.1);
-    border-left-color: var(--vrum-red);
+    color: var(--red);
+    background: var(--sidebar-hover);
+    border-left-color: var(--red);
 }
 
 .sidebar-footer {
     padding: 20px 28px;
-    border-top: 1px solid rgba(255,255,255,0.06);
+    border-top: 1px solid var(--sidebar-bdr);
 }
 
 .main-content {
@@ -416,49 +476,49 @@ body {
     flex: 1;
     padding: 32px 40px;
     min-height: 100vh;
+    background: var(--bg);
 }
 
-/* ---- PAGE HEADER ---- */
-.page-header {
-    margin-bottom: 32px;
-}
+/* ---- CABEÇALHO DE PÁGINA ---- */
+.page-header { margin-bottom: 32px; }
 
 .page-header h1 {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 2.2rem;
     letter-spacing: 2px;
-    color: var(--vrum-white);
+    color: var(--txt);
 }
 
 .page-header p {
-    color: var(--vrum-silver);
+    color: var(--txt-muted);
     font-size: 0.9rem;
     margin-top: 4px;
 }
 
 /* ---- CARDS ---- */
 .card {
-    background: var(--vrum-gray);
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.07);
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    border: 1px solid var(--bdr);
     padding: 24px;
     margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
 }
 
 .card-header {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 1.3rem;
     letter-spacing: 2px;
-    color: var(--vrum-white);
+    color: var(--txt);
     margin-bottom: 20px;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    border-bottom: 1px solid var(--bdr);
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-/* ---- TABLE ---- */
+/* ---- TABELA ---- */
 .vrum-table {
     width: 100%;
     border-collapse: collapse;
@@ -466,25 +526,25 @@ body {
 }
 
 .vrum-table th {
-    background: rgba(214,40,40,0.12);
-    color: var(--vrum-red);
+    background: var(--bg-alt);
+    color: var(--red);
     font-size: 0.75rem;
     letter-spacing: 1px;
     text-transform: uppercase;
     padding: 12px 16px;
     text-align: left;
-    border-bottom: 1px solid rgba(214,40,40,0.25);
+    border-bottom: 2px solid var(--bdr-md);
 }
 
 .vrum-table td {
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    color: var(--vrum-light);
+    border-bottom: 1px solid var(--bdr);
+    color: var(--txt);
 }
 
-.vrum-table tr:hover td { background: rgba(255,255,255,0.03); }
+.vrum-table tr:hover td { background: var(--bg-hover); }
 
-/* ---- STATUS BADGES ---- */
+/* ---- BADGES DE STATUS ---- */
 .badge {
     display: inline-block;
     padding: 4px 12px;
@@ -495,33 +555,31 @@ body {
     text-transform: uppercase;
 }
 
-.badge-aguardando  { background: rgba(154,154,154,0.2); color: #9A9A9A; border: 1px solid #9A9A9A; }
-.badge-negociacao  { background: rgba(243,156,18,0.2);  color: #F39C12; border: 1px solid #F39C12; }
-.badge-fabricacao  { background: rgba(52,152,219,0.2);  color: #3498DB; border: 1px solid #3498DB; }
-.badge-fabricado   { background: rgba(155,89,182,0.2);  color: #9B59B6; border: 1px solid #9B59B6; }
-.badge-enviado     { background: rgba(26,188,156,0.2);  color: #1ABC9C; border: 1px solid #1ABC9C; }
-.badge-pronto      { background: rgba(46,204,113,0.2);  color: #2ECC71; border: 1px solid #2ECC71; }
-.badge-finalizado  { background: rgba(255,255,255,0.1); color: #FFF;    border: 1px solid rgba(255,255,255,0.2); }
-.badge-cancelado   { background: rgba(214,40,40,0.2);   color: #D62828; border: 1px solid #D62828; }
+.badge-aguardando  { background: rgba(154,154,154,0.12); color: #666;    border: 1px solid #9A9A9A; }
+.badge-negociacao  { background: rgba(243,156,18,0.10);  color: #A06800; border: 1px solid #F39C12; }
+.badge-fabricacao  { background: rgba(52,152,219,0.10);  color: #1565A0; border: 1px solid #3498DB; }
+.badge-fabricado   { background: rgba(155,89,182,0.10);  color: #6A2FA0; border: 1px solid #9B59B6; }
+.badge-enviado     { background: rgba(26,188,156,0.10);  color: #0A7260; border: 1px solid #1ABC9C; }
+.badge-pronto      { background: rgba(46,204,113,0.10);  color: #167A3A; border: 1px solid #2ECC71; }
+.badge-finalizado  { background: rgba(0,0,0,0.05);       color: #555;    border: 1px solid rgba(0,0,0,0.18); }
+.badge-cancelado   { background: rgba(214,40,40,0.08);   color: #A01C1C; border: 1px solid var(--red); }
 
-/* ---- PROGRESS BAR ---- */
+/* ---- BARRA DE PROGRESSO ---- */
 .progress-wrap {
-    background: var(--vrum-mid);
+    background: var(--bg-alt);
     border-radius: 20px;
     height: 8px;
     overflow: hidden;
 }
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--vrum-red), #FF6B6B);
+    background: linear-gradient(90deg, var(--red), #FF6B6B);
     border-radius: 20px;
     transition: width 0.6s ease;
 }
 
-/* ---- FORMS ---- */
-.form-group {
-    margin-bottom: 20px;
-}
+/* ---- FORMULÁRIOS ---- */
+.form-group { margin-bottom: 20px; }
 
 .form-label {
     display: block;
@@ -529,17 +587,17 @@ body {
     font-weight: 700;
     letter-spacing: 0.8px;
     text-transform: uppercase;
-    color: var(--vrum-silver);
+    color: var(--txt-muted);
     margin-bottom: 8px;
 }
 
 .form-control {
     width: 100%;
-    background: var(--vrum-mid);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--bg-card);
+    border: 1px solid var(--bdr-md);
     border-radius: var(--radius);
     padding: 12px 16px;
-    color: var(--vrum-white);
+    color: var(--txt);
     font-family: 'DM Sans', sans-serif;
     font-size: 0.9rem;
     transition: var(--transition);
@@ -547,24 +605,24 @@ body {
 
 .form-control:focus {
     outline: none;
-    border-color: var(--vrum-red);
-    box-shadow: 0 0 0 3px rgba(214,40,40,0.15);
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px var(--red-glow);
 }
 
-.form-control::placeholder { color: var(--vrum-silver); }
+.form-control::placeholder { color: var(--txt-light); }
 
-select.form-control option { background: var(--vrum-gray); }
+select.form-control option { background: var(--bg-card); color: var(--txt); }
 
-/* ---- LOGIN PAGE ---- */
+/* ---- LOGIN ---- */
 .login-page {
     min-height: 100vh;
     display: flex;
-    background: var(--vrum-black);
+    background: var(--bg);
 }
 
 .login-left {
     flex: 1;
-    background: linear-gradient(160deg, #1A0505 0%, #0D0D0D 100%);
+    background: #111111;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -587,19 +645,19 @@ select.form-control option { background: var(--vrum-gray); }
 }
 
 .login-brand {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 5rem;
     letter-spacing: 6px;
-    color: var(--vrum-white);
+    color: #FAFAFA;
     position: relative;
     z-index: 1;
     line-height: 1;
 }
-.login-brand span { color: var(--vrum-red); }
+.login-brand span { color: var(--red); }
 
 .login-tagline {
     font-size: 0.9rem;
-    color: var(--vrum-silver);
+    color: var(--silver);
     letter-spacing: 3px;
     text-transform: uppercase;
     margin-top: 12px;
@@ -609,37 +667,37 @@ select.form-control option { background: var(--vrum-gray); }
 
 .login-right {
     width: 440px;
-    background: var(--vrum-gray);
+    background: var(--bg-card);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 60px 48px;
-    border-left: 1px solid rgba(255,255,255,0.07);
+    border-left: 1px solid var(--bdr);
 }
 
 .login-form { width: 100%; }
 
 .login-title {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 2rem;
     letter-spacing: 2px;
-    color: var(--vrum-white);
+    color: var(--txt);
     margin-bottom: 6px;
 }
 
 .login-subtitle {
-    color: var(--vrum-silver);
+    color: var(--txt-muted);
     font-size: 0.85rem;
     margin-bottom: 36px;
 }
 
-/* ---- MESSAGES ---- */
+/* ---- MENSAGENS ---- */
 .messages { margin-bottom: 20px; }
 
 .msg-error {
-    background: rgba(214,40,40,0.15);
-    border: 1px solid rgba(214,40,40,0.4);
-    color: #FF6B6B;
+    background: rgba(214,40,40,0.07);
+    border: 1px solid rgba(214,40,40,0.25);
+    color: #A01C1C;
     padding: 12px 16px;
     border-radius: var(--radius);
     font-size: 0.88rem;
@@ -647,9 +705,9 @@ select.form-control option { background: var(--vrum-gray); }
 }
 
 .msg-success {
-    background: rgba(46,204,113,0.15);
-    border: 1px solid rgba(46,204,113,0.4);
-    color: #2ECC71;
+    background: rgba(46,204,113,0.07);
+    border: 1px solid rgba(46,204,113,0.25);
+    color: #167A3A;
     padding: 12px 16px;
     border-radius: var(--radius);
     font-size: 0.88rem;
@@ -658,12 +716,12 @@ select.form-control option { background: var(--vrum-gray); }
 
 .field-error {
     display: none;
-    color: #FF6B6B;
+    color: var(--red);
     font-size: 0.8rem;
     margin-top: 4px;
 }
 
-/* ---- STATS CARDS ---- */
+/* ---- STAT CARDS ---- */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -672,30 +730,31 @@ select.form-control option { background: var(--vrum-gray); }
 }
 
 .stat-card {
-    background: var(--vrum-gray);
-    border-radius: 10px;
+    background: var(--bg-card);
+    border-radius: var(--radius);
     padding: 24px;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-left: 4px solid var(--vrum-red);
+    border: 1px solid var(--bdr);
+    border-left: 4px solid var(--red);
+    box-shadow: var(--shadow-sm);
 }
 
 .stat-number {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 2.5rem;
-    color: var(--vrum-white);
+    color: var(--txt);
     letter-spacing: 2px;
     line-height: 1;
 }
 
 .stat-label {
     font-size: 0.78rem;
-    color: var(--vrum-silver);
+    color: var(--txt-muted);
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-top: 6px;
 }
 
-/* ---- VEHICLE DETAIL ---- */
+/* ---- DETALHE DE VEÍCULO ---- */
 .veiculo-detail {
     display: grid;
     grid-template-columns: 1fr 420px;
@@ -706,53 +765,50 @@ select.form-control option { background: var(--vrum-gray); }
 .veiculo-img-main {
     width: 100%;
     aspect-ratio: 16/9;
-    background: var(--vrum-mid);
-    border-radius: 12px;
+    background: var(--bg-alt);
+    border-radius: var(--radius);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 6rem;
     margin-bottom: 16px;
-    border: 1px solid rgba(255,255,255,0.07);
+    border: 1px solid var(--bdr);
     overflow: hidden;
 }
-
 .veiculo-img-main img { width: 100%; height: 100%; object-fit: cover; }
 
-.veiculo-thumb-row {
-    display: flex;
-    gap: 10px;
-}
+.veiculo-thumb-row { display: flex; gap: 10px; }
 
 .veiculo-thumb {
     flex: 1;
     aspect-ratio: 16/9;
-    background: var(--vrum-mid);
-    border-radius: 6px;
+    background: var(--bg-alt);
+    border-radius: var(--radius);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 2rem;
     cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid var(--bdr);
     transition: var(--transition);
+    overflow: hidden;
 }
-.veiculo-thumb:hover { border-color: var(--vrum-red); }
+.veiculo-thumb:hover { border-color: var(--red); }
 
 .veiculo-sidebar { position: sticky; top: 80px; }
 
 .veiculo-name {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 3rem;
     letter-spacing: 3px;
     line-height: 1;
-    color: var(--vrum-white);
+    color: var(--txt);
 }
 
 .veiculo-price {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--vrum-red);
+    color: var(--red);
     margin: 12px 0;
 }
 
@@ -764,15 +820,15 @@ select.form-control option { background: var(--vrum-gray); }
 }
 
 .spec-item {
-    background: var(--vrum-mid);
-    border-radius: 8px;
+    background: var(--bg-alt);
+    border-radius: var(--radius);
     padding: 12px;
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid var(--bdr);
 }
 
 .spec-label {
     font-size: 0.72rem;
-    color: var(--vrum-silver);
+    color: var(--txt-muted);
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -780,11 +836,11 @@ select.form-control option { background: var(--vrum-gray); }
 .spec-value {
     font-size: 0.95rem;
     font-weight: 600;
-    color: var(--vrum-white);
+    color: var(--txt);
     margin-top: 4px;
 }
 
-/* ---- PEDIDO TIMELINE ---- */
+/* ---- TIMELINE DE PEDIDO ---- */
 .timeline {
     position: relative;
     padding-left: 30px;
@@ -797,7 +853,7 @@ select.form-control option { background: var(--vrum-gray); }
     top: 0;
     bottom: 0;
     width: 2px;
-    background: rgba(255,255,255,0.08);
+    background: var(--bdr-md);
 }
 
 .timeline-item {
@@ -812,81 +868,81 @@ select.form-control option { background: var(--vrum-gray); }
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: var(--vrum-mid);
-    border: 2px solid var(--vrum-silver);
+    background: var(--bg-alt);
+    border: 2px solid var(--silver);
 }
 
 .timeline-dot.active {
-    background: var(--vrum-red);
-    border-color: var(--vrum-red);
-    box-shadow: 0 0 10px rgba(214,40,40,0.5);
+    background: var(--red);
+    border-color: var(--red);
+    box-shadow: 0 0 10px rgba(214,40,40,0.40);
 }
 
 .timeline-dot.done {
-    background: var(--vrum-success);
-    border-color: var(--vrum-success);
+    background: var(--success);
+    border-color: var(--success);
 }
 
 .timeline-label {
     font-weight: 700;
     font-size: 0.9rem;
-    color: var(--vrum-white);
+    color: var(--txt);
 }
 
 .timeline-date {
     font-size: 0.78rem;
-    color: var(--vrum-silver);
+    color: var(--txt-muted);
     margin-top: 2px;
 }
 
 /* ---- FOOTER ---- */
 .footer {
-    background: var(--vrum-gray);
-    border-top: 1px solid rgba(255,255,255,0.06);
+    background: #111111;
+    border-top: 1px solid var(--bdr);
     padding: 40px;
     text-align: center;
 }
 
 .footer-logo {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 2rem;
     letter-spacing: 3px;
-    color: var(--vrum-white);
+    color: #FAFAFA;
     margin-bottom: 8px;
 }
-.footer-logo span { color: var(--vrum-red); }
+.footer-logo span { color: var(--red); }
 
 .footer-text {
-    color: var(--vrum-silver);
+    color: var(--silver);
     font-size: 0.82rem;
 }
 
-/* ---- UTILS ---- */
-.text-red    { color: var(--vrum-red); }
-.text-silver { color: var(--vrum-silver); }
-.text-white  { color: var(--vrum-white); }
-.mt-8  { margin-top: 8px; }
-.mt-16 { margin-top: 16px; }
-.mt-24 { margin-top: 24px; }
-.mb-8  { margin-bottom: 8px; }
-.mb-16 { margin-bottom: 16px; }
-.mb-24 { margin-bottom: 24px; }
+/* ---- UTILITÁRIOS ---- */
+.text-red    { color: var(--red); }
+.text-silver { color: var(--silver); }
+.text-muted  { color: var(--txt-muted); }
+.mt-8   { margin-top: 8px; }
+.mt-16  { margin-top: 16px; }
+.mt-24  { margin-top: 24px; }
+.mb-8   { margin-bottom: 8px; }
+.mb-16  { margin-bottom: 16px; }
+.mb-24  { margin-bottom: 24px; }
 .d-flex { display: flex; }
 .gap-12 { gap: 12px; }
 .gap-16 { gap: 16px; }
-.align-center { align-items: center; }
+.align-center    { align-items: center; }
 .justify-between { justify-content: space-between; }
-.w-100 { width: 100%; }
+.w-100  { width: 100%; }
 
-/* ---- RESPONSIVE ---- */
+/* ---- RESPONSIVO ---- */
 @media (max-width: 900px) {
-    .veiculo-detail { grid-template-columns: 1fr; }
-    .launch-card { flex-direction: column; }
-    .launch-card-img { width: 100%; }
-    .login-left { display: none; }
-    .login-right { width: 100%; }
-    .sidebar { transform: translateX(-100%); }
-    .main-content { margin-left: 0; }
-    .navbar { padding: 0 20px; }
-    .section { padding: 48px 20px; }
+    .veiculo-detail    { grid-template-columns: 1fr; }
+    .launch-card       { flex-direction: column; }
+    .launch-card-img   { width: 100%; }
+    .login-left        { display: none; }
+    .login-right       { width: 100%; }
+    .sidebar           { transform: translateX(-100%); }
+    .main-content      { margin-left: 0; }
+    .navbar            { padding: 0 20px; }
+    .section           { padding: 48px 20px; }
 }

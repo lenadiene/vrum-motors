@@ -167,16 +167,17 @@ public class VendedorVrumMotorsSeleniumTest {
 
     @After
     public void logoutAposCadaTeste() {
+        aguardar(1000);
         try {
-            // CDP limpa TODOS os cookies
-            ((org.openqa.selenium.chrome.ChromeDriver) driver)
-                    .executeCdpCommand("Network.clearBrowserCookies", new java.util.HashMap<>());
-            // Navegar para about:blank garante fresh load no próximo driver.get()
-            driver.get("about:blank");
-            aguardar(500);
+            WebElement btnSair = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//a[contains(text(),'Sair')] | //input[contains(@value,'Sair')] | //button[contains(text(),'Sair')]")));
+            btnSair.click();
+            wait.until(ExpectedConditions.or(
+                    ExpectedConditions.urlContains("login"),
+                    ExpectedConditions.urlContains("home")));
         } catch (Exception e) {
             driver.manage().deleteAllCookies();
-            driver.get("about:blank");
+            driver.get(LOGIN_URL);
         }
     }
 

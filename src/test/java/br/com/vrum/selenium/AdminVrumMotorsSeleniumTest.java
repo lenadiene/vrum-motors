@@ -104,6 +104,8 @@ public class AdminVrumMotorsSeleniumTest {
                     ExpectedConditions.urlContains("login"),
                     ExpectedConditions.urlContains("home")));
         } catch (Exception e) {
+            // ignored — finally garante limpeza
+        } finally {
             driver.manage().deleteAllCookies();
         }
     }

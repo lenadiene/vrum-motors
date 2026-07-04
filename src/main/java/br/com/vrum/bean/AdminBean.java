@@ -1,6 +1,7 @@
 package br.com.vrum.bean;
 
 import br.com.vrum.model.*;
+import br.com.vrum.model.TipoConfiguracaoVeiculo;
 import br.com.vrum.service.*;
 
 import jakarta.annotation.PostConstruct;
@@ -12,7 +13,6 @@ import jakarta.persistence.PersistenceException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.Year;
 import java.util.List;
 
 @Named("adminBean")
@@ -39,6 +39,14 @@ public class AdminBean implements Serializable {
     private String precoTexto = "";
     private String anoTexto   = "";
 
+    // Opções de seletores carregadas do banco
+    private List<String> opcoesAnos;
+    private List<String> opcoesMarcas;
+    private List<String> opcoesMotores;
+    private List<String> opcoesCombustiveis;
+    private List<String> opcoesTransmissoes;
+    private List<String> opcoesTracoes;
+
     // Pedidos
     private List<Pedido> pedidos;
 
@@ -46,6 +54,7 @@ public class AdminBean implements Serializable {
     private final ConcessionariaService concService = new ConcessionariaService();
     private final VeiculoService veiculoService = new VeiculoService();
     private final PedidoService pedidoService = new PedidoService();
+    private final ConfiguracaoVeiculoService cfgService = new ConfiguracaoVeiculoService();
 
     @PostConstruct
     public void init() {
@@ -57,6 +66,12 @@ public class AdminBean implements Serializable {
         concessionarias = concService.listarTodas();
         veiculos = veiculoService.listarTodos();
         pedidos = pedidoService.listarTodos();
+        opcoesAnos         = cfgService.listarValores(TipoConfiguracaoVeiculo.ANO);
+        opcoesMarcas       = cfgService.listarValores(TipoConfiguracaoVeiculo.MARCA);
+        opcoesMotores      = cfgService.listarValores(TipoConfiguracaoVeiculo.MOTOR);
+        opcoesCombustiveis = cfgService.listarValores(TipoConfiguracaoVeiculo.COMBUSTIVEL);
+        opcoesTransmissoes = cfgService.listarValores(TipoConfiguracaoVeiculo.TRANSMISSAO);
+        opcoesTracoes      = cfgService.listarValores(TipoConfiguracaoVeiculo.TRACAO);
     }
 
     // ---- USUÁRIOS ----
@@ -338,7 +353,6 @@ public class AdminBean implements Serializable {
     // ---- VEÍCULOS ----
     public void novoVeiculo() {
         veiculoEdicao = new Veiculo();
-        veiculoEdicao.setMarca("Vrum");
         precoTexto = "";
         anoTexto   = "";
         mostrarFormVeiculo = true;
@@ -361,8 +375,10 @@ public class AdminBean implements Serializable {
     }
 
     public void salvarVeiculo() {
-        // Marca sempre "Vrum"
-        veiculoEdicao.setMarca("Vrum");
+        // Valida marca
+        if (veiculoEdicao.getMarca() == null || veiculoEdicao.getMarca().trim().isEmpty()) {
+            addErro("Selecione a marca do veículo."); return;
+        }
 
         // Validar e trim nome
         String nome = veiculoEdicao.getNome();
@@ -377,15 +393,10 @@ public class AdminBean implements Serializable {
         if (modelo.length() > 50)                  { addErro("O modelo deve ter no máximo 50 caracteres."); return; }
         veiculoEdicao.setModelo(modelo);
 
-        // Validar ano
+        // Validar ano (valores vêm do banco, select já restringe as opções)
         if (anoTexto == null || anoTexto.trim().isEmpty()) { addErro("Selecione o ano do veículo."); return; }
         try {
-            int ano = Integer.parseInt(anoTexto.trim());
-            int anoAtual = Year.now().getValue();
-            if (ano < 1950 || ano > anoAtual + 1) {
-                addErro("Ano inválido. Informe um ano entre 1950 e " + (anoAtual + 1) + "."); return;
-            }
-            veiculoEdicao.setAno(ano);
+            veiculoEdicao.setAno(Integer.parseInt(anoTexto.trim()));
         } catch (NumberFormatException e) {
             addErro("Ano inválido."); return;
         }
@@ -467,4 +478,11 @@ public class AdminBean implements Serializable {
     public List<Pedido> getPedidos() { return pedidos; }
     public Long getConcessionariaIdSelecionada() { return concessionariaIdSelecionada; }
     public void setConcessionariaIdSelecionada(Long id) { this.concessionariaIdSelecionada = id; }
+
+    public List<String> getOpcoesAnos()         { return opcoesAnos; }
+    public List<String> getOpcoesMarcas()       { return opcoesMarcas; }
+    public List<String> getOpcoesMotores()      { return opcoesMotores; }
+    public List<String> getOpcoesCombustiveis() { return opcoesCombustiveis; }
+    public List<String> getOpcoesTransmissoes() { return opcoesTransmissoes; }
+    public List<String> getOpcoesTracoes()      { return opcoesTracoes; }
 }

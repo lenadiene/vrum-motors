@@ -719,6 +719,8 @@ public class VrumClienteFluxoTest {
     }
 
     private void irParaCadastroViaComprar() {
+        driver.manage().deleteAllCookies();
+        aguardar(300);
         for (int tentativa = 1; tentativa <= 3; tentativa++) {
             driver.get(HOME_URL);
             wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vehicle-card")));

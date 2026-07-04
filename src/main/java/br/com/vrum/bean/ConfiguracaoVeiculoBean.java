@@ -19,27 +19,47 @@ public class ConfiguracaoVeiculoBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private List<String> opcoesMotor       = new ArrayList<>();
-    private List<String> opcoesCombustivel = new ArrayList<>();
-    private List<String> opcoesTransmissao = new ArrayList<>();
-    private List<String> opcoesTracao      = new ArrayList<>();
+    private List<String> opcoesAno         = new ArrayList<>();
+    private List<String> opcoesMarca        = new ArrayList<>();
+    private List<String> opcoesMotor        = new ArrayList<>();
+    private List<String> opcoesCombustivel  = new ArrayList<>();
+    private List<String> opcoesTransmissao  = new ArrayList<>();
+    private List<String> opcoesTracao       = new ArrayList<>();
 
-    private String novoMotor       = "";
-    private String novoCombustivel = "";
-    private String novaTransmissao = "";
-    private String novaTracao      = "";
+    private String novoAno          = "";
+    private String novaMarca        = "";
+    private String novoMotor        = "";
+    private String novoCombustivel  = "";
+    private String novaTransmissao  = "";
+    private String novaTracao       = "";
 
     private final ConfiguracaoVeiculoService service = new ConfiguracaoVeiculoService();
 
     @PostConstruct
     public void init() {
-        opcoesMotor       = new ArrayList<>(service.listarValores(TipoConfiguracaoVeiculo.MOTOR));
+        opcoesAno        = new ArrayList<>(service.listarValores(TipoConfiguracaoVeiculo.ANO));
+        opcoesMarca      = new ArrayList<>(service.listarValores(TipoConfiguracaoVeiculo.MARCA));
+        opcoesMotor      = new ArrayList<>(service.listarValores(TipoConfiguracaoVeiculo.MOTOR));
         opcoesCombustivel = new ArrayList<>(service.listarValores(TipoConfiguracaoVeiculo.COMBUSTIVEL));
         opcoesTransmissao = new ArrayList<>(service.listarValores(TipoConfiguracaoVeiculo.TRANSMISSAO));
-        opcoesTracao      = new ArrayList<>(service.listarValores(TipoConfiguracaoVeiculo.TRACAO));
+        opcoesTracao     = new ArrayList<>(service.listarValores(TipoConfiguracaoVeiculo.TRACAO));
     }
 
     // ---- Adicionar ----
+    public void adicionarAno() {
+        if (novoAno != null && !novoAno.trim().isEmpty()) {
+            try { Integer.parseInt(novoAno.trim()); }
+            catch (NumberFormatException e) { addErro("Ano deve ser um número válido."); return; }
+        }
+        adicionar(opcoesAno, novoAno, "Ano");
+        novoAno = "";
+    }
+
+    public void adicionarMarca() {
+        adicionar(opcoesMarca, novaMarca, "Marca");
+        novaMarca = "";
+    }
+
     public void adicionarMotor() {
         adicionar(opcoesMotor, novoMotor, "Motor");
         novoMotor = "";
@@ -74,6 +94,8 @@ public class ConfiguracaoVeiculoBean implements Serializable {
     }
 
     // ---- Remover ----
+    public void removerAno(String v)         { opcoesAno.remove(v); }
+    public void removerMarca(String v)       { opcoesMarca.remove(v); }
     public void removerMotor(String v)       { opcoesMotor.remove(v); }
     public void removerCombustivel(String v) { opcoesCombustivel.remove(v); }
     public void removerTransmissao(String v) { opcoesTransmissao.remove(v); }
@@ -81,6 +103,8 @@ public class ConfiguracaoVeiculoBean implements Serializable {
 
     // ---- Salvar e Voltar ----
     public String salvarEVoltar() {
+        service.salvarTipo(TipoConfiguracaoVeiculo.ANO,        opcoesAno);
+        service.salvarTipo(TipoConfiguracaoVeiculo.MARCA,      opcoesMarca);
         service.salvarTipo(TipoConfiguracaoVeiculo.MOTOR,       opcoesMotor);
         service.salvarTipo(TipoConfiguracaoVeiculo.COMBUSTIVEL, opcoesCombustivel);
         service.salvarTipo(TipoConfiguracaoVeiculo.TRANSMISSAO, opcoesTransmissao);
@@ -98,20 +122,28 @@ public class ConfiguracaoVeiculoBean implements Serializable {
     }
 
     // ---- Getters / Setters ----
-    public List<String> getOpcoesMotor()              { return opcoesMotor; }
-    public List<String> getOpcoesCombustivel()        { return opcoesCombustivel; }
-    public List<String> getOpcoesTransmissao()        { return opcoesTransmissao; }
-    public List<String> getOpcoesTracao()             { return opcoesTracao; }
+    public List<String> getOpcoesAno()         { return opcoesAno; }
+    public List<String> getOpcoesMarca()       { return opcoesMarca; }
+    public List<String> getOpcoesMotor()       { return opcoesMotor; }
+    public List<String> getOpcoesCombustivel() { return opcoesCombustivel; }
+    public List<String> getOpcoesTransmissao() { return opcoesTransmissao; }
+    public List<String> getOpcoesTracao()      { return opcoesTracao; }
 
-    public String getNovoMotor()                      { return novoMotor; }
-    public void   setNovoMotor(String v)              { this.novoMotor = v; }
+    public String getNovoAno()          { return novoAno; }
+    public void   setNovoAno(String v)  { this.novoAno = v; }
 
-    public String getNovoCombustivel()                { return novoCombustivel; }
-    public void   setNovoCombustivel(String v)        { this.novoCombustivel = v; }
+    public String getNovaMarca()        { return novaMarca; }
+    public void   setNovaMarca(String v){ this.novaMarca = v; }
 
-    public String getNovaTransmissao()                { return novaTransmissao; }
-    public void   setNovaTransmissao(String v)        { this.novaTransmissao = v; }
+    public String getNovoMotor()        { return novoMotor; }
+    public void   setNovoMotor(String v){ this.novoMotor = v; }
 
-    public String getNovaTracao()                     { return novaTracao; }
-    public void   setNovaTracao(String v)             { this.novaTracao = v; }
+    public String getNovoCombustivel()          { return novoCombustivel; }
+    public void   setNovoCombustivel(String v)  { this.novoCombustivel = v; }
+
+    public String getNovaTransmissao()          { return novaTransmissao; }
+    public void   setNovaTransmissao(String v)  { this.novaTransmissao = v; }
+
+    public String getNovaTracao()        { return novaTracao; }
+    public void   setNovaTracao(String v){ this.novaTracao = v; }
 }

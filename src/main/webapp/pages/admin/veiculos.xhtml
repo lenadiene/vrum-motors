@@ -89,29 +89,6 @@
         }
 
         /* ============================================================
-           Seletor de Ano
-        ============================================================ */
-        function gerarSelectAno() {
-            var sel = document.getElementById('anoSelect');
-            if (!sel) return;
-            var anoAtual = new Date().getFullYear();
-            sel.innerHTML = '<option value="">Selecione o ano...</option>';
-            for (var y = anoAtual + 1; y >= 1950; y--) {
-                var o = document.createElement('option');
-                o.value = o.textContent = y;
-                sel.appendChild(o);
-            }
-            var h = document.querySelector('[id$=":hiddenAno"]');
-            if (h && h.value) sel.value = h.value;
-        }
-
-        function onAnoChange(el) {
-            var h = document.querySelector('[id$=":hiddenAno"]');
-            if (h) h.value = el.value;
-            atualizarBotaoVeiculo();
-        }
-
-        /* ============================================================
            Máscara Monetária  →  R$ 0.000,00
         ============================================================ */
         function mascaraPreco(el) {
@@ -206,23 +183,23 @@
         function atualizarBotaoVeiculo() {
             var nomeEl   = document.querySelector('[id$=":inputNomeV"]');
             var modeloEl = document.querySelector('[id$=":inputModelo"]');
-            var anoEl    = document.getElementById('anoSelect');
+            var anoEl    = document.querySelector('[id$=":anoSelect"]');
+            var marcaEl  = document.querySelector('[id$=":marcaSelect"]');
             var tipoEl   = document.querySelector('[id$=":tipoSelect"]');
             var btn      = document.querySelector('[id$=":btnSalvarVeiculo"]');
             if (!btn) return;
             var nomeOk   = nomeEl   && nomeEl.value.trim().length > 0   && !nomeEl.classList.contains('input-invalid');
             var modeloOk = modeloEl && modeloEl.value.trim().length >= 2 && !modeloEl.classList.contains('input-invalid');
             var anoOk    = anoEl    && anoEl.value !== '';
+            var marcaOk  = marcaEl  && marcaEl.value !== '';
             var tipoOk   = tipoEl   && tipoEl.value !== '';
-            btn.disabled = !(nomeOk && modeloOk && anoOk && tipoOk);
+            btn.disabled = !(nomeOk && modeloOk && anoOk && marcaOk && tipoOk);
         }
 
         /* ============================================================
            Inicialização
         ============================================================ */
         window.addEventListener('DOMContentLoaded', function() {
-            gerarSelectAno();
-
             /* modo edição: formatar preço existente */
             var precoEl = document.querySelector('[id$=":inputPreco"]');
             if (precoEl && precoEl.value) formatarPrecoInicial(precoEl);
@@ -264,9 +241,12 @@
     <main class="main-content">
         <div class="page-header d-flex justify-between align-center">
             <div><h1>Veículos</h1><p>Catálogo da Vrum Motors</p></div>
-            <h:form>
-                <h:commandButton value="+ Novo Veículo" action="#{adminBean.novoVeiculo}" styleClass="btn btn-primary"/>
-            </h:form>
+            <div style="display:flex; gap:10px">
+                <a href="configuracoes-veiculo.xhtml" class="btn btn-ghost btn-sm">⚙ Configurar opções</a>
+                <h:form>
+                    <h:commandButton value="+ Novo Veículo" action="#{adminBean.novoVeiculo}" styleClass="btn btn-primary"/>
+                </h:form>
+            </div>
         </div>
 
         <h:form id="veiculoForm">
@@ -305,20 +285,26 @@
                         <!-- Ano -->
                         <div class="form-group">
                             <label class="form-label">Ano *</label>
-                            <select id="anoSelect" class="form-control" onchange="onAnoChange(this);">
-                                <option value="">Selecione o ano...</option>
-                            </select>
-                            <h:inputHidden id="hiddenAno" value="#{adminBean.anoTexto}"/>
+                            <h:selectOneMenu id="anoSelect" value="#{adminBean.anoTexto}"
+                                             styleClass="form-control"
+                                             onchange="atualizarBotaoVeiculo();">
+                                <f:selectItem itemLabel="Selecione o ano..." itemValue=""/>
+                                <f:selectItems value="#{adminBean.opcoesAnos}" var="a"
+                                               itemLabel="#{a}" itemValue="#{a}"/>
+                            </h:selectOneMenu>
                             <span id="v-ano-msg" class="field-error"></span>
                         </div>
 
-                        <!-- Marca (exibição somente) -->
+                        <!-- Marca -->
                         <div class="form-group">
-                            <label class="form-label">Marca</label>
-                            <div style="padding-top:6px">
-                                <span class="marca-badge">VRUM</span>
-                                <div style="font-size:0.75rem; color:#9A9A9A; margin-top:4px">Preenchida automaticamente pelo sistema</div>
-                            </div>
+                            <label class="form-label">Marca *</label>
+                            <h:selectOneMenu id="marcaSelect" value="#{adminBean.veiculoEdicao.marca}"
+                                             styleClass="form-control"
+                                             onchange="atualizarBotaoVeiculo();">
+                                <f:selectItem itemLabel="Selecione a marca..." itemValue=""/>
+                                <f:selectItems value="#{adminBean.opcoesMarcas}" var="m"
+                                               itemLabel="#{m}" itemValue="#{m}"/>
+                            </h:selectOneMenu>
                         </div>
 
                         <!-- ── MECÂNICA ───────────────────────────────────── -->
@@ -328,52 +314,35 @@
                             <label class="form-label">Motor</label>
                             <h:selectOneMenu value="#{adminBean.veiculoEdicao.motor}" styleClass="form-control">
                                 <f:selectItem itemLabel="Selecione..." itemValue=""/>
-                                <f:selectItem itemLabel="1.0"        itemValue="1.0"/>
-                                <f:selectItem itemLabel="1.0 Turbo"  itemValue="1.0 Turbo"/>
-                                <f:selectItem itemLabel="1.3 Turbo"  itemValue="1.3 Turbo"/>
-                                <f:selectItem itemLabel="1.4 Turbo"  itemValue="1.4 Turbo"/>
-                                <f:selectItem itemLabel="1.5"        itemValue="1.5"/>
-                                <f:selectItem itemLabel="1.6"        itemValue="1.6"/>
-                                <f:selectItem itemLabel="2.0"        itemValue="2.0"/>
-                                <f:selectItem itemLabel="2.0 Turbo"  itemValue="2.0 Turbo"/>
-                                <f:selectItem itemLabel="3.0"        itemValue="3.0"/>
-                                <f:selectItem itemLabel="4.0"        itemValue="4.0"/>
-                                <f:selectItem itemLabel="Elétrico"   itemValue="Elétrico"/>
+                                <f:selectItems value="#{adminBean.opcoesMotores}" var="opt"
+                                               itemLabel="#{opt}" itemValue="#{opt}"/>
                             </h:selectOneMenu>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Combustível</label>
                             <h:selectOneMenu value="#{adminBean.veiculoEdicao.combustivel}" styleClass="form-control">
-                                <f:selectItem itemLabel="Selecione..."            itemValue=""/>
-                                <f:selectItem itemLabel="Flex (Gasolina/Álcool)"  itemValue="Flex (Gasolina/Álcool)"/>
-                                <f:selectItem itemLabel="Gasolina"                itemValue="Gasolina"/>
-                                <f:selectItem itemLabel="Etanol"                  itemValue="Etanol"/>
-                                <f:selectItem itemLabel="Diesel"                  itemValue="Diesel"/>
-                                <f:selectItem itemLabel="Híbrido"                 itemValue="Híbrido"/>
-                                <f:selectItem itemLabel="Elétrico"                itemValue="Elétrico"/>
+                                <f:selectItem itemLabel="Selecione..." itemValue=""/>
+                                <f:selectItems value="#{adminBean.opcoesCombustiveis}" var="opt"
+                                               itemLabel="#{opt}" itemValue="#{opt}"/>
                             </h:selectOneMenu>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Transmissão</label>
                             <h:selectOneMenu value="#{adminBean.veiculoEdicao.transmissao}" styleClass="form-control">
-                                <f:selectItem itemLabel="Selecione..."  itemValue=""/>
-                                <f:selectItem itemLabel="Manual"        itemValue="Manual"/>
-                                <f:selectItem itemLabel="Automático"    itemValue="Automático"/>
-                                <f:selectItem itemLabel="Automatizado"  itemValue="Automatizado"/>
-                                <f:selectItem itemLabel="CVT"           itemValue="CVT"/>
+                                <f:selectItem itemLabel="Selecione..." itemValue=""/>
+                                <f:selectItems value="#{adminBean.opcoesTransmissoes}" var="opt"
+                                               itemLabel="#{opt}" itemValue="#{opt}"/>
                             </h:selectOneMenu>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Tração</label>
                             <h:selectOneMenu value="#{adminBean.veiculoEdicao.tracao}" styleClass="form-control">
-                                <f:selectItem itemLabel="Selecione..."       itemValue=""/>
-                                <f:selectItem itemLabel="4x2 (Dianteira)"    itemValue="4x2 (Dianteira)"/>
-                                <f:selectItem itemLabel="4x2 (Traseira)"     itemValue="4x2 (Traseira)"/>
-                                <f:selectItem itemLabel="4x4"                itemValue="4x4"/>
-                                <f:selectItem itemLabel="AWD (Integral)"     itemValue="AWD (Integral)"/>
+                                <f:selectItem itemLabel="Selecione..." itemValue=""/>
+                                <f:selectItems value="#{adminBean.opcoesTracoes}" var="opt"
+                                               itemLabel="#{opt}" itemValue="#{opt}"/>
                             </h:selectOneMenu>
                         </div>
 

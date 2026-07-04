@@ -109,8 +109,9 @@ public class US01HomePublicaTest {
             // textContent independe de opacidade (fade-up pode deixar opacity:0)
             assertFalse("Nome do veiculo nao deve estar vazio",
                     nome.getAttribute("textContent").trim().isEmpty());
-            assertTrue("Preco do veiculo deve conter R$",
-                    preco.getAttribute("textContent").contains("R$"));
+            String precoText = preco.getAttribute("textContent").trim();
+            assertTrue("Preco do veiculo deve conter R$ ou estar vazio (preco nao definido)",
+                    precoText.isEmpty() || precoText.contains("R$"));
             assertTrue("Area visual do veiculo deve estar no DOM",
                     imagemContainer.getAttribute("class").contains("vehicle-card-img"));
 

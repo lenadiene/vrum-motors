@@ -120,6 +120,62 @@
             <div class="card">
                 <div class="cfg-grid">
 
+                    <!-- ── ANO ── -->
+                    <div class="cfg-section">
+                        <div class="cfg-section-title">📅 Ano</div>
+                        <div class="cfg-tag-list">
+                            <h:panelGroup rendered="#{empty configuracaoVeiculoBean.opcoesAno}">
+                                <span class="cfg-empty">Nenhuma opção cadastrada.</span>
+                            </h:panelGroup>
+                            <ui:repeat value="#{configuracaoVeiculoBean.opcoesAno}" var="opt">
+                                <span class="cfg-tag">
+                                    #{opt}
+                                    <h:commandButton value="×"
+                                                     action="#{configuracaoVeiculoBean.removerAno(opt)}"
+                                                     styleClass="cfg-remove"
+                                                     title="Remover"/>
+                                </span>
+                            </ui:repeat>
+                        </div>
+                        <div class="cfg-add-row">
+                            <h:inputText value="#{configuracaoVeiculoBean.novoAno}"
+                                         styleClass="form-control"
+                                         placeholder="Ex: 2028"
+                                         maxlength="4"/>
+                            <h:commandButton value="+ Adicionar"
+                                             action="#{configuracaoVeiculoBean.adicionarAno}"
+                                             styleClass="btn btn-primary btn-sm"/>
+                        </div>
+                    </div>
+
+                    <!-- ── MARCA ── -->
+                    <div class="cfg-section">
+                        <div class="cfg-section-title">🏷 Marca</div>
+                        <div class="cfg-tag-list">
+                            <h:panelGroup rendered="#{empty configuracaoVeiculoBean.opcoesMarca}">
+                                <span class="cfg-empty">Nenhuma opção cadastrada.</span>
+                            </h:panelGroup>
+                            <ui:repeat value="#{configuracaoVeiculoBean.opcoesMarca}" var="opt">
+                                <span class="cfg-tag">
+                                    #{opt}
+                                    <h:commandButton value="×"
+                                                     action="#{configuracaoVeiculoBean.removerMarca(opt)}"
+                                                     styleClass="cfg-remove"
+                                                     title="Remover"/>
+                                </span>
+                            </ui:repeat>
+                        </div>
+                        <div class="cfg-add-row">
+                            <h:inputText value="#{configuracaoVeiculoBean.novaMarca}"
+                                         styleClass="form-control"
+                                         placeholder="Ex: Vrum Sport"
+                                         maxlength="100"/>
+                            <h:commandButton value="+ Adicionar"
+                                             action="#{configuracaoVeiculoBean.adicionarMarca}"
+                                             styleClass="btn btn-primary btn-sm"/>
+                        </div>
+                    </div>
+
                     <!-- ── MOTOR ── -->
                     <div class="cfg-section">
                         <div class="cfg-section-title">⚙ Motor</div>

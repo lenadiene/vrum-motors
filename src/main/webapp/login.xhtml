@@ -5,44 +5,290 @@
 
 <h:head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Login — Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
-    <script type="text/javascript">
-        function verificarLimite(campo, msgId) {
-            if(campo.value.length >= campo.maxLength) {
-                document.getElementById(msgId).style.display = 'block';
-            } else {
-                document.getElementById(msgId).style.display = 'none';
-            }
+    <style>/*<![CDATA[*/
+
+        /* ── Animações chrome/prata ── */
+        @keyframes chrome-shine {
+            0%   { background-position: -200% center; }
+            100% { background-position:  200% center; }
         }
-    </script>
+        @keyframes silver-ray {
+            0%   { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
+            8%   { opacity: 0.9; }
+            92%  { opacity: 0.9; }
+            100% { transform: translateX(200vw)  skewX(-12deg); opacity: 0; }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Layout geral ── */
+        body { background: #FAFAFA; }
+
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            background: #FAFAFA;
+        }
+
+        /* ── Lado esquerdo — foto com overlay claro ── */
+        .login-left {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 72px;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(250,250,252,0.90) 0%,
+                    rgba(240,240,246,0.72) 60%,
+                    rgba(232,232,240,0.55) 100%
+                ),
+                url('https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1400&q=80')
+                center / cover no-repeat;
+            border-right: 1px solid rgba(0,0,0,0.07);
+        }
+
+        /* Raio de prata sobre a foto */
+        .login-left::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: 0;
+            width: 2px;
+            background: linear-gradient(
+                180deg,
+                transparent             0%,
+                rgba(192,204,220,0.55) 20%,
+                rgba(240,246,252,0.95) 50%,
+                rgba(192,204,220,0.55) 80%,
+                transparent            100%
+            );
+            pointer-events: none;
+            animation: silver-ray 10s ease-in-out infinite;
+            animation-delay: 2s;
+        }
+
+        /* Remove o radial gradient escuro que vinha do CSS global */
+        .login-left::before { display: none; }
+
+        /* ── Marca ── */
+        .login-brand {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 5rem;
+            letter-spacing: 6px;
+            line-height: 0.9;
+            color: #111;
+            position: relative;
+            z-index: 1;
+        }
+        .login-brand span { color: #D62828; }
+
+        /* Linha decorativa vermelha */
+        .login-brand-line {
+            width: 48px;
+            height: 3px;
+            background: #D62828;
+            margin: 20px 0 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Tagline com efeito chrome */
+        .login-tagline-chrome {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            background: linear-gradient(
+                90deg,
+                #555  0%,
+                #999  25%,
+                #ccc  40%,
+                #eee  50%,
+                #ccc  60%,
+                #999  75%,
+                #555  100%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: chrome-shine 5s linear infinite;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 48px;
+        }
+
+        /* ── Bullets de benefícios ── */
+        .login-features {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-feature {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            animation: fadeUp 0.6s ease both;
+        }
+        .login-feature:nth-child(1) { animation-delay: 0.1s; }
+        .login-feature:nth-child(2) { animation-delay: 0.2s; }
+        .login-feature:nth-child(3) { animation-delay: 0.3s; }
+
+        .login-feature-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(214,40,40,0.07);
+            border: 1px solid rgba(214,40,40,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .login-feature-text {
+            font-size: 0.88rem;
+            color: rgba(0,0,0,0.55);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Lado direito — formulário ── */
+        .login-right {
+            width: 460px;
+            flex-shrink: 0;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 52px;
+            border-left: 1px solid rgba(0,0,0,0.07);
+            box-shadow: -4px 0 24px rgba(0,0,0,0.05);
+        }
+
+        .login-form {
+            width: 100%;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .login-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.4rem;
+            letter-spacing: 3px;
+            color: #111;
+            margin-bottom: 6px;
+        }
+
+        .login-subtitle {
+            color: rgba(0,0,0,0.45);
+            font-size: 0.88rem;
+            margin-bottom: 36px;
+            line-height: 1.5;
+        }
+
+        /* Campos com foco vermelho */
+        .form-control {
+            background: #FAFAFA;
+            border: 1px solid rgba(0,0,0,0.13);
+        }
+        .form-control:focus {
+            background: #fff;
+            border-color: #D62828;
+            box-shadow: 0 0 0 3px rgba(214,40,40,0.10);
+        }
+
+        /* Links do formulário */
+        .login-link-muted {
+            color: rgba(0,0,0,0.40);
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .login-link-muted:hover { color: rgba(0,0,0,0.65); }
+
+        .login-link-red {
+            color: #D62828;
+            font-size: 0.85rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .login-link-red:hover { color: #A01C1C; }
+
+        /* Caixa de logins de exemplo */
+        .dev-hints {
+            margin-top: 28px;
+            background: #F5F5F7;
+            border-radius: 6px;
+            padding: 16px 18px;
+            border: 1px solid rgba(0,0,0,0.07);
+        }
+        .dev-hints-title {
+            font-size: 0.68rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .dev-hints p {
+            color: #888;
+            font-size: 0.77rem;
+            line-height: 1.7;
+        }
+
+    /*]]>*/</style>
+    <script>//<![CDATA[
+        function verificarLimite(campo, msgId) {
+            var el = document.getElementById(msgId);
+            if (!el) return;
+            el.style.display = campo.value.length >= campo.maxLength ? 'block' : 'none';
+        }
+    //]]></script>
 </h:head>
 
 <h:body>
 <div class="login-page">
 
-    <!-- Lado esquerdo visual -->
+    <!-- ===== LADO ESQUERDO ===== -->
     <div class="login-left">
         <div class="login-brand">VRUM<br/><span>MOTORS</span></div>
-        <div class="login-tagline">Plataforma de Gestão Interna</div>
-        <div style="margin-top:60px; display:flex; flex-direction:column; gap:16px; position:relative; z-index:1">
-            <div style="display:flex; align-items:center; gap:12px; color:#9A9A9A; font-size:0.85rem">
-                <span style="color:#D62828; font-size:1.1rem">⚡</span> Controle total de pedidos
+        <div class="login-brand-line"></div>
+        <div class="login-tagline-chrome">Performance · Inovação · Luxo</div>
+
+        <div class="login-features">
+            <div class="login-feature">
+                <div class="login-feature-icon">🚗</div>
+                <div class="login-feature-text">Explore nosso catálogo de veículos exclusivos</div>
             </div>
-            <div style="display:flex; align-items:center; gap:12px; color:#9A9A9A; font-size:0.85rem">
-                <span style="color:#D62828; font-size:1.1rem">🏭</span> Gestão de fabricação em tempo real
+            <div class="login-feature">
+                <div class="login-feature-icon">📦</div>
+                <div class="login-feature-text">Acompanhe seu pedido em tempo real</div>
             </div>
-            <div style="display:flex; align-items:center; gap:12px; color:#9A9A9A; font-size:0.85rem">
-                <span style="color:#D62828; font-size:1.1rem">🚗</span> Acompanhamento de veículos
+            <div class="login-feature">
+                <div class="login-feature-icon">⚡</div>
+                <div class="login-feature-text">Processo 100% digital, rápido e seguro</div>
             </div>
         </div>
     </div>
 
-    <!-- Lado direito formulário -->
+    <!-- ===== FORMULÁRIO ===== -->
     <div class="login-right">
         <div class="login-form">
             <div class="login-title">Bem-vindo</div>
-            <p class="login-subtitle">Entre com suas credenciais para acessar o sistema</p>
+            <p class="login-subtitle">Acesse sua conta Vrum Motors</p>
 
             <h:form id="loginForm">
                 <h:messages globalOnly="true" styleClass="messages"
@@ -55,11 +301,13 @@
                                  requiredMessage="Informe o e-mail"
                                  styleClass="form-control"
                                  maxlength="100"
-                                 oninput="verificarLimite(this, 'email-max-msg')"
-                                 onkeyup="verificarLimite(this, 'email-max-msg')"
+                                 oninput="verificarLimite(this,'email-max-msg')"
+                                 onkeyup="verificarLimite(this,'email-max-msg')"
                                  placeholder="seu@email.com"/>
-                    <h:message for="email" style="color:#FF6B6B; font-size:0.8rem"/>
-                    <span id="email-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 100 caracteres.</span>
+                    <h:message for="email" style="color:#D62828; font-size:0.8rem"/>
+                    <span id="email-max-msg" style="display:none; color:#D62828; font-size:0.8rem; margin-top:4px">
+                        Limite de 100 caracteres atingido.
+                    </span>
                 </div>
 
                 <div class="form-group">
@@ -69,39 +317,36 @@
                                    requiredMessage="Informe a senha"
                                    styleClass="form-control"
                                    maxlength="50"
-                                   oninput="verificarLimite(this, 'senha-max-msg')"
-                                   onkeyup="verificarLimite(this, 'senha-max-msg')"
+                                   oninput="verificarLimite(this,'senha-max-msg')"
+                                   onkeyup="verificarLimite(this,'senha-max-msg')"
                                    placeholder="••••••••"/>
-                    <h:message for="senha" style="color:#FF6B6B; font-size:0.8rem"/>
-                    <span id="senha-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 50 caracteres.</span>
+                    <h:message for="senha" style="color:#D62828; font-size:0.8rem"/>
+                    <span id="senha-max-msg" style="display:none; color:#D62828; font-size:0.8rem; margin-top:4px">
+                        Limite de 50 caracteres atingido.
+                    </span>
                 </div>
 
                 <h:commandButton value="Entrar"
                                  action="#{loginBean.login}"
                                  styleClass="btn btn-primary w-100"
-                                 style="margin-top:8px"/>
+                                 style="margin-top:8px; letter-spacing:2px"/>
             </h:form>
 
-            <div style="text-align:center; margin-top:24px">
-                <a href="home.xhtml" style="color:#9A9A9A; font-size:0.85rem; text-decoration:none">
-                    ← Voltar para o site
-                </a>
+            <div style="text-align:center; margin-top:20px">
+                <a href="home.xhtml" class="login-link-muted">← Voltar para o site</a>
+            </div>
+            <div style="text-align:center; margin-top:10px">
+                <a href="cadastro.xhtml" class="login-link-red">Não tem conta? Cadastre-se</a>
             </div>
 
-            <div style="text-align:center; margin-top:12px">
-                <a href="cadastro.xhtml" style="color:#D62828; font-size:0.85rem; text-decoration:none">
-                    Não tem conta? Cadastre-se
-                </a>
-            </div>
-
-            <!-- Dica de logins para desenvolvimento -->
-            <div style="margin-top:32px; background:rgba(255,255,255,0.04); border-radius:6px; padding:16px; border:1px solid rgba(255,255,255,0.08)">
-                <p style="color:#9A9A9A; font-size:0.75rem; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px">Logins de exemplo:</p>
-                <p style="color:#9A9A9A; font-size:0.78rem">admin@vrummotors.com / admin123</p>
-                <p style="color:#9A9A9A; font-size:0.78rem">gerente.recife@vrummotors.com / gerente123</p>
-                <p style="color:#9A9A9A; font-size:0.78rem">fabrica@vrummotors.com / fabrica123</p>
-                <p style="color:#9A9A9A; font-size:0.78rem">vendedor@vrummotors.com / vendedor123</p>
-                <p style="color:#9A9A9A; font-size:0.78rem">cliente@email.com / cliente123</p>
+            <!-- Logins de exemplo (desenvolvimento) -->
+            <div class="dev-hints">
+                <div class="dev-hints-title">Logins de exemplo</div>
+                <p>admin@vrummotors.com / admin123</p>
+                <p>gerente.recife@vrummotors.com / gerente123</p>
+                <p>fabrica@vrummotors.com / fabrica123</p>
+                <p>vendedor@vrummotors.com / vendedor123</p>
+                <p>cliente@email.com / cliente123</p>
             </div>
         </div>
     </div>

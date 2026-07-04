@@ -5,7 +5,9 @@ public enum TipoConfiguracaoVeiculo {
     MOTOR("Motor"),
     COMBUSTIVEL("Combustível"),
     TRANSMISSAO("Transmissão"),
-    TRACAO("Tração");
+    TRACAO("Tração"),
+    ANO("Ano"),
+    MARCA("Marca");
 
     private final String descricao;
 

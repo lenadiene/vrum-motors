@@ -11,8 +11,59 @@
     <title>Vrum Motors — Sinta a Velocidade</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
     <style>/*<![CDATA[*/
-        /* ── Fundo geral da home: branco ── */
-        body { background: #FAFAFA !important; color: #111 !important; }
+
+        /* ═══════════════════════════════════════════════════
+           ANIMAÇÕES CHROME/PRATA — reflexo de carro prata
+           ═══════════════════════════════════════════════════ */
+
+        /* Raio de luz diagonal que varre a cena */
+        @keyframes silver-ray {
+            0%   { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
+            6%   { opacity: 1; }
+            94%  { opacity: 1; }
+            100% { transform: translateX(200vw)  skewX(-12deg); opacity: 0; }
+        }
+
+        /* Brilho chrome que percorre gradiente de texto / superfície */
+        @keyframes chrome-shine {
+            0%   { background-position: -200% center; }
+            100% { background-position:  200% center; }
+        }
+
+        /* Varredura suave em superfícies brancas */
+        @keyframes silver-sweep {
+            0%   { transform: translateX(-100%); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateX(500%);  opacity: 0; }
+        }
+
+        /* Fade-in de entrada */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Texto chrome (aplicado em .chrome-text) ── */
+        .chrome-text {
+            background: linear-gradient(
+                90deg,
+                #ffffff  0%,
+                #b8b8c8  18%,
+                #e8e8f0  32%,
+                #ffffff  44%,
+                #f4f4f8  50%,
+                #ffffff  56%,
+                #e0e0ec  68%,
+                #b0b0c0  82%,
+                #ffffff  100%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: chrome-shine 4s linear infinite;
+        }
 
         /* ── Navbar fixa — transparente sobre hero, branca ao scrollar ── */
         .navbar {
@@ -20,36 +71,81 @@
             top: 0; left: 0; right: 0;
             background: transparent !important;
             border-bottom: none !important;
-            transition: background 0.4s ease, border-bottom 0.4s ease, box-shadow 0.4s ease;
+            box-shadow: none !important;
+            transition: background 0.4s ease, box-shadow 0.4s ease;
         }
         .navbar.scrolled {
             background: rgba(255,255,255,0.97) !important;
             border-bottom: 1px solid rgba(0,0,0,0.07) !important;
             backdrop-filter: blur(14px);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.06) !important;
         }
-        .navbar-logo { color: #111 !important; }
-        .navbar-logo span { color: #D62828 !important; }
-        .navbar-links a { color: rgba(255,255,255,0.85); }
+        .navbar-logo        { color: #111 !important; }
+        .navbar-logo span   { color: var(--red) !important; }
+        .navbar-links a     { color: rgba(255,255,255,0.85); }
         .navbar-links a:hover { color: #fff; }
-        .navbar.scrolled .navbar-links a { color: rgba(0,0,0,0.55); }
-        .navbar.scrolled .navbar-links a:hover { color: #D62828; }
-        .navbar.scrolled .navbar-logo { color: #111 !important; }
+        .navbar.scrolled .navbar-links a       { color: rgba(0,0,0,0.55); }
+        .navbar.scrolled .navbar-links a:hover { color: var(--red); }
+        .navbar.scrolled .navbar-logo          { color: #111 !important; }
 
-        /* ── Hero cinematográfico ── */
+        /* ── Hero cinematográfico + raios de prata ── */
         .hero {
             height: 100vh;
             background:
                 linear-gradient(to right,
                     rgba(0,0,0,0.82) 0%,
-                    rgba(0,0,0,0.4)  55%,
+                    rgba(0,0,0,0.40) 55%,
                     rgba(0,0,0,0.15) 100%),
                 url('https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1920&q=80')
                 center / cover no-repeat;
+            overflow: hidden;
         }
+
+        /* Raio de prata 1 — mais espesso e lento */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: 0;
+            width: 3px;
+            background: linear-gradient(
+                180deg,
+                transparent              0%,
+                rgba(192,204,216,0.5)   20%,
+                rgba(240,244,248,0.95)  50%,
+                rgba(192,204,216,0.5)   80%,
+                transparent             100%
+            );
+            pointer-events: none;
+            animation: silver-ray 9s ease-in-out infinite;
+            animation-delay: 1.5s;
+            z-index: 1;
+        }
+
+        /* Raio de prata 2 — mais fino e defasado */
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: 0;
+            width: 1px;
+            background: linear-gradient(
+                180deg,
+                transparent              0%,
+                rgba(220,228,236,0.45)  30%,
+                rgba(255,255,255,0.80)  50%,
+                rgba(220,228,236,0.45)  70%,
+                transparent             100%
+            );
+            pointer-events: none;
+            animation: silver-ray 9s ease-in-out infinite;
+            animation-delay: 5.8s;
+            z-index: 1;
+        }
+
         .hero-content {
             text-align: left;
             padding-left: 80px;
+            position: relative;
+            z-index: 2;
         }
         .hero-title {
             font-size: clamp(4.5rem, 9vw, 10rem);
@@ -60,7 +156,7 @@
             font-size: 0.8rem;
             letter-spacing: 6px;
             text-transform: uppercase;
-            color: #D62828;
+            color: var(--red);
             margin-bottom: 20px;
             font-weight: 500;
         }
@@ -68,27 +164,49 @@
             font-size: 1rem;
             letter-spacing: 3px;
             margin: 28px 0 44px;
-            color: rgba(255,255,255,0.6);
+            color: rgba(255,255,255,0.60);
         }
 
-        /* ── Stats bar — branca com separadores ── */
+        /* ── Stats bar — varredura de prata ── */
         .stats-bar {
             background: #fff;
             padding: 36px 80px;
             display: flex;
             gap: 0;
             border-bottom: 1px solid rgba(0,0,0,0.07);
-            border-top: 1px solid rgba(0,0,0,0.05);
+            border-top:    1px solid rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        /* Reflexo que varre a barra de stats */
+        .stats-bar::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: 0;
+            width: 22%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(192,204,216,0.22),
+                rgba(240,244,248,0.38),
+                rgba(192,204,216,0.22),
+                transparent
+            );
+            pointer-events: none;
+            animation: silver-sweep 7s ease-in-out infinite;
+            animation-delay: 3s;
         }
         .stats-bar-item {
             flex: 1;
             text-align: center;
             padding: 0 20px;
             border-right: 1px solid rgba(0,0,0,0.08);
+            position: relative;
+            z-index: 1;
         }
         .stats-bar-item:last-child { border-right: none; }
         .stats-num {
-            font-family: 'Bebas Neue', cursive;
+            font-family: 'Bebas Neue', sans-serif;
             font-size: 3.2rem;
             color: #D62828;
             letter-spacing: 2px;
@@ -102,24 +220,32 @@
             margin-top: 6px;
         }
 
-        /* ── Seção editorial — fundo branco ── */
-        .editorial-section {
-            padding: 0;
-            background: #fff;
-        }
+        /* ── Seção editorial ── */
+        .editorial-section { padding: 0; background: #fff; }
         .editorial-section-title {
             padding: 80px 80px 0;
-            font-family: 'Bebas Neue', cursive;
+            font-family: 'Bebas Neue', sans-serif;
             font-size: 0.8rem;
             letter-spacing: 8px;
             color: #bbb;
             text-transform: uppercase;
         }
         .editorial-divider {
-            width: 40px;
-            height: 2px;
-            background: #D62828;
+            width: 40px; height: 2px;
+            background: var(--red);
             margin: 12px 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Brilho prata na linha divisória */
+        .editorial-divider::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0; left: -100%;
+            width: 80%;
+            background: linear-gradient(90deg, transparent, rgba(220,228,236,0.9), transparent);
+            animation: silver-sweep 5s ease-in-out infinite;
+            animation-delay: 4s;
         }
 
         .editorial-card {
@@ -127,36 +253,53 @@
             grid-template-columns: 58% 42%;
             min-height: 72vh;
             overflow: hidden;
-        }
-        .editorial-card.reverse {
-            grid-template-columns: 42% 58%;
-        }
-        .editorial-card.reverse .ed-img   { order: 2; }
-        .editorial-card.reverse .ed-body  { order: 1; }
-
-        .ed-img {
-            overflow: hidden;
             position: relative;
         }
+        .editorial-card.reverse { grid-template-columns: 42% 58%; }
+        .editorial-card.reverse .ed-img  { order: 2; }
+        .editorial-card.reverse .ed-body { order: 1; }
+
+        .ed-img { overflow: hidden; position: relative; }
         .ed-img img {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             object-fit: cover;
             transition: transform 0.8s ease;
             display: block;
         }
         .editorial-card:hover .ed-img img { transform: scale(1.04); }
 
+        /* Reflexo de prata sobre a imagem no hover */
+        .ed-img::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            left: -80%;
+            width: 40%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(220,228,240,0.30),
+                rgba(255,255,255,0.55),
+                rgba(220,228,240,0.30),
+                transparent
+            );
+            transform: skewX(-8deg);
+            transition: left 0.7s ease;
+            pointer-events: none;
+        }
+        .editorial-card:hover .ed-img::after { left: 130%; }
+
         .ed-badge {
             position: absolute;
             top: 28px; left: 28px;
-            background: #D62828;
+            background: var(--red);
             color: #fff;
             font-size: 0.65rem;
             font-weight: 700;
             letter-spacing: 3px;
             text-transform: uppercase;
             padding: 5px 14px;
+            z-index: 2;
         }
 
         .ed-body {
@@ -170,12 +313,12 @@
         .ed-tag {
             font-size: 0.65rem;
             letter-spacing: 5px;
-            color: #D62828;
+            color: var(--red);
             text-transform: uppercase;
             margin-bottom: 20px;
         }
         .ed-title {
-            font-family: 'Bebas Neue', cursive;
+            font-family: 'Bebas Neue', sans-serif;
             font-size: clamp(2.5rem, 4vw, 4rem);
             letter-spacing: 3px;
             color: #111;
@@ -196,12 +339,9 @@
             background: rgba(0,0,0,0.07);
             margin-bottom: 40px;
         }
-        .ed-spec {
-            background: #fff;
-            padding: 16px 20px;
-        }
+        .ed-spec { background: #fff; padding: 16px 20px; }
         .ed-spec-val {
-            font-family: 'Bebas Neue', cursive;
+            font-family: 'Bebas Neue', sans-serif;
             font-size: 1.3rem;
             color: #111;
             letter-spacing: 1px;
@@ -215,7 +355,7 @@
         }
         .ed-actions { display: flex; gap: 14px; flex-wrap: wrap; }
 
-        /* Botão premium outline */
+        /* ── Botão premium outline com reflexo prata no hover ── */
         .btn-premium {
             background: transparent;
             color: #111;
@@ -230,13 +370,34 @@
             font-family: 'DM Sans', sans-serif;
             text-decoration: none;
             display: inline-block;
+            position: relative;
+            overflow: hidden;
         }
+        /* Reflexo prata deslizante no hover */
+        .btn-premium::before {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            left: -100%;
+            width: 60%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(192,204,216,0.35),
+                rgba(240,244,248,0.55),
+                transparent
+            );
+            transform: skewX(-15deg);
+            transition: left 0.5s ease;
+            pointer-events: none;
+        }
+        .btn-premium:hover::before { left: 160%; }
         .btn-premium:hover {
             border-color: #111;
             background: rgba(0,0,0,0.04);
             color: #111;
         }
-        /* Na navbar transparente (sobre o hero) botão fica branco */
+        /* Sobre hero transparente */
         .navbar:not(.scrolled) .btn-premium {
             color: rgba(255,255,255,0.85);
             border-color: rgba(255,255,255,0.35);
@@ -246,22 +407,19 @@
             border-color: #fff;
             background: rgba(255,255,255,0.06);
         }
-        /* Botão vermelho sempre branco */
+        /* Variante vermelha */
         .btn-premium-red {
-            background: #D62828 !important;
-            border-color: #D62828 !important;
+            background: var(--red) !important;
+            border-color: var(--red) !important;
             color: #fff !important;
         }
         .btn-premium-red:hover {
-            background: #b01f1f !important;
-            border-color: #b01f1f !important;
+            background: var(--red-dk) !important;
+            border-color: var(--red-dk) !important;
         }
 
-        /* ── Catálogo — fundo cinza claro ── */
-        .catalog-section {
-            padding: 100px 80px;
-            background: #F5F5F5;
-        }
+        /* ── Catálogo ── */
+        .catalog-section { padding: 100px 80px; background: var(--bg-alt); }
         .catalog-header {
             display: flex;
             justify-content: space-between;
@@ -269,7 +427,7 @@
             margin-bottom: 56px;
         }
         .catalog-header-left h2 {
-            font-family: 'Bebas Neue', cursive;
+            font-family: 'Bebas Neue', sans-serif;
             font-size: 3rem;
             letter-spacing: 4px;
             color: #111;
@@ -281,24 +439,15 @@
             color: #aaa;
             text-transform: uppercase;
         }
-        .catalog-filters {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+        .catalog-filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .catalog-filters .form-control {
             background: #fff;
             border: 1px solid rgba(0,0,0,0.12);
             color: #111;
             font-size: 0.82rem;
         }
-        .catalog-filters .form-control:focus {
-            border-color: #D62828;
-            outline: none;
-        }
+        .catalog-filters .form-control:focus { border-color: var(--red); outline: none; }
 
-        /* Grade de veículos */
         .vehicles-grid {
             grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
             gap: 16px;
@@ -311,43 +460,44 @@
         }
         .vehicle-card:hover {
             transform: translateY(-4px);
-            background: #fff;
-            border-color: transparent;
             box-shadow: 0 8px 28px rgba(0,0,0,0.10);
         }
-        .vehicle-card-img {
-            height: 260px;
-            overflow: hidden;
-            position: relative;
-        }
+        .vehicle-card-img { height: 260px; overflow: hidden; position: relative; }
         .vehicle-card-img img {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             object-fit: cover;
             transition: transform 0.6s ease;
             display: block;
         }
         .vehicle-card:hover .vehicle-card-img img { transform: scale(1.05); }
+        /* Reflexo prata no card hover */
+        .vehicle-card-img::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            left: -80%;
+            width: 45%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(220,228,240,0.25),
+                rgba(255,255,255,0.45),
+                rgba(220,228,240,0.25),
+                transparent
+            );
+            transform: skewX(-8deg);
+            transition: left 0.65s ease;
+            pointer-events: none;
+        }
+        .vehicle-card:hover .vehicle-card-img::after { left: 140%; }
 
-        .vehicle-card-body { padding: 24px 28px 28px; }
-        .vehicle-card-name {
-            font-size: 1.3rem;
-            letter-spacing: 2px;
-            color: #111;
-        }
-        .vehicle-card-price {
-            font-size: 1.1rem;
-            margin: 6px 0 10px;
-            color: #D62828;
-        }
-        .vehicle-card-desc {
-            font-size: 0.8rem;
-            margin-bottom: 20px;
-            color: #888;
-        }
+        .vehicle-card-body   { padding: 24px 28px 28px; }
+        .vehicle-card-name   { font-size: 1.3rem; letter-spacing: 2px; color: #111; }
+        .vehicle-card-price  { font-size: 1.1rem; margin: 6px 0 10px; color: var(--red); }
+        .vehicle-card-desc   { font-size: 0.8rem; margin-bottom: 20px; color: #888; }
         .vehicle-card-actions { gap: 8px; }
 
-        /* ── Sobre — fundo branco ── */
+        /* ── Sobre ── */
         .about-section {
             padding: 100px 80px;
             background: #fff;
@@ -360,32 +510,24 @@
             align-items: center;
         }
         .about-title {
-            font-family: 'Bebas Neue', cursive;
+            font-family: 'Bebas Neue', sans-serif;
             font-size: 3rem;
             letter-spacing: 4px;
             color: #111;
             margin-bottom: 8px;
         }
-        .about-line {
-            width: 36px; height: 2px;
-            background: #D62828;
-            margin: 16px 0 28px;
-        }
-        .about-text {
-            color: rgba(0,0,0,0.45);
-            line-height: 1.9;
-            font-size: 0.92rem;
-        }
+        .about-line { width: 36px; height: 2px; background: var(--red); margin: 16px 0 28px; }
+        .about-text { color: rgba(0,0,0,0.45); line-height: 1.9; font-size: 0.92rem; }
         .stat-card {
-            background: #F5F5F5;
+            background: var(--bg-alt);
             border: 1px solid rgba(0,0,0,0.06);
             padding: 28px;
             border-radius: 0;
         }
         .stat-number {
-            font-family: 'Bebas Neue', cursive;
+            font-family: 'Bebas Neue', sans-serif;
             font-size: 2.4rem;
-            color: #D62828;
+            color: var(--red);
             letter-spacing: 2px;
         }
         .stat-label {
@@ -396,7 +538,7 @@
             margin-top: 4px;
         }
 
-        /* ── Footer refinado ── */
+        /* ── Footer ── */
         .footer {
             background: #050505;
             padding: 60px 80px;
@@ -405,31 +547,20 @@
             justify-content: space-between;
             align-items: center;
         }
-        .footer-logo {
-            font-family: 'Bebas Neue', cursive;
-            font-size: 1.6rem;
-            letter-spacing: 4px;
-        }
-        .footer-logo span { color: #D62828; }
+        .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 4px; color: #fff; }
+        .footer-logo span { color: var(--red); }
         .footer-right { text-align: right; }
-        .footer-text {
-            font-size: 0.75rem;
-            color: #444;
-            letter-spacing: 1px;
-        }
+        .footer-text  { font-size: 0.75rem; color: #444; letter-spacing: 1px; }
 
-        /* ── Fade-in no scroll ── */
+        /* ── Fade-up no scroll ── */
         .fade-up {
             opacity: 0;
             transform: translateY(30px);
             transition: opacity 0.7s ease, transform 0.7s ease;
         }
-        .fade-up.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .fade-up.visible { opacity: 1; transform: translateY(0); }
 
-        /* ── Modal — branco ── */
+        /* ── Modal ── */
         .modal-overlay {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.55); z-index: 2000;
@@ -437,24 +568,25 @@
         }
         .modal-overlay.open { display: flex; }
         .modal-box {
-            background: #fff; border: 1px solid rgba(0,0,0,0.1);
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.10);
             max-width: 740px; width: 100%;
             max-height: 90vh; overflow-y: auto; position: relative;
             animation: fadeIn .2s ease;
             box-shadow: 0 20px 60px rgba(0,0,0,0.18);
         }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         .modal-header { background: #F8F8F8; padding: 28px 32px 20px; border-bottom: 1px solid rgba(0,0,0,0.08); }
         .modal-close { position: absolute; top: 18px; right: 24px; background: none; border: none; color: #bbb; font-size: 1.5rem; cursor: pointer; }
         .modal-close:hover { color: #111; }
-        .modal-body { padding: 28px 32px; }
-        .modal-name { font-family: 'Bebas Neue', cursive; font-size: 2.2rem; letter-spacing: 3px; color: #111; }
-        .modal-price { color: #D62828; font-size: 1.3rem; font-weight: 700; margin: 6px 0; }
-        .modal-desc { color: rgba(0,0,0,0.45); font-size: 0.9rem; line-height: 1.7; margin-bottom: 24px; }
+        .modal-body  { padding: 28px 32px; }
+        .modal-name  { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 3px; color: #111; }
+        .modal-price { color: var(--red); font-size: 1.3rem; font-weight: 700; margin: 6px 0; }
+        .modal-desc  { color: rgba(0,0,0,0.45); font-size: 0.9rem; line-height: 1.7; margin-bottom: 24px; }
         .modal-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(0,0,0,0.07); margin-bottom: 28px; }
-        .modal-spec-item { background: #fff; padding: 14px 18px; }
+        .modal-spec-item  { background: #fff; padding: 14px 18px; }
         .modal-spec-label { font-size: 0.65rem; color: #aaa; text-transform: uppercase; letter-spacing: 2px; }
-        .modal-spec-val { font-size: 1rem; font-weight: 700; color: #111; margin-top: 3px; }
+        .modal-spec-val   { font-size: 1rem; font-weight: 700; color: #111; margin-top: 3px; }
+
     /*]]>*/</style>
 </h:head>
 
@@ -506,7 +638,7 @@
     <section class="hero">
         <div class="hero-content">
             <div class="hero-eyebrow">Concessionária Oficial — Desde 2010</div>
-            <div class="hero-title">SINTA A<br/><span class="accent">VELOCIDADE</span></div>
+            <div class="hero-title">SINTA A<br/><span class="chrome-text">VELOCIDADE</span></div>
             <p class="hero-subtitle">Performance. Inovação. Luxo.</p>
             <a href="#veiculos" class="btn-premium btn-premium-red" style="margin-right:16px">Ver Veículos</a>
             <a href="#lancamentos" class="btn-premium">Lançamentos</a>
