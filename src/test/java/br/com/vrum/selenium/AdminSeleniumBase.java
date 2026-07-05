@@ -1,7 +1,9 @@
 package br.com.vrum.selenium;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -63,6 +65,12 @@ public abstract class AdminSeleniumBase {
         WebDriverManager.chromedriver().setup();
         ChromeOptions opts = new ChromeOptions();
         opts.addArguments("--start-maximized");
+        // Desabilita o gerenciador de senhas do Chrome para evitar que o diálogo
+        // "Salvar senha?" bloqueie o campo de e-mail nos testes subsequentes
+        Map<String, Object> prefs = new HashMap<>();
+        prefs.put("credentials_enable_service", false);
+        prefs.put("profile.password_manager_enabled", false);
+        opts.setExperimentalOption("prefs", prefs);
         driver = new ChromeDriver(opts);
         js     = (JavascriptExecutor) driver;
         wait   = new WebDriverWait(driver, Duration.ofSeconds(15));
@@ -168,13 +176,16 @@ public abstract class AdminSeleniumBase {
      */
     protected void abrirPrimeiroPedido() {
         List<WebElement> btnsSel = driver.findElements(By.xpath(
-                "(//input[contains(@value,'Selecionar')] | //button[contains(text(),'Selecionar') or contains(text(),'Ver')])[1]"));
+                "(//input[contains(@value,'Selecionar') or contains(@value,'Editar')] | " +
+                "//button[contains(text(),'Selecionar') or contains(text(),'Ver') or contains(text(),'Editar')])[1]"));
         if (!btnsSel.isEmpty()) {
-            wait.until(ExpectedConditions.elementToBeClickable(btnsSel.get(0))).click();
+            WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(btnsSel.get(0)));
+            js.executeScript("arguments[0].click();", btn);
         } else {
-            driver.findElements(By.cssSelector(".vrum-table tbody tr")).get(0).click();
+            List<WebElement> rows = driver.findElements(By.cssSelector(".vrum-table tbody tr"));
+            if (!rows.isEmpty()) rows.get(0).click();
         }
-        aguardar(800);
+        aguardar(1000);
     }
 
     protected void aguardar(int ms) {

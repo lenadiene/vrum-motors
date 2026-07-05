@@ -41,6 +41,12 @@
         <param-value>.xhtml</param-value>
     </context-param>
 
+    <!-- Modo desenvolvimento: recarrega XHTML automaticamente sem redeploy -->
+    <context-param>
+        <param-name>jakarta.faces.PROJECT_STAGE</param-name>
+        <param-value>Development</param-value>
+    </context-param>
+
     <!-- Estado do JSF no servidor -->
     <context-param>
         <param-name>jakarta.faces.STATE_SAVING_METHOD</param-name>

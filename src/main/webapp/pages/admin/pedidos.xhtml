@@ -44,14 +44,15 @@
 
                     <div class="form-group" style="margin:0">
                         <label class="form-label">Buscar cliente</label>
-                        <h:inputText value="#{adminPedidosBean.buscaCliente}"
+                        <h:inputText id="buscaCliente"
+                                     value="#{adminPedidosBean.buscaCliente}"
                                      styleClass="form-control"
                                      placeholder="Nome do cliente..."/>
                     </div>
 
                     <div class="form-group" style="margin:0">
                         <label class="form-label">Concessionária</label>
-                        <h:selectOneMenu value="#{adminPedidosBean.filtroConcessionariaId}" styleClass="form-control">
+                        <h:selectOneMenu id="filtroConcessionaria" value="#{adminPedidosBean.filtroConcessionariaId}" styleClass="form-control">
                             <f:selectItem itemLabel="Todas" itemValue=""/>
                             <f:selectItems value="#{adminPedidosBean.concessionarias}" var="c"
                                            itemLabel="#{c.nome} — #{c.cidade}" itemValue="#{c.id}"/>
@@ -60,7 +61,7 @@
 
                     <div class="form-group" style="margin:0">
                         <label class="form-label">Vendedor</label>
-                        <h:selectOneMenu value="#{adminPedidosBean.filtroVendedorId}" styleClass="form-control">
+                        <h:selectOneMenu id="filtroVendedor" value="#{adminPedidosBean.filtroVendedorId}" styleClass="form-control">
                             <f:selectItem itemLabel="Todos" itemValue=""/>
                             <f:selectItem itemLabel="— Sem vendedor —" itemValue="-1"/>
                             <f:selectItems value="#{adminPedidosBean.vendedores}" var="v"
@@ -70,7 +71,7 @@
 
                     <div class="form-group" style="margin:0">
                         <label class="form-label">Veículo</label>
-                        <h:selectOneMenu value="#{adminPedidosBean.filtroVeiculoId}" styleClass="form-control">
+                        <h:selectOneMenu id="filtroVeiculo" value="#{adminPedidosBean.filtroVeiculoId}" styleClass="form-control">
                             <f:selectItem itemLabel="Todos" itemValue=""/>
                             <f:selectItems value="#{adminPedidosBean.veiculos}" var="v"
                                            itemLabel="#{v.nome}" itemValue="#{v.id}"/>
@@ -79,7 +80,7 @@
 
                     <div class="form-group" style="margin:0">
                         <label class="form-label">Status</label>
-                        <h:selectOneMenu value="#{adminPedidosBean.filtroStatusStr}" styleClass="form-control">
+                        <h:selectOneMenu id="filtroStatus" value="#{adminPedidosBean.filtroStatusStr}" styleClass="form-control">
                             <f:selectItem itemLabel="Todos" itemValue=""/>
                             <f:selectItems value="#{adminPedidosBean.statusPedidoValues}" var="s"
                                            itemLabel="#{s.descricao}" itemValue="#{s.name()}"/>
@@ -240,7 +241,7 @@
 
                                 <div class="form-group">
                                     <label class="form-label">Vendedor</label>
-                                    <h:selectOneMenu value="#{adminPedidosBean.editVendedorId}" styleClass="form-control">
+                                    <h:selectOneMenu id="editVendedor" value="#{adminPedidosBean.editVendedorId}" styleClass="form-control">
                                         <f:selectItem itemLabel="— Sem vendedor —" itemValue=""/>
                                         <f:selectItems value="#{adminPedidosBean.vendedores}" var="v"
                                                        itemLabel="#{v.nome} (#{v.concessionaria.cidade})" itemValue="#{v.id}"/>
@@ -249,7 +250,7 @@
 
                                 <div class="form-group">
                                     <label class="form-label">Status</label>
-                                    <h:selectOneMenu value="#{adminPedidosBean.editStatusStr}" styleClass="form-control">
+                                    <h:selectOneMenu id="editStatus" value="#{adminPedidosBean.editStatusStr}" styleClass="form-control">
                                         <f:selectItems value="#{adminPedidosBean.statusPedidoValues}" var="s"
                                                        itemLabel="#{s.descricao}" itemValue="#{s.name()}"/>
                                     </h:selectOneMenu>
@@ -264,14 +265,16 @@
 
                                 <div class="form-group">
                                     <label class="form-label">Forma de Pagamento</label>
-                                    <h:inputText value="#{adminPedidosBean.editFormaPagamento}"
+                                    <h:inputText id="editFormaPagamento"
+                                                 value="#{adminPedidosBean.editFormaPagamento}"
                                                  styleClass="form-control"
                                                  placeholder="Financiamento, À Vista..."/>
                                 </div>
 
                                 <div class="form-group">
                                     <label class="form-label">Prazo de Fabricação</label>
-                                    <h:inputText value="#{adminPedidosBean.editPrazoFabricacao}"
+                                    <h:inputText id="prazoFabricacao"
+                                                 value="#{adminPedidosBean.editPrazoFabricacao}"
                                                  styleClass="form-control"
                                                  placeholder="dd/MM/yyyy"
                                                  converter="localDateConverter"/>
@@ -279,7 +282,8 @@
 
                                 <div class="form-group">
                                     <label class="form-label">Prazo de Entrega</label>
-                                    <h:inputText value="#{adminPedidosBean.editPrazoEntrega}"
+                                    <h:inputText id="prazoEntrega"
+                                                 value="#{adminPedidosBean.editPrazoEntrega}"
                                                  styleClass="form-control"
                                                  placeholder="dd/MM/yyyy"
                                                  converter="localDateConverter"/>
@@ -287,7 +291,8 @@
 
                                 <div class="form-group">
                                     <label class="form-label">Data de Retirada</label>
-                                    <h:inputText value="#{adminPedidosBean.editDataRetirada}"
+                                    <h:inputText id="dataRetirada"
+                                                 value="#{adminPedidosBean.editDataRetirada}"
                                                  styleClass="form-control"
                                                  placeholder="dd/MM/yyyy"
                                                  converter="localDateConverter"/>
@@ -295,7 +300,8 @@
 
                                 <div class="form-group" style="grid-column:1/-1">
                                     <label class="form-label">Observações</label>
-                                    <h:inputTextarea value="#{adminPedidosBean.editObservacoes}"
+                                    <h:inputTextarea id="editObservacoes"
+                                                     value="#{adminPedidosBean.editObservacoes}"
                                                      styleClass="form-control"
                                                      rows="3"
                                                      placeholder="Observações internas..."/>

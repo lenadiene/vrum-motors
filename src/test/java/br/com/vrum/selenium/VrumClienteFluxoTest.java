@@ -92,11 +92,7 @@ public class VrumClienteFluxoTest {
 
     @After
     public void logout() {
-        aguardar(1500);
-        try {
-            driver.get(BASE_URL + "/logout");
-            wait.until(ExpectedConditions.urlContains("login"));
-        } catch (Exception ignored) {}
+        fazerLogout();
     }
 
     // =========================================================
@@ -358,12 +354,7 @@ public class VrumClienteFluxoTest {
         String cpf = gerarCPFValido();
         realizarCadastroCompleto("Cliente CPF Orig", gerarTelefone(), cpf);
 
-        driver.get(BASE_URL + "/logout");
-        try {
-            wait.until(ExpectedConditions.or(
-                    ExpectedConditions.urlContains("login"),
-                    ExpectedConditions.urlContains("home")));
-        } catch (Exception ignored) {}
+        fazerLogout();
 
         // Passo 2: tenta cadastrar com mesmo CPF
         irParaCadastroViaComprar();
@@ -391,12 +382,7 @@ public class VrumClienteFluxoTest {
         // Passo 1: registra com telefone único
         realizarCadastroCompleto("Cliente Tel Orig", telefone, gerarCPFValido());
 
-        driver.get(BASE_URL + "/logout");
-        try {
-            wait.until(ExpectedConditions.or(
-                    ExpectedConditions.urlContains("login"),
-                    ExpectedConditions.urlContains("home")));
-        } catch (Exception ignored) {}
+        fazerLogout();
 
         // Passo 2: tenta cadastrar com mesmo telefone
         irParaCadastroViaComprar();
@@ -645,13 +631,7 @@ public class VrumClienteFluxoTest {
                     driver.getCurrentUrl().contains("meus-pedidos"));
             System.out.println("   ✔ " + p[2] + " bloqueado → " + driver.getCurrentUrl());
 
-            driver.get(BASE_URL + "/logout");
-            try {
-                wait.until(ExpectedConditions.or(
-                        ExpectedConditions.urlContains("login"),
-                        ExpectedConditions.urlContains("home")));
-            } catch (Exception ignored) {}
-            aguardar(1000);
+            fazerLogout();
         }
 
         System.out.println("✅ CF21 — Todos os perfis não-cliente bloqueados de meus-pedidos");
@@ -665,12 +645,7 @@ public class VrumClienteFluxoTest {
         wait.until(ExpectedConditions.urlContains("/cliente/"));
         String nomeClienteA = "João Cliente"; // nome do cliente padrão do DataInicializador
 
-        driver.get(BASE_URL + "/logout");
-        try {
-            wait.until(ExpectedConditions.or(
-                    ExpectedConditions.urlContains("login"),
-                    ExpectedConditions.urlContains("home")));
-        } catch (Exception ignored) {}
+        fazerLogout();
 
         // Registra cliente B
         realizarCadastroCompleto("Cliente B Isolamento", gerarTelefone(), gerarCPFValido());
@@ -694,6 +669,35 @@ public class VrumClienteFluxoTest {
     // =========================================================
     // HELPERS
     // =========================================================
+
+    /**
+     * Logout correto: clica no botão "Sair" para invalidar a sessão no servidor.
+     * driver.get("/logout") retorna 404 (não mapeado no web.xml) e não invalida a sessão JSF.
+     */
+    private void fazerLogout() {
+        aguardar(500);
+        try {
+            // Se "Sair" não estiver na página atual, navega para home onde sempre aparece quando logado
+            if (driver.findElements(By.xpath(
+                    "//a[contains(text(),'Sair')] | //input[contains(@value,'Sair')] | //button[contains(text(),'Sair')]"))
+                    .isEmpty()) {
+                driver.get(HOME_URL);
+                aguardar(300);
+            }
+            List<WebElement> btnsSair = driver.findElements(By.xpath(
+                    "//a[contains(text(),'Sair')] | //input[contains(@value,'Sair')] | //button[contains(text(),'Sair')]"));
+            if (!btnsSair.isEmpty()) {
+                wait.until(ExpectedConditions.elementToBeClickable(By.xpath(
+                        "//a[contains(text(),'Sair')] | //input[contains(@value,'Sair')] | //button[contains(text(),'Sair')]"))).click();
+                wait.until(ExpectedConditions.or(
+                        ExpectedConditions.urlContains("login"),
+                        ExpectedConditions.urlContains("home")));
+            }
+        } catch (Exception ignored) {
+        } finally {
+            driver.manage().deleteAllCookies();
+        }
+    }
 
     private void fazerLogin(String email, String senha) {
         try { driver.manage().deleteAllCookies(); } catch (Exception ignored) {}

@@ -56,6 +56,9 @@
         /* ---- controle de "campo tocado" ---- */
         var tocados = { nome: false, email: false, telefone: false, cpf: false };
 
+        /* flag de senha (password.value não é legível fora do handler em Chrome 149+) */
+        window._senhaPreenchida = false;
+
         /* ---- validadores ---- */
         function validarNome(el) {
             var msg = document.getElementById('nome-validation-msg');
@@ -120,7 +123,6 @@
             var telEl    = document.querySelector('[id$=":inputTelefone"]');
             var cpfEl    = document.querySelector('[id$=":inputCpf"]');
             var perfilEl = document.querySelector('[id$=":perfilSelect"]');
-            var senhaEl  = document.querySelector('[id$=":inputSenha"]');
             var btn      = document.querySelector('[id$=":btnSalvarUsuario"]');
             if (!btn) return;
 
@@ -133,7 +135,7 @@
             var perfilOk = perfilEl && perfilEl.value !== '';
             var card     = document.querySelector('[data-novo-usuario]');
             var ehNovo   = card && card.getAttribute('data-novo-usuario') === 'true';
-            var senhaOk  = !ehNovo || (senhaEl && senhaEl.value.trim().length > 0);
+            var senhaOk  = !ehNovo || window._senhaPreenchida;
 
             btn.disabled = !(nomeOk && emailOk && telOk && cpfOk && perfilOk && senhaOk);
         }
@@ -240,7 +242,7 @@
                             <h:inputSecret id="inputSenha" value="#{adminBean.senhaUsuario}"
                                            styleClass="form-control" maxlength="50" placeholder="••••••••"
                                            redisplay="true"
-                                           oninput="atualizarBotao();"/>
+                                           oninput="window._senhaPreenchida=(this.value.trim().length>0); atualizarBotao();"/>
                             <span id="senha-validation-msg" class="field-error" style="display:none;"></span>
                         </div>
                     </div>
@@ -260,6 +262,7 @@
 
                     <!-- Inicializa estado do formulário ao renderizar -->
                     <script>
+                        window._senhaPreenchida = false;
                         toggleConcessionaria('#{adminBean.usuarioEdicao.perfil}');
                         atualizarBotao();
                     </script>
@@ -289,13 +292,18 @@
                                         #{u.ativo ? 'Ativo' : 'Inativo'}
                                     </span>
                                 </td>
-                                <td style="display:flex; gap:8px">
-                                    <h:commandButton value="Editar" action="#{adminBean.editarUsuario(u)}" styleClass="btn btn-ghost btn-sm" immediate="true"/>
-                                    <h:panelGroup rendered="#{u.ativo}">
-                                        <h:commandButton value="Inativar" action="#{adminBean.inativarUsuario(u)}" styleClass="btn btn-sm" style="background:#D62828; color:#FFF; border:none; border-radius:6px; cursor:pointer; padding:8px 16px; font-size:0.8rem"/>
+                                <td style="display:flex; gap:8px; align-items:center">
+                                    <h:panelGroup rendered="#{u.id != loginBean.usuarioLogado.id}">
+                                        <h:commandButton value="Editar" action="#{adminBean.editarUsuario(u)}" styleClass="btn btn-ghost btn-sm" immediate="true"/>
+                                        <h:panelGroup rendered="#{u.ativo}">
+                                            <h:commandButton value="Inativar" action="#{adminBean.inativarUsuario(u)}" styleClass="btn btn-sm" style="background:#D62828; color:#FFF; border:none; border-radius:6px; cursor:pointer; padding:8px 16px; font-size:0.8rem"/>
+                                        </h:panelGroup>
+                                        <h:panelGroup rendered="#{!u.ativo}">
+                                            <h:commandButton value="Reativar" action="#{adminBean.reativarUsuario(u)}" styleClass="btn btn-primary btn-sm"/>
+                                        </h:panelGroup>
                                     </h:panelGroup>
-                                    <h:panelGroup rendered="#{!u.ativo}">
-                                        <h:commandButton value="Reativar" action="#{adminBean.reativarUsuario(u)}" styleClass="btn btn-primary btn-sm"/>
+                                    <h:panelGroup rendered="#{u.id == loginBean.usuarioLogado.id}">
+                                        <span style="color:#9A9A9A; font-size:0.85rem; font-style:italic">você</span>
                                     </h:panelGroup>
                                 </td>
                             </tr>

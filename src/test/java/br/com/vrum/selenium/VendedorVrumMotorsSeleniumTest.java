@@ -58,6 +58,7 @@ public class VendedorVrumMotorsSeleniumTest {
             + "?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true";
     private static final String DB_USER = "root";
     private static final String DB_PASS = "root";
+    private static final String NUM_B03 = "VRM_TEST_B03";
     private static final String NUM_B04 = "VRM_TEST_B04";
     private static final String NUM_B05 = "VRM_TEST_B05";
 
@@ -98,10 +99,11 @@ public class VendedorVrumMotorsSeleniumTest {
                     vendedorId != null ? vendedorId.toString() : null);
 
             if (vendedorId == null || clienteId == null || veiculoId == null || concId == null) {
-                System.out.println("⚠️ criarPedidosTeste: dados base não encontrados — B04/B05 serão pulados.");
+                System.out.println("⚠️ criarPedidosTeste: dados base não encontrados — B03/B04/B05 serão pulados.");
                 return;
             }
 
+            criarSeNaoExistir(conn, NUM_B03, clienteId, veiculoId, concId, vendedorId, "EM_NEGOCIACAO");
             criarSeNaoExistir(conn, NUM_B04, clienteId, veiculoId, concId, vendedorId, "ENVIADO_CIDADE");
             criarSeNaoExistir(conn, NUM_B05, clienteId, veiculoId, concId, vendedorId, "PRONTO_ENTREGA");
 
@@ -155,9 +157,10 @@ public class VendedorVrumMotorsSeleniumTest {
     private static void limparPedidosTeste() {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
              PreparedStatement ps = conn.prepareStatement(
-                     "DELETE FROM pedidos WHERE NUMEROPEDIDO IN (?, ?)")) {
-            ps.setString(1, NUM_B04);
-            ps.setString(2, NUM_B05);
+                     "DELETE FROM pedidos WHERE NUMEROPEDIDO IN (?, ?, ?)")) {
+            ps.setString(1, NUM_B03);
+            ps.setString(2, NUM_B04);
+            ps.setString(3, NUM_B05);
             int removidos = ps.executeUpdate();
             System.out.println("✅ limparPedidosTeste: " + removidos + " pedido(s) de teste removido(s).");
         } catch (Exception e) {
@@ -167,8 +170,15 @@ public class VendedorVrumMotorsSeleniumTest {
 
     @After
     public void logoutAposCadaTeste() {
-        aguardar(1000);
+        aguardar(500);
         try {
+            // Se não estamos em uma página de vendedor (ex: acesso-negado após A02),
+            // navegar para pedidos garante que o botão "Sair" esteja disponível e
+            // que a sessão do servidor seja corretamente invalidada via loginBean.logout().
+            if (!driver.getCurrentUrl().contains("/vendedor/")) {
+                driver.get(URL_PEDIDOS);
+                aguardar(500);
+            }
             WebElement btnSair = wait.until(ExpectedConditions.elementToBeClickable(
                     By.xpath("//a[contains(text(),'Sair')] | //input[contains(@value,'Sair')] | //button[contains(text(),'Sair')]")));
             btnSair.click();
@@ -396,9 +406,11 @@ public class VendedorVrumMotorsSeleniumTest {
 
         Assume.assumeTrue("Precondição: Deve haver pedido PRONTO_ENTREGA para gerenciar", !badgesPronto.isEmpty());
 
-        WebElement btnGerenciar = driver.findElement(
-                By.xpath("//span[contains(@class,'badge-prontoentrega')]/following::input[contains(@value,'Selecionar')][1]"));
-        btnGerenciar.click();
+        // Busca o botão especificamente para VRM_TEST_B05 pelo número do pedido,
+        // evitando ambiguidade quando VRM_TEST_B04 também está em PRONTO_ENTREGA após B04.
+        WebElement btnGerenciar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//*[contains(text(),'" + NUM_B05 + "')]/following::input[contains(@value,'Selecionar')][1]")));
+        jsClick(btnGerenciar);
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//div[contains(@class,'card-header') and contains(.,'Gerenciando')]")));

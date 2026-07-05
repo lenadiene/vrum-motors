@@ -119,6 +119,12 @@ public class AdminBean implements Serializable {
             return;
         }
 
+        // --- 2b. Impede que o admin edite os próprios dados ---
+        if (usuarioEdicao.getId() != null && usuarioEdicao.getId().equals(sessao.getId())) {
+            addErro("Você não pode editar os seus próprios dados.");
+            return;
+        }
+
         // --- 3. Validação de campos (espelho server-side das regras do front) ---
         if (!validarCamposUsuario()) return;
 
@@ -277,6 +283,12 @@ public class AdminBean implements Serializable {
     }
 
     public void inativarUsuario(Usuario u) {
+        FacesContext fc = FacesContext.getCurrentInstance();
+        Usuario sessao = (Usuario) fc.getExternalContext().getSessionMap().get("usuarioLogado");
+        if (sessao != null && u.getId().equals(sessao.getId())) {
+            addErro("Você não pode inativar sua própria conta.");
+            return;
+        }
         usuarioService.inativar(u);
         addSucesso("Usuário inativado.");
         usuarios = usuarioService.listarTodos();

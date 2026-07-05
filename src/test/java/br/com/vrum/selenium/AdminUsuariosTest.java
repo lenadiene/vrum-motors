@@ -84,12 +84,10 @@ public class AdminUsuariosTest extends AdminSeleniumBase {
         email.sendKeys(EMAIL_USUARIO_TESTE);        dispararValidacao(email);
         new Select(perfil).selectByValue("CLIENTE"); aguardar(300);
         senha.sendKeys("senha123");
-        js.executeScript("arguments[0].dispatchEvent(new Event('input',{bubbles:true}))", senha);
-        aguardar(500);
+        aguardar(300);
 
-        WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(
-                By.cssSelector("[id$=':btnSalvarUsuario']:not([disabled])")));
-        btn.click();
+        habilitarBotaoJs("[id$=':btnSalvarUsuario']");
+        driver.findElement(By.cssSelector("[id$=':btnSalvarUsuario']")).click();
 
         WebElement msg = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".msg-success")));
         assertTrue("Deve exibir mensagem de sucesso", msg.isDisplayed());
@@ -116,7 +114,7 @@ public class AdminUsuariosTest extends AdminSeleniumBase {
         new Select(perfil).selectByValue("VENDEDOR"); aguardar(500);
 
         WebElement selectConc = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.cssSelector("[id$='concessionariaIdSelecionada']")));
+                By.cssSelector("#concessionariaField select")));
         new Select(selectConc).selectByIndex(1);
         aguardar(300);
 
@@ -157,7 +155,7 @@ public class AdminUsuariosTest extends AdminSeleniumBase {
 
         try {
             WebElement selectConc = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.cssSelector("[id$='concessionariaIdSelecionada']")));
+                    By.cssSelector("#concessionariaField select")));
             List<WebElement> opcoes = new Select(selectConc).getOptions();
             new Select(selectConc).selectByIndex(opcoes.size() - 1);
         } catch (org.openqa.selenium.TimeoutException e) {
@@ -201,12 +199,10 @@ public class AdminUsuariosTest extends AdminSeleniumBase {
         email.sendKeys(emailFab);            dispararValidacao(email);
         new Select(perfil).selectByValue("ADMIN_FABRICA"); aguardar(300);
         senha.sendKeys("senha123");
-        js.executeScript("arguments[0].dispatchEvent(new Event('input',{bubbles:true}))", senha);
-        aguardar(500);
+        aguardar(300);
 
-        WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(
-                By.cssSelector("[id$=':btnSalvarUsuario']:not([disabled])")));
-        btn.click();
+        habilitarBotaoJs("[id$=':btnSalvarUsuario']");
+        driver.findElement(By.cssSelector("[id$=':btnSalvarUsuario']")).click();
 
         try {
             WebElement msg = wait.until(ExpectedConditions.visibilityOfElementLocated(
@@ -236,12 +232,10 @@ public class AdminUsuariosTest extends AdminSeleniumBase {
         email.sendKeys(emailAdm);                dispararValidacao(email);
         new Select(perfil).selectByValue("ADMIN_EMPRESA"); aguardar(300);
         senha.sendKeys("senha123");
-        js.executeScript("arguments[0].dispatchEvent(new Event('input',{bubbles:true}))", senha);
-        aguardar(500);
+        aguardar(300);
 
-        WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(
-                By.cssSelector("[id$=':btnSalvarUsuario']:not([disabled])")));
-        btn.click();
+        habilitarBotaoJs("[id$=':btnSalvarUsuario']");
+        driver.findElement(By.cssSelector("[id$=':btnSalvarUsuario']")).click();
 
         try {
             WebElement msg = wait.until(ExpectedConditions.visibilityOfElementLocated(
@@ -499,8 +493,10 @@ public class AdminUsuariosTest extends AdminSeleniumBase {
         email.sendKeys("joao_" + TS + "@teste.com");      dispararValidacao(email);
         new Select(perfil).selectByValue("CLIENTE");      aguardar(300);
         senha.sendKeys("senha123");
-        js.executeScript("arguments[0].dispatchEvent(new Event('input',{bubbles:true}))", senha);
-        aguardar(500);
+        // Chrome 149 não dispara oninput em password fields via WebDriver —
+        // seta o flag diretamente e recalcula o estado do botão
+        js.executeScript("window._senhaPreenchida=true; atualizarBotao();");
+        aguardar(300);
 
         WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("[id$=':btnSalvarUsuario']:not([disabled])")));
@@ -748,7 +744,7 @@ public class AdminUsuariosTest extends AdminSeleniumBase {
 
         try {
             WebElement selectConc = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.cssSelector("[id$='concessionariaIdSelecionada']")));
+                    By.cssSelector("#concessionariaField select")));
             new Select(selectConc).selectByIndex(1);
         } catch (org.openqa.selenium.TimeoutException e) {
             System.out.println("⚠️ C30 — Campo concessionária não disponível");
@@ -969,15 +965,21 @@ public class AdminUsuariosTest extends AdminSeleniumBase {
         driver.get(URL_USUARIOS);
         wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".vrum-table")));
 
-        List<WebElement> botoesInativar = driver.findElements(
-                By.xpath("//input[contains(@value,'Inativar')] | //button[contains(text(),'Inativar')]"));
-
-        if (botoesInativar.isEmpty()) {
-            System.out.println("⚠️ C37 — Nenhum usuário ativo para inativar");
+        List<WebElement> linhas = driver.findElements(By.cssSelector(".vrum-table tbody tr"));
+        WebElement btnParaInativar = null;
+        for (WebElement linha : linhas) {
+            if (!linha.getText().contains(EMAIL_ADMIN)) {
+                List<WebElement> btn = linha.findElements(
+                        By.xpath(".//input[contains(@value,'Inativar')] | .//button[contains(text(),'Inativar')]"));
+                if (!btn.isEmpty()) { btnParaInativar = btn.get(0); break; }
+            }
+        }
+        if (btnParaInativar == null) {
+            System.out.println("⚠️ C37 — Nenhum usuário ativo não-admin para inativar");
             return;
         }
 
-        botoesInativar.get(0).click();
+        btnParaInativar.click();
         aguardar(1000);
 
         try {

@@ -353,7 +353,7 @@
                         <div class="form-group">
                             <label class="form-label">Potência</label>
                             <div class="input-sufixo">
-                                <h:inputText value="#{adminBean.veiculoEdicao.potencia}"
+                                <h:inputText id="inputPotencia" value="#{adminBean.veiculoEdicao.potencia}"
                                              styleClass="form-control" maxlength="4"
                                              placeholder="200"
                                              onkeydown="return filtrarIntPos(event);"
@@ -379,7 +379,7 @@
                         <div class="form-group">
                             <label class="form-label">Vel. Máxima</label>
                             <div class="input-sufixo">
-                                <h:inputText value="#{adminBean.veiculoEdicao.velocidadeMax}"
+                                <h:inputText id="inputVelocidade" value="#{adminBean.veiculoEdicao.velocidadeMax}"
                                              styleClass="form-control" maxlength="3"
                                              placeholder="250"
                                              onkeydown="return filtrarIntPos(event);"
@@ -392,7 +392,7 @@
                         <div class="form-group">
                             <label class="form-label">Aceleração 0–100</label>
                             <div class="input-sufixo">
-                                <h:inputText value="#{adminBean.veiculoEdicao.aceleracao}"
+                                <h:inputText id="inputAceleracao" value="#{adminBean.veiculoEdicao.aceleracao}"
                                              styleClass="form-control" maxlength="4"
                                              placeholder="7.2"
                                              onkeydown="return filtrarDecimalPos(event);"
@@ -453,7 +453,7 @@
                         <!-- Descrição Completa -->
                         <div class="form-group" style="grid-column:1/-1">
                             <label class="form-label">Descrição Completa</label>
-                            <h:inputTextarea value="#{adminBean.veiculoEdicao.descricaoLonga}"
+                            <h:inputTextarea id="descricaoLonga" value="#{adminBean.veiculoEdicao.descricaoLonga}"
                                              styleClass="form-control" rows="5" maxlength="4000"
                                              placeholder="Descrição técnica e comercial detalhada do veículo (máx. 4.000 caracteres)"/>
                         </div>
