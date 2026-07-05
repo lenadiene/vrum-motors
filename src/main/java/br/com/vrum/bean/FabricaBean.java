@@ -10,7 +10,9 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.faces.context.FacesContext;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @Named("fabricaBean")
 @ViewScoped
@@ -25,6 +27,7 @@ public class FabricaBean implements Serializable {
     private String observacoes;
 
     private final PedidoService service = new PedidoService();
+    private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @PostConstruct
     public void init() {
@@ -41,6 +44,7 @@ public class FabricaBean implements Serializable {
 
     public void atualizarStatus() {
         try {
+            sincronizarPrazoEntregaSubmetido();
             service.atualizarStatusFabricacao(pedidoSelecionado, novoStatus, prazoEntrega, observacoes);
             addSucesso("Status atualizado para: " + novoStatus.getDescricao());
             pedidos = service.listarParaFabricacao();
@@ -67,6 +71,28 @@ public class FabricaBean implements Serializable {
     private void addSucesso(String msg) {
         FacesContext.getCurrentInstance().addMessage(null,
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", msg));
+    }
+
+    private void sincronizarPrazoEntregaSubmetido() {
+        if (prazoEntrega != null) {
+            return;
+        }
+
+        Map<String, String> parametros = FacesContext.getCurrentInstance()
+                .getExternalContext()
+                .getRequestParameterMap();
+        String prazoInformado = parametros.get("fabricaForm:prazoEntrega");
+        if (prazoInformado == null) {
+            prazoInformado = parametros.entrySet().stream()
+                    .filter(e -> e.getKey().endsWith(":prazoEntrega"))
+                    .map(Map.Entry::getValue)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        if (prazoInformado != null && !prazoInformado.trim().isEmpty()) {
+            prazoEntrega = LocalDate.parse(prazoInformado.trim(), DATA_BR);
+        }
     }
 
     public List<Pedido> getPedidos() { return pedidos; }

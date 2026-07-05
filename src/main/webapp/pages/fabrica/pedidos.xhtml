@@ -108,8 +108,9 @@
                                          styleClass="form-control"
                                          placeholder="dd/MM/yyyy"
                                          maxlength="10"
-                                         oninput="if(this.value.length >= 10) document.getElementById('prazo-max-msg').style.display='block'; else document.getElementById('prazo-max-msg').style.display='none';"
-                                         converter="localDateConverter"/>
+                                         oninput="if(this.value.length >= 10) document.getElementById('prazo-max-msg').style.display='block'; else document.getElementById('prazo-max-msg').style.display='none';">
+                                <f:converter converterId="localDateConverter"/>
+                            </h:inputText>
                             <span id="prazo-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 10 caracteres.</span>
                         </div>
 
