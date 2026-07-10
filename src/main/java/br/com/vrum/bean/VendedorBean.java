@@ -19,6 +19,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Named("vendedorBean")
 @ViewScoped
@@ -57,6 +58,27 @@ public class VendedorBean implements Serializable {
         pedidosDisponiveis = service.listarDisponiveisPorConcessionaria(vendedor.getConcessionaria());
         meusPedidos = service.listarPorVendedor(vendedor);
     }
+
+    public void cancelarSelecao() {
+        this.pedidoSelecionado = null;
+        this.anexosPedidoSelecionado = Collections.emptyList();
+    }
+
+    private List<Pedido> filtrarMeus(StatusPedido s) {
+        if (meusPedidos == null) return Collections.emptyList();
+        return meusPedidos.stream().filter(p -> p.getStatus() == s).collect(Collectors.toList());
+    }
+
+    public boolean isMostrarModal()        { return pedidoSelecionado != null; }
+    public void   setMostrarModal(boolean v) { /* derivado de pedidoSelecionado */ }
+
+    public List<Pedido> getMeusEmNegociacao()         { return filtrarMeus(StatusPedido.EM_NEGOCIACAO); }
+    public List<Pedido> getMeusAguardandoFabricacao() { return filtrarMeus(StatusPedido.AGUARDANDO_FABRICACAO); }
+    public List<Pedido> getMeusEmFabricacao()         { return filtrarMeus(StatusPedido.EM_FABRICACAO); }
+    public List<Pedido> getMeusFabricados()           { return filtrarMeus(StatusPedido.FABRICADO); }
+    public List<Pedido> getMeusEnviados()             { return filtrarMeus(StatusPedido.ENVIADO_CIDADE); }
+    public List<Pedido> getMeusProntos()              { return filtrarMeus(StatusPedido.PRONTO_ENTREGA); }
+    public List<Pedido> getMeusFinalizados()          { return filtrarMeus(StatusPedido.FINALIZADO); }
 
     public void assumirPedido(Pedido pedido) {
         try {
@@ -109,12 +131,11 @@ public class VendedorBean implements Serializable {
         }
 
         carregarPedidos();
-        pedidoSelecionado = service.buscarPorId(pedidoSelecionado.getId());
-        anexosPedidoSelecionado = service.listarAnexos(pedidoSelecionado);
-        
+        pedidoSelecionado = null;
+        anexosPedidoSelecionado = Collections.emptyList();
         arquivoAnexo = null;
         formaPagamento = null;
-        prazoEmDias = null; 
+        prazoEmDias = null;
     }
 
     public void marcarProntoEntrega() {
@@ -122,7 +143,8 @@ public class VendedorBean implements Serializable {
             service.marcarProntoEntrega(pedidoSelecionado);
             addSucesso("Veículo marcado como pronto para entrega!");
             carregarPedidos();
-            pedidoSelecionado = service.buscarPorId(pedidoSelecionado.getId());
+            pedidoSelecionado = null;
+            anexosPedidoSelecionado = Collections.emptyList();
         } catch (Exception e) {
             addErro(e.getMessage());
         }
@@ -133,7 +155,8 @@ public class VendedorBean implements Serializable {
             service.finalizarPedido(pedidoSelecionado, dataRetirada);
             addSucesso("Pedido finalizado com sucesso!");
             carregarPedidos();
-            pedidoSelecionado = service.buscarPorId(pedidoSelecionado.getId());
+            pedidoSelecionado = null;
+            anexosPedidoSelecionado = Collections.emptyList();
         } catch (Exception e) {
             addErro(e.getMessage());
         }

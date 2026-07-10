@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
@@ -8,6 +8,109 @@
     <meta charset="UTF-8"/>
     <title>Fábrica — Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <style>
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            align-items: start;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .kanban-col {
+            border-radius: 8px;
+            overflow: hidden;
+            min-width: 220px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .kanban-col-header {
+            padding: 10px 14px;
+            font-family: 'Bebas Neue', cursive;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .kanban-col-header .col-count {
+            font-family: inherit;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .kanban-col-body { padding: 10px; min-height: 140px; }
+        .kanban-card {
+            background: #2A2A2A;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            position: relative;
+            color: #fff;
+        }
+        .kanban-card.done { opacity: 0.75; }
+        .kcheck {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+            accent-color: #E30613;
+        }
+        .kc-header {
+            padding-right: 22px;
+            margin-bottom: 6px;
+        }
+        .kc-numero {
+            font-family: 'Bebas Neue', cursive;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            color: #9A9A9A;
+        }
+        .kc-veiculo {
+            font-weight: 600;
+            font-size: 0.88rem;
+            display: block;
+        }
+        .kc-info {
+            font-size: 0.78rem;
+            color: #9A9A9A;
+            margin: 2px 0;
+        }
+        .kc-prazo-tag {
+            display: inline-block;
+            font-size: 0.72rem;
+            background: rgba(26,188,156,0.15);
+            color: #1ABC9C;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin-top: 4px;
+        }
+        .kanban-col-footer {
+            padding: 8px 10px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .prazo-panel {
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .prazo-panel .prazo-label {
+            font-size: 0.82rem;
+            color: #9A9A9A;
+            margin-bottom: 6px;
+        }
+        @media (max-width: 900px) {
+            .kanban-board { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
 </h:head>
 
 <h:body>
@@ -20,7 +123,7 @@
             <div class="sidebar-user-role">Admin Fábrica</div>
         </div>
         <nav class="sidebar-nav">
-            <a href="pedidos.xhtml" class="active">🏭 Ordens de Fabricação</a>
+            <a href="pedidos.xhtml" class="active">&#x1F3ED; Ordens de Fabricação</a>
         </nav>
         <div class="sidebar-footer">
             <h:form>
@@ -32,108 +135,289 @@
     <main class="main-content">
         <div class="page-header">
             <h1>Ordens de Fabricação</h1>
-            <p>Gerencie o status de fabricação dos veículos encomendados</p>
+            <p>Gerencie o fluxo de produção dos veículos</p>
         </div>
 
         <h:form id="fabricaForm">
-            <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success" style="margin-bottom:16px"/>
+            <h:messages globalOnly="true" errorClass="msg-error" infoClass="msg-success"
+                        style="display:block; margin-bottom:16px"/>
+
+            <!-- Campo oculto: IDs selecionados via checkbox (preenchido por JS antes do submit) -->
+            <h:inputHidden id="idsHidden" value="#{fabricaBean.idsSelecionadosHidden}"/>
 
             <!-- Stats rápidas -->
-            <div class="stats-grid" style="margin-bottom:28px">
+            <div class="stats-grid" style="margin-bottom:24px">
                 <div class="stat-card">
-                    <div class="stat-number">#{fabricaBean.pedidos.size()}</div>
-                    <div class="stat-label">Total Ordens</div>
+                    <div class="stat-number">#{fabricaBean.pedidosAguardando.size()}</div>
+                    <div class="stat-label">Aguardando</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">#{fabricaBean.pedidosEmFabricacao.size()}</div>
+                    <div class="stat-label">Em Fabricação</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">#{fabricaBean.pedidosFabricados.size()}</div>
+                    <div class="stat-label">Fabricado</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">#{fabricaBean.pedidosEnviados.size()}</div>
+                    <div class="stat-label">Enviado p/ Cidade</div>
                 </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 380px; gap:24px; align-items:start">
-
-                <!-- Lista de pedidos -->
-                <div class="card">
-                    <div class="card-header">Pedidos em Produção</div>
-
-                    <h:panelGroup rendered="#{empty fabricaBean.pedidos}">
-                        <p style="color:#9A9A9A; text-align:center; padding:30px">Nenhum pedido para fabricação no momento.</p>
-                    </h:panelGroup>
-
-                    <ui:repeat value="#{fabricaBean.pedidos}" var="p">
-                        <div style="padding:16px; border-radius:8px; background:#2E2E2E; margin-bottom:12px; cursor:pointer;
-                                    border-left:4px solid #{p.status.name() == 'EM_FABRICACAO' ? '#3498DB' : p.status.name() == 'FABRICADO' ? '#9B59B6' : '#1ABC9C'}">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
-                                <div>
-                                    <span style="font-family:'Bebas Neue',cursive; font-size:1.1rem; letter-spacing:1px">#{p.veiculo.nome}</span>
-                                    <span style="color:#9A9A9A; font-size:0.78rem; margin-left:8px">#{p.numeroPedido}</span>
-                                </div>
-                                <span class="badge badge-#{p.status.name().toLowerCase().replace('_','')}">#{p.status.descricao}</span>
-                            </div>
-                            <div style="font-size:0.82rem; color:#9A9A9A; margin-bottom:12px">
-                                Concessionária: #{p.concessionaria.cidade} •
-                                <h:outputText value="#{p.dataPedido}">
-                                    <f:convertDateTime pattern="dd/MM/yyyy" type="localDateTime"/>
-                                </h:outputText>
-                            </div>
-                            <h:commandButton value="Atualizar Status"
-                                             id="btnSelecionarPedido"
-                                             action="#{fabricaBean.selecionarPedido(p)}"
-                                             styleClass="btn btn-ghost btn-sm"/>
-                        </div>
-                    </ui:repeat>
+            <!-- Painel: prazo unitário (FABRICADO → ENVIADO_CIDADE) -->
+            <h:panelGroup id="painelPrazoUnitario" layout="block"
+                          rendered="#{fabricaBean.mostrarPrazoUnitario}"
+                          styleClass="prazo-panel"
+                          style="background:rgba(227,6,19,0.08); border:1px solid rgba(227,6,19,0.4)">
+                <div>
+                    <div class="prazo-label">Prazo de entrega na concessionária *</div>
+                    <h:inputText id="prazoUnitario"
+                                 value="#{fabricaBean.prazoEntregaUnitarioTexto}"
+                                 styleClass="form-control"
+                                 placeholder="dd/MM/yyyy"
+                                 maxlength="10"
+                                 oninput="mascaraData(this)"
+                                 style="width:150px"/>
                 </div>
+                <h:commandButton value="Confirmar Envio"
+                                 action="#{fabricaBean.confirmarEnvioUnitario}"
+                                 styleClass="btn btn-primary">
+                    <f:ajax execute="@form" render="@form"/>
+                </h:commandButton>
+                <h:commandButton value="Cancelar"
+                                 action="#{fabricaBean.cancelarAcao}"
+                                 styleClass="btn btn-ghost"
+                                 immediate="true">
+                    <f:ajax execute="@this" render="@form"/>
+                </h:commandButton>
+            </h:panelGroup>
 
-                <!-- Painel de atualização -->
-                <h:panelGroup rendered="#{fabricaBean.pedidoSelecionado != null}">
-                    <div class="card" style="position:sticky; top:80px; border:2px solid #3498DB">
-                        <div class="card-header" style="color:#3498DB">Atualizar Fabricação</div>
+            <!-- Painel: prazo em lote (FABRICADO → ENVIADO_CIDADE em lote) -->
+            <h:panelGroup id="painelPrazoLote" layout="block"
+                          rendered="#{fabricaBean.mostrarConfirmacaoLote}"
+                          styleClass="prazo-panel"
+                          style="background:rgba(255,140,0,0.08); border:1px solid rgba(255,140,0,0.4)">
+                <div>
+                    <div class="prazo-label">Prazo único para todos os pedidos selecionados *</div>
+                    <h:inputText id="prazoLote"
+                                 value="#{fabricaBean.prazoEntregaLoteTexto}"
+                                 styleClass="form-control"
+                                 placeholder="dd/MM/yyyy"
+                                 maxlength="10"
+                                 oninput="mascaraData(this)"
+                                 style="width:150px"/>
+                </div>
+                <h:commandButton value="Confirmar Envio em Lote"
+                                 action="#{fabricaBean.confirmarEnvioLote}"
+                                 styleClass="btn btn-primary">
+                    <f:ajax execute="@form" render="@form"/>
+                </h:commandButton>
+                <h:commandButton value="Cancelar"
+                                 action="#{fabricaBean.cancelarAcao}"
+                                 styleClass="btn btn-ghost"
+                                 immediate="true">
+                    <f:ajax execute="@this" render="@form"/>
+                </h:commandButton>
+            </h:panelGroup>
 
-                        <div style="margin-bottom:16px; padding:12px; background:#2E2E2E; border-radius:6px">
-                            <div style="font-family:'Bebas Neue',cursive; font-size:1.3rem; letter-spacing:1px">
-                                #{fabricaBean.pedidoSelecionado.veiculo.nome}
-                            </div>
-                            <div style="font-size:0.82rem; color:#9A9A9A">#{fabricaBean.pedidoSelecionado.numeroPedido}</div>
-                            <div style="font-size:0.82rem; color:#9A9A9A; margin-top:4px">Destino: #{fabricaBean.pedidoSelecionado.concessionaria.cidade}</div>
-                        </div>
+            <!-- Kanban Board -->
+            <h:panelGroup id="kanbanBoard" layout="block" styleClass="kanban-board">
 
-                        <div class="form-group">
-                            <label class="form-label">Novo Status *</label>
-                            <h:selectOneMenu id="selectStatus" value="#{fabricaBean.novoStatus}" required="true" styleClass="form-control">
-                                <f:selectItem itemLabel="Selecione..." itemValue=""/>
-                                <f:selectItems value="#{fabricaBean.statusPermitidos}"
-                                               var="s" itemLabel="#{s.descricao}" itemValue="#{s}"/>
-                            </h:selectOneMenu>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Prazo de Entrega na Concessionária</label>
-                            <h:inputText id="prazoEntrega" value="#{fabricaBean.prazoEntrega}"
-                                         styleClass="form-control"
-                                         placeholder="dd/MM/yyyy"
-                                         maxlength="10"
-                                         oninput="if(this.value.length >= 10) document.getElementById('prazo-max-msg').style.display='block'; else document.getElementById('prazo-max-msg').style.display='none';">
-                                <f:converter converterId="localDateConverter"/>
-                            </h:inputText>
-                            <span id="prazo-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 10 caracteres.</span>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Observações</label>
-                            <h:inputTextarea id="observacoes" value="#{fabricaBean.observacoes}"
-                                             styleClass="form-control"
-                                             rows="3"
-                                             maxlength="500"
-                                             oninput="if(this.value.length >= 500) document.getElementById('obs-max-msg').style.display='block'; else document.getElementById('obs-max-msg').style.display='none';"
-                                             placeholder="Informações adicionais sobre a produção..."/>
-                            <span id="obs-max-msg" style="display:none; color:#FF6B6B; font-size:0.8rem; margin-top:4px;">Você atingiu o limite de 500 caracteres.</span>
-                        </div>
-
-                        <h:commandButton id="btnSalvarStatus"
-                                         value="✅ Atualizar Status"
-                                         action="#{fabricaBean.atualizarStatus}"
-                                         styleClass="btn btn-primary w-100"/>
+                <!-- Coluna 1: Aguardando Fabricação -->
+                <div class="kanban-col">
+                    <div class="kanban-col-header" style="background:#8B6914; color:#FFD966">
+                        <span>Aguardando Fabricação</span>
+                        <span class="col-count">#{fabricaBean.pedidosAguardando.size()}</span>
                     </div>
-                </h:panelGroup>
-            </div>
+                    <div class="kanban-col-body">
+                        <h:panelGroup rendered="#{empty fabricaBean.pedidosAguardando}">
+                            <p style="color:#666; font-size:0.8rem; text-align:center; padding:20px 0">Nenhum pedido</p>
+                        </h:panelGroup>
+                        <ui:repeat value="#{fabricaBean.pedidosAguardando}" var="p">
+                            <div class="kanban-card" data-pedido="#{p.numeroPedido}">
+                                <input type="checkbox" class="kcheck" data-col="col0" data-id="#{p.id}"/>
+                                <div class="kc-header">
+                                    <span class="kc-numero">#{p.numeroPedido}</span>
+                                    <span class="kc-veiculo">#{p.veiculo.nome}</span>
+                                </div>
+                                <div class="kc-info">&#x1F464; #{p.cliente.nome}</div>
+                                <div class="kc-info">&#x1F4C5; <h:outputText value="#{p.dataAtualizacao}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy" type="localDateTime"/>
+                                </h:outputText></div>
+                                <div style="margin-top:10px">
+                                    <h:commandButton value="▶ Em Fabricação"
+                                                     styleClass="btn btn-sm btn-primary w-100"
+                                                     action="#{fabricaBean.avancarUnitario(p)}">
+                                        <f:ajax execute="@form" render="@form"/>
+                                    </h:commandButton>
+                                </div>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                    <div class="kanban-col-footer">
+                        <button type="button" class="btn btn-ghost btn-sm"
+                                onclick="toggleTodos('col0')">&#x2611; Todos</button>
+                        <h:commandButton value="▶ Avançar Selecionados"
+                                         styleClass="btn btn-sm btn-primary"
+                                         onclick="coletarIds('col0')"
+                                         action="#{fabricaBean.avancarLoteAguardando}">
+                            <f:ajax execute="@form" render="@form"/>
+                        </h:commandButton>
+                    </div>
+                </div>
+
+                <!-- Coluna 2: Em Fabricação -->
+                <div class="kanban-col">
+                    <div class="kanban-col-header" style="background:#1A5276; color:#5DADE2">
+                        <span>Em Fabricação</span>
+                        <span class="col-count">#{fabricaBean.pedidosEmFabricacao.size()}</span>
+                    </div>
+                    <div class="kanban-col-body">
+                        <h:panelGroup rendered="#{empty fabricaBean.pedidosEmFabricacao}">
+                            <p style="color:#666; font-size:0.8rem; text-align:center; padding:20px 0">Nenhum pedido</p>
+                        </h:panelGroup>
+                        <ui:repeat value="#{fabricaBean.pedidosEmFabricacao}" var="p">
+                            <div class="kanban-card" data-pedido="#{p.numeroPedido}">
+                                <input type="checkbox" class="kcheck" data-col="col1" data-id="#{p.id}"/>
+                                <div class="kc-header">
+                                    <span class="kc-numero">#{p.numeroPedido}</span>
+                                    <span class="kc-veiculo">#{p.veiculo.nome}</span>
+                                </div>
+                                <div class="kc-info">&#x1F464; #{p.cliente.nome}</div>
+                                <div class="kc-info">&#x1F4C5; <h:outputText value="#{p.dataAtualizacao}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy" type="localDateTime"/>
+                                </h:outputText></div>
+                                <h:panelGroup rendered="#{p.prazoFabricacao != null}">
+                                    <div class="kc-info">&#x23F0; Prazo fab.:
+                                        <h:outputText value="#{p.prazoFabricacao}">
+                                            <f:convertDateTime pattern="dd/MM/yyyy" type="localDate"/>
+                                        </h:outputText>
+                                    </div>
+                                </h:panelGroup>
+                                <div style="margin-top:10px">
+                                    <h:commandButton value="✓ Fabricado"
+                                                     styleClass="btn btn-sm btn-primary w-100"
+                                                     action="#{fabricaBean.avancarUnitario(p)}">
+                                        <f:ajax execute="@form" render="@form"/>
+                                    </h:commandButton>
+                                </div>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                    <div class="kanban-col-footer">
+                        <button type="button" class="btn btn-ghost btn-sm"
+                                onclick="toggleTodos('col1')">&#x2611; Todos</button>
+                        <h:commandButton value="✓ Fabricado Selecionados"
+                                         styleClass="btn btn-sm btn-primary"
+                                         onclick="coletarIds('col1')"
+                                         action="#{fabricaBean.avancarLoteEmFabricacao}">
+                            <f:ajax execute="@form" render="@form"/>
+                        </h:commandButton>
+                    </div>
+                </div>
+
+                <!-- Coluna 3: Fabricado -->
+                <div class="kanban-col">
+                    <div class="kanban-col-header" style="background:#4A235A; color:#BB8FCE">
+                        <span>Fabricado</span>
+                        <span class="col-count">#{fabricaBean.pedidosFabricados.size()}</span>
+                    </div>
+                    <div class="kanban-col-body">
+                        <h:panelGroup rendered="#{empty fabricaBean.pedidosFabricados}">
+                            <p style="color:#666; font-size:0.8rem; text-align:center; padding:20px 0">Nenhum pedido</p>
+                        </h:panelGroup>
+                        <ui:repeat value="#{fabricaBean.pedidosFabricados}" var="p">
+                            <div class="kanban-card" data-pedido="#{p.numeroPedido}">
+                                <input type="checkbox" class="kcheck" data-col="col2" data-id="#{p.id}"/>
+                                <div class="kc-header">
+                                    <span class="kc-numero">#{p.numeroPedido}</span>
+                                    <span class="kc-veiculo">#{p.veiculo.nome}</span>
+                                </div>
+                                <div class="kc-info">&#x1F464; #{p.cliente.nome}</div>
+                                <div class="kc-info">&#x1F4C5; <h:outputText value="#{p.dataAtualizacao}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy" type="localDateTime"/>
+                                </h:outputText></div>
+                                <div style="margin-top:10px">
+                                    <h:commandButton value="&#x1F69A; Enviar para Cidade"
+                                                     styleClass="btn btn-sm w-100"
+                                                     style="background:#9B59B6; color:#fff; border:none"
+                                                     action="#{fabricaBean.prepararEnvioUnitario(p)}">
+                                        <f:ajax execute="@form" render="@form"/>
+                                    </h:commandButton>
+                                </div>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                    <div class="kanban-col-footer">
+                        <button type="button" class="btn btn-ghost btn-sm"
+                                onclick="toggleTodos('col2')">&#x2611; Todos</button>
+                        <h:commandButton value="&#x1F69A; Enviar Selecionados"
+                                         styleClass="btn btn-sm"
+                                         style="background:#9B59B6; color:#fff; border:none"
+                                         onclick="coletarIds('col2')"
+                                         action="#{fabricaBean.prepararEnvioLote}">
+                            <f:ajax execute="@form" render="@form"/>
+                        </h:commandButton>
+                    </div>
+                </div>
+
+                <!-- Coluna 4: Enviado para Cidade -->
+                <div class="kanban-col">
+                    <div class="kanban-col-header" style="background:#0E4F3F; color:#1ABC9C">
+                        <span>Enviado para Cidade</span>
+                        <span class="col-count">#{fabricaBean.pedidosEnviados.size()}</span>
+                    </div>
+                    <div class="kanban-col-body">
+                        <h:panelGroup rendered="#{empty fabricaBean.pedidosEnviados}">
+                            <p style="color:#666; font-size:0.8rem; text-align:center; padding:20px 0">Nenhum pedido</p>
+                        </h:panelGroup>
+                        <ui:repeat value="#{fabricaBean.pedidosEnviados}" var="p">
+                            <div class="kanban-card done" data-pedido="#{p.numeroPedido}">
+                                <div class="kc-header">
+                                    <span class="kc-numero">#{p.numeroPedido}</span>
+                                    <span class="kc-veiculo">#{p.veiculo.nome}</span>
+                                </div>
+                                <div class="kc-info">&#x1F464; #{p.cliente.nome}</div>
+                                <div class="kc-info">&#x1F3E2; #{p.concessionaria.cidade}</div>
+                                <h:panelGroup rendered="#{p.prazoEntrega != null}">
+                                    <div class="kc-prazo-tag">
+                                        Entrega até:
+                                        <h:outputText value="#{p.prazoEntrega}">
+                                            <f:convertDateTime pattern="dd/MM/yyyy" type="localDate"/>
+                                        </h:outputText>
+                                    </div>
+                                </h:panelGroup>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                </div>
+
+            </h:panelGroup>
         </h:form>
     </main>
 </div>
+
+<script type="text/javascript">
+    function mascaraData(el) {
+        var v = el.value.replace(/\D/g, '').slice(0, 8);
+        if (v.length >= 5)      v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+        else if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+        el.value = v;
+    }
+
+    function coletarIds(col) {
+        var checks = document.querySelectorAll('.kcheck[data-col="' + col + '"]:checked');
+        var ids = Array.from(checks).map(function(c) { return c.dataset.id; }).join(',');
+        var hidden = document.getElementById('fabricaForm:idsHidden');
+        if (hidden) hidden.value = ids;
+    }
+
+    function toggleTodos(col) {
+        var checks = document.querySelectorAll('.kcheck[data-col="' + col + '"]');
+        var allChecked = Array.from(checks).every(function(c) { return c.checked; });
+        checks.forEach(function(c) { c.checked = !allChecked; });
+    }
+</script>
 </h:body>
 </html>

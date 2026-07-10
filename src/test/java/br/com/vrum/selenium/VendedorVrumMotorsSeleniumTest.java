@@ -5,7 +5,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -69,6 +71,17 @@ public class VendedorVrumMotorsSeleniumTest {
         WebDriverManager.chromedriver().setup();
         ChromeOptions opts = new ChromeOptions();
         opts.addArguments("--start-maximized");
+        opts.addArguments("--no-first-run");
+        opts.addArguments("--disable-background-networking");
+        opts.addArguments("--disable-features=SafeBrowsing,PasswordLeakDetection,"
+                + "SafeBrowsingEnhancedProtection,PasswordManager");
+        Map<String, Object> prefs = new HashMap<>();
+        prefs.put("credentials_enable_service", false);
+        prefs.put("profile.password_manager_enabled", false);
+        prefs.put("profile.password_manager_leak_detection", false);
+        prefs.put("safebrowsing.enabled", false);
+        prefs.put("safebrowsing_without_cookies_enabled", false);
+        opts.setExperimentalOption("prefs", prefs);
         driver = new ChromeDriver(opts);
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
         criarPedidosTeste();
@@ -115,10 +128,18 @@ public class VendedorVrumMotorsSeleniumTest {
     private static void criarSeNaoExistir(Connection conn, String numero,
             Long clienteId, Long veiculoId, Long concId, Long vendedorId, String status)
             throws Exception {
-        Long existe = queryLong(conn, "SELECT ID FROM pedidos WHERE NUMEROPEDIDO = ?", numero);
-        if (existe != null) {
-            System.out.println("ℹ️ Pedido " + numero + " já existe, mantendo.");
-            return;
+        // Sempre apaga e recria: garante ID novo e evita stale L2 cache do EclipseLink/JPA
+        Long idExistente = queryLong(conn, "SELECT ID FROM pedidos WHERE NUMEROPEDIDO = ?", numero);
+        if (idExistente != null) {
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM anexos WHERE pedido_id = ?")) {
+                ps.setLong(1, idExistente);
+                ps.executeUpdate();
+            } catch (Exception ignored) { /* sem anexos ou nome de tabela diferente */ }
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM pedidos WHERE ID = ?")) {
+                ps.setLong(1, idExistente);
+                ps.executeUpdate();
+            }
+            System.out.println("ℹ️ Pedido " + numero + " removido para recriar com status " + status + ".");
         }
         String sql = "INSERT INTO pedidos "
                 + "(NUMEROPEDIDO, cliente_id, veiculo_id, concessionaria_id, vendedor_id, "
@@ -217,6 +238,12 @@ public class VendedorVrumMotorsSeleniumTest {
         ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
     }
 
+    /** Aguarda o modal de gerenciamento abrir (JS adiciona classe 'open' via DOMContentLoaded). */
+    private void aguardarModalAberto() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector("#modalGerenciar.open .vrum-modal-hd")));
+    }
+
     // =========================================================================
     // BLOCO A — Autenticação e Acesso
     // =========================================================================
@@ -288,27 +315,24 @@ public class VendedorVrumMotorsSeleniumTest {
         fazerLogin();
         driver.get(URL_PEDIDOS);
 
-        List<WebElement> badgesNegociacao = driver.findElements(
-                By.xpath("//span[contains(@class,'badge-emnegociacao')]"));
-        Assume.assumeTrue("Precondição: Deve haver pedido EM_NEGOCIACAO para gerenciar", !badgesNegociacao.isEmpty());
+        List<WebElement> colNegociacao = driver.findElements(
+                By.xpath("//div[@data-col='EM_NEGOCIACAO']//input[contains(@value,'Gerenciar')]"));
+        Assume.assumeTrue("Precondição: Deve haver pedido EM_NEGOCIACAO para gerenciar", !colNegociacao.isEmpty());
 
-        WebElement btnGerenciar = driver.findElement(
-                By.xpath("//span[contains(@class,'badge-emnegociacao')]/following::input[contains(@value,'Selecionar')][1]"));
-        btnGerenciar.click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//div[contains(@class,'card-header') and contains(.,'Gerenciando')]")));
+        jsClick(colNegociacao.get(0));
+        aguardarModalAberto();
         aguardar(500);
 
-        // Jakarta Faces 4 não renderiza 'placeholder'; usamos maxlength para localizar
+        // Limpa campos obrigatórios e tenta enviar
         WebElement inputPagamento = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//input[@type='text' and @maxlength='50']")));
+                By.xpath("//div[@id='modalGerenciar']//input[@type='text' and @maxlength='50']")));
         inputPagamento.clear();
-        WebElement inputPrazo = driver.findElement(By.xpath("//input[@type='text' and @maxlength='4']"));
+        WebElement inputPrazo = driver.findElement(
+                By.xpath("//div[@id='modalGerenciar']//input[@type='text' and @maxlength='4']"));
         inputPrazo.clear();
 
         WebElement btnEnviarFabrica = driver.findElement(
                 By.xpath("//input[contains(@value,'Enviar para Fabrica')] | //button[contains(text(),'Enviar para Fabrica')]"));
-        // JS click necessário: o .click() normal do Selenium não submete form multipart/form-data neste contexto JSF
         jsClick(btnEnviarFabrica);
         aguardar(2000);
 
@@ -326,26 +350,21 @@ public class VendedorVrumMotorsSeleniumTest {
         fazerLogin();
         driver.get(URL_PEDIDOS);
 
-        List<WebElement> badgesNegociacao = driver.findElements(
-                By.xpath("//span[contains(@class,'badge-emnegociacao')]"));
+        List<WebElement> colNegociacao = driver.findElements(
+                By.xpath("//div[@data-col='EM_NEGOCIACAO']//input[contains(@value,'Gerenciar')]"));
+        Assume.assumeTrue("Precondição: Deve haver pedido EM_NEGOCIACAO para gerenciar", !colNegociacao.isEmpty());
 
-        Assume.assumeTrue("Precondição: Deve haver pedido EM_NEGOCIACAO para gerenciar", !badgesNegociacao.isEmpty());
-
-        WebElement btnGerenciar = driver.findElement(
-                By.xpath("//span[contains(@class,'badge-emnegociacao')]/following::input[contains(@value,'Selecionar')][1]"));
-        btnGerenciar.click();
-
-        // Aguarda o painel de gerenciamento aparecer
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//div[contains(@class,'card-header') and contains(.,'Gerenciando')]")));
+        jsClick(colNegociacao.get(0));
+        aguardarModalAberto();
         aguardar(500);
 
         WebElement inputPagamento = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//input[@type='text' and @maxlength='50']")));
+                By.xpath("//div[@id='modalGerenciar']//input[@type='text' and @maxlength='50']")));
         inputPagamento.clear();
         inputPagamento.sendKeys("Pix à Vista");
 
-        WebElement inputPrazo = driver.findElement(By.xpath("//input[@type='text' and @maxlength='4']"));
+        WebElement inputPrazo = driver.findElement(
+                By.xpath("//div[@id='modalGerenciar']//input[@type='text' and @maxlength='4']"));
         inputPrazo.clear();
         inputPrazo.sendKeys("90");
         aguardar(500);
@@ -369,17 +388,12 @@ public class VendedorVrumMotorsSeleniumTest {
         fazerLogin();
         driver.get(URL_PEDIDOS);
 
-        List<WebElement> badgesEnviado = driver.findElements(
-                By.xpath("//span[contains(@class,'badge-enviadocidade')]"));
+        List<WebElement> colEnviado = driver.findElements(
+                By.xpath("//div[@data-col='ENVIADO_CIDADE']//input[contains(@value,'Gerenciar')]"));
+        Assume.assumeTrue("Precondição: Deve haver pedido ENVIADO_CIDADE para gerenciar", !colEnviado.isEmpty());
 
-        Assume.assumeTrue("Precondição: Deve haver pedido ENVIADO_CIDADE para gerenciar", !badgesEnviado.isEmpty());
-
-        WebElement btnGerenciar = driver.findElement(
-                By.xpath("//span[contains(@class,'badge-enviadocidade')]/following::input[contains(@value,'Selecionar')][1]"));
-        btnGerenciar.click();
-
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//div[contains(@class,'card-header') and contains(.,'Gerenciando')]")));
+        jsClick(colEnviado.get(0));
+        aguardarModalAberto();
         aguardar(500);
 
         WebElement btnPronto = wait.until(ExpectedConditions.elementToBeClickable(
@@ -401,30 +415,27 @@ public class VendedorVrumMotorsSeleniumTest {
         fazerLogin();
         driver.get(URL_PEDIDOS);
 
-        List<WebElement> badgesPronto = driver.findElements(
-                By.xpath("//span[contains(@class,'badge-prontoentrega')]"));
+        List<WebElement> colPronto = driver.findElements(
+                By.xpath("//div[@data-col='PRONTO_ENTREGA']//input[contains(@value,'Finalizar')]"));
+        Assume.assumeTrue("Precondição: Deve haver pedido PRONTO_ENTREGA para gerenciar", !colPronto.isEmpty());
 
-        Assume.assumeTrue("Precondição: Deve haver pedido PRONTO_ENTREGA para gerenciar", !badgesPronto.isEmpty());
-
-        // Busca o botão especificamente para VRM_TEST_B05 pelo número do pedido,
-        // evitando ambiguidade quando VRM_TEST_B04 também está em PRONTO_ENTREGA após B04.
-        WebElement btnGerenciar = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//*[contains(text(),'" + NUM_B05 + "')]/following::input[contains(@value,'Selecionar')][1]")));
-        jsClick(btnGerenciar);
-
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//div[contains(@class,'card-header') and contains(.,'Gerenciando')]")));
+        // Localiza o botão do card específico de VRM_TEST_B05 para evitar ambiguidade
+        WebElement btnFinalizar = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//div[@data-col='PRONTO_ENTREGA']//div[contains(@class,'vnd-card') and .//*[contains(text(),'"
+                        + NUM_B05 + "')]]//input[contains(@value,'Finalizar')]")));
+        jsClick(btnFinalizar);
+        aguardarModalAberto();
         aguardar(500);
 
         WebElement inputData = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//input[@type='text']")));
+                By.xpath("//div[@id='modalGerenciar']//input[@type='text']")));
         inputData.clear();
         inputData.sendKeys("28/12/2026");
         aguardar(500);
 
-        WebElement btnFinalizar = driver.findElement(
+        WebElement btnFinalizarPedido = driver.findElement(
                 By.xpath("//input[contains(@value,'Finalizar Pedido')] | //button[contains(text(),'Finalizar Pedido')]"));
-        jsClick(btnFinalizar);
+        jsClick(btnFinalizarPedido);
         aguardar(1500);
 
         WebElement msgSucesso = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".msg-success")));

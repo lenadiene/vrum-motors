@@ -13,7 +13,15 @@ import jakarta.persistence.PersistenceException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.YearMonth;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.OptionalDouble;
+import java.util.stream.Collectors;
 
 @Named("adminBean")
 @ViewScoped
@@ -457,6 +465,194 @@ public class AdminBean implements Serializable {
 
     public TipoVeiculo[] getTiposVeiculo() { return TipoVeiculo.values(); }
     public PerfilUsuario[] getPerfis()     { return PerfilUsuario.values(); }
+
+    // ── Dashboard analytics ──────────────────────────────────────────────────
+
+    public int getPedidosEsteMes() {
+        YearMonth atual = YearMonth.now();
+        return (int) pedidos.stream()
+                .filter(p -> p.getDataPedido() != null
+                        && YearMonth.from(p.getDataPedido()).equals(atual))
+                .count();
+    }
+
+    public int getPedidosEmAberto() {
+        return (int) pedidos.stream()
+                .filter(p -> p.getStatus() != StatusPedido.FINALIZADO
+                        && p.getStatus() != StatusPedido.CANCELADO)
+                .count();
+    }
+
+    public String getTicketMedio() {
+        OptionalDouble avg = pedidos.stream()
+                .filter(p -> p.getVeiculo() != null && p.getVeiculo().getPreco() != null)
+                .mapToDouble(p -> p.getVeiculo().getPreco().doubleValue())
+                .average();
+        if (!avg.isPresent()) return "R$ 0,00";
+        BigDecimal val = BigDecimal.valueOf(avg.getAsDouble()).setScale(2, RoundingMode.HALF_UP);
+        return "R$ " + String.format(new Locale("pt", "BR"), "%,.2f", val);
+    }
+
+    public List<Pedido> getUltimosPedidos() {
+        return pedidos.stream()
+                .filter(p -> p.getDataPedido() != null)
+                .sorted(Comparator.comparing(Pedido::getDataPedido).reversed())
+                .limit(5)
+                .collect(Collectors.toList());
+    }
+
+    public String getStatusLabelsJson() {
+        Map<StatusPedido, Long> counts = pedidos.stream()
+                .collect(Collectors.groupingBy(Pedido::getStatus, Collectors.counting()));
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (StatusPedido s : StatusPedido.values()) {
+            if (counts.getOrDefault(s, 0L) > 0) {
+                if (!first) sb.append(',');
+                sb.append('\'').append(s.getDescricao().replace("'", "\\'")).append('\'');
+                first = false;
+            }
+        }
+        return sb.append(']').toString();
+    }
+
+    public String getStatusDataJson() {
+        Map<StatusPedido, Long> counts = pedidos.stream()
+                .collect(Collectors.groupingBy(Pedido::getStatus, Collectors.counting()));
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (StatusPedido s : StatusPedido.values()) {
+            long cnt = counts.getOrDefault(s, 0L);
+            if (cnt > 0) {
+                if (!first) sb.append(',');
+                sb.append(cnt);
+                first = false;
+            }
+        }
+        return sb.append(']').toString();
+    }
+
+    public String getMesLabelsJson() {
+        String[] nomes = {"Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"};
+        YearMonth now = YearMonth.now();
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 11; i >= 0; i--) {
+            if (i < 11) sb.append(',');
+            YearMonth ym = now.minusMonths(i);
+            int y = ym.getYear() % 100;
+            sb.append('\'').append(nomes[ym.getMonthValue() - 1])
+              .append('/').append(y < 10 ? "0" : "").append(y).append('\'');
+        }
+        return sb.append(']').toString();
+    }
+
+    public String getMesDataJson() {
+        YearMonth now = YearMonth.now();
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 11; i >= 0; i--) {
+            if (i < 11) sb.append(',');
+            YearMonth ym = now.minusMonths(i);
+            long cnt = pedidos.stream()
+                    .filter(p -> p.getDataPedido() != null
+                            && YearMonth.from(p.getDataPedido()).equals(ym))
+                    .count();
+            sb.append(cnt);
+        }
+        return sb.append(']').toString();
+    }
+
+    public String getConcLabelsJson() {
+        Map<String, Long> counts = pedidos.stream()
+                .filter(p -> p.getConcessionaria() != null)
+                .collect(Collectors.groupingBy(
+                        p -> p.getConcessionaria().getNome(), Collectors.counting()));
+        StringBuilder sb = new StringBuilder("[");
+        counts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .limit(8)
+                .forEach(e -> sb.append(sb.length() > 1 ? "," : "")
+                        .append('\'').append(e.getKey().replace("'", "\\'")).append('\''));
+        return sb.append(']').toString();
+    }
+
+    public String getConcDataJson() {
+        Map<String, Long> counts = pedidos.stream()
+                .filter(p -> p.getConcessionaria() != null)
+                .collect(Collectors.groupingBy(
+                        p -> p.getConcessionaria().getNome(), Collectors.counting()));
+        StringBuilder sb = new StringBuilder("[");
+        counts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .limit(8)
+                .forEach(e -> sb.append(sb.length() > 1 ? "," : "").append(e.getValue()));
+        return sb.append(']').toString();
+    }
+
+    public String getTipoLabelsJson() {
+        Map<String, Long> counts = new LinkedHashMap<>();
+        for (TipoVeiculo t : TipoVeiculo.values()) counts.put(t.getDescricao(), 0L);
+        pedidos.stream()
+                .filter(p -> p.getVeiculo() != null && p.getVeiculo().getTipo() != null)
+                .forEach(p -> {
+                    String k = p.getVeiculo().getTipo().getDescricao();
+                    counts.put(k, counts.get(k) + 1);
+                });
+        StringBuilder sb = new StringBuilder("[");
+        counts.entrySet().stream()
+                .filter(e -> e.getValue() > 0)
+                .forEach(e -> sb.append(sb.length() > 1 ? "," : "")
+                        .append('\'').append(e.getKey().replace("'", "\\'")).append('\''));
+        return sb.append(']').toString();
+    }
+
+    public String getTipoDataJson() {
+        Map<String, Long> counts = new LinkedHashMap<>();
+        for (TipoVeiculo t : TipoVeiculo.values()) counts.put(t.getDescricao(), 0L);
+        pedidos.stream()
+                .filter(p -> p.getVeiculo() != null && p.getVeiculo().getTipo() != null)
+                .forEach(p -> {
+                    String k = p.getVeiculo().getTipo().getDescricao();
+                    counts.put(k, counts.get(k) + 1);
+                });
+        StringBuilder sb = new StringBuilder("[");
+        counts.entrySet().stream()
+                .filter(e -> e.getValue() > 0)
+                .forEach(e -> sb.append(sb.length() > 1 ? "," : "").append(e.getValue()));
+        return sb.append(']').toString();
+    }
+
+    public String getVeicLabelsJson() {
+        Map<String, Long> counts = pedidos.stream()
+                .filter(p -> p.getVeiculo() != null)
+                .collect(Collectors.groupingBy(
+                        p -> p.getVeiculo().getNome() + " " + p.getVeiculo().getModelo(),
+                        Collectors.counting()));
+        StringBuilder sb = new StringBuilder("[");
+        counts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .limit(8)
+                .forEach(e -> sb.append(sb.length() > 1 ? "," : "")
+                        .append('\'').append(e.getKey().replace("'", "\\'")).append('\''));
+        return sb.append(']').toString();
+    }
+
+    public String getVeicDataJson() {
+        Map<String, Long> counts = pedidos.stream()
+                .filter(p -> p.getVeiculo() != null)
+                .collect(Collectors.groupingBy(
+                        p -> p.getVeiculo().getNome() + " " + p.getVeiculo().getModelo(),
+                        Collectors.counting()));
+        StringBuilder sb = new StringBuilder("[");
+        counts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .limit(8)
+                .forEach(e -> sb.append(sb.length() > 1 ? "," : "").append(e.getValue()));
+        return sb.append(']').toString();
+    }
     public String getPrecoTexto()  { return precoTexto; }
     public void   setPrecoTexto(String p) { this.precoTexto = p; }
     public String getAnoTexto()    { return anoTexto; }

@@ -65,12 +65,20 @@ public abstract class AdminSeleniumBase {
         WebDriverManager.chromedriver().setup();
         ChromeOptions opts = new ChromeOptions();
         opts.addArguments("--start-maximized");
-        // Desabilita o gerenciador de senhas do Chrome para evitar que o diálogo
-        // "Salvar senha?" bloqueie o campo de e-mail nos testes subsequentes
+        opts.addArguments("--no-first-run");
+        opts.addArguments("--disable-background-networking");
+        // Desabilita completamente o Safe Browsing / gerenciador de senhas do Chrome
+        // para evitar diálogos de "Salvar senha" e "Mude sua senha" durante os testes
+        opts.addArguments("--disable-features=SafeBrowsing,PasswordLeakDetection,"
+                + "SafeBrowsingEnhancedProtection,PasswordManager");
         Map<String, Object> prefs = new HashMap<>();
         prefs.put("credentials_enable_service", false);
         prefs.put("profile.password_manager_enabled", false);
+        prefs.put("profile.password_manager_leak_detection", false);
+        prefs.put("safebrowsing.enabled", false);
+        prefs.put("safebrowsing_without_cookies_enabled", false);
         opts.setExperimentalOption("prefs", prefs);
+        opts.setExperimentalOption("excludeSwitches", List.of("enable-automation"));
         driver = new ChromeDriver(opts);
         js     = (JavascriptExecutor) driver;
         wait   = new WebDriverWait(driver, Duration.ofSeconds(15));

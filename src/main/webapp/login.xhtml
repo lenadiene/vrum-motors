@@ -35,7 +35,7 @@
             background: #FAFAFA;
         }
 
-        /* ── Lado esquerdo — foto com overlay claro ── */
+        /* ── Lado esquerdo — foto com overlay escuro ── */
         .login-left {
             flex: 1;
             position: relative;
@@ -47,13 +47,13 @@
             background:
                 linear-gradient(
                     135deg,
-                    rgba(250,250,252,0.90) 0%,
-                    rgba(240,240,246,0.72) 60%,
-                    rgba(232,232,240,0.55) 100%
+                    rgba(10,10,12,0.72) 0%,
+                    rgba(18,18,22,0.60) 60%,
+                    rgba(30,18,18,0.65) 100%
                 ),
                 url('https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1400&q=80')
                 center / cover no-repeat;
-            border-right: 1px solid rgba(0,0,0,0.07);
+            border-right: 1px solid rgba(255,255,255,0.06);
         }
 
         /* Raio de prata sobre a foto */
@@ -84,11 +84,11 @@
             font-size: 5rem;
             letter-spacing: 6px;
             line-height: 0.9;
-            color: #111;
+            color: #fff;
             position: relative;
             z-index: 1;
         }
-        .login-brand span { color: #D62828; }
+        .login-brand span { color: #E84040; }
 
         /* Linha decorativa vermelha */
         .login-brand-line {
@@ -149,8 +149,8 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background: rgba(214,40,40,0.07);
-            border: 1px solid rgba(214,40,40,0.18);
+            background: rgba(214,40,40,0.18);
+            border: 1px solid rgba(214,40,40,0.40);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -160,7 +160,7 @@
 
         .login-feature-text {
             font-size: 0.88rem;
-            color: rgba(0,0,0,0.55);
+            color: rgba(255,255,255,0.85);
             font-weight: 500;
             letter-spacing: 0.3px;
         }

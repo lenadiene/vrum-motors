@@ -52,7 +52,7 @@ public class PedidoService {
             throw new IllegalArgumentException("Forma de pagamento é obrigatória.");
         }
         
-        pedido.setStatus(StatusPedido.EM_FABRICACAO);
+        pedido.setStatus(StatusPedido.AGUARDANDO_FABRICACAO);
         pedido.setPrazoFabricacao(prazoFabricacao);
         pedido.setFormaPagamento(formaPagamento.trim());
         pedidoDAO.atualizar(pedido);
@@ -77,6 +77,10 @@ public class PedidoService {
                             + novoStatus.getDescricao());
         }
 
+        if (novoStatus == StatusPedido.ENVIADO_CIDADE && prazoEntrega == null) {
+            throw new IllegalArgumentException("Prazo de entrega na concessionária é obrigatório para envio à cidade.");
+        }
+
         pedido.setStatus(novoStatus);
 
         if (prazoEntrega != null) {
@@ -92,16 +96,12 @@ public class PedidoService {
 
     public List<StatusPedido> obterStatusPermitidosFabricacao(StatusPedido atual) {
         switch (atual) {
-
-            case EM_NEGOCIACAO:
+            case AGUARDANDO_FABRICACAO:
                 return List.of(StatusPedido.EM_FABRICACAO);
-
             case EM_FABRICACAO:
                 return List.of(StatusPedido.FABRICADO);
-
             case FABRICADO:
                 return List.of(StatusPedido.ENVIADO_CIDADE);
-
             default:
                 return List.of();
         }

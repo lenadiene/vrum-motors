@@ -85,7 +85,7 @@ public class PedidoDAO extends GenericDAO<Pedido, Long> {
                     "SELECT p FROM Pedido p WHERE p.status IN :statuses ORDER BY p.dataPedido ASC",
                     Pedido.class)
                     .setParameter("statuses", List.of(
-                            StatusPedido.EM_NEGOCIACAO,
+                            StatusPedido.AGUARDANDO_FABRICACAO,
                             StatusPedido.EM_FABRICACAO,
                             StatusPedido.FABRICADO,
                             StatusPedido.ENVIADO_CIDADE))

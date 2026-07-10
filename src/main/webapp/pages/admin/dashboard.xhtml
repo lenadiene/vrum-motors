@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
@@ -8,6 +8,57 @@
     <meta charset="UTF-8"/>
     <title>Admin — Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" type="text/javascript"></script>
+    <style>
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: var(--card-bg, #fff);
+            border-radius: 8px;
+            padding: 20px 24px;
+            border-top: 3px solid #444;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .kpi-card.accent { border-top-color: #E30613; }
+        .kpi-label {
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #9A9A9A;
+            margin-bottom: 8px;
+        }
+        .kpi-value {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2.4rem;
+            line-height: 1;
+            letter-spacing: 1px;
+        }
+        .kpi-value.sm { font-size: 1.6rem; }
+        .charts-row {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .charts-row.col-3-2 { grid-template-columns: 3fr 2fr; }
+        .chart-card {
+            background: var(--card-bg, #fff);
+            border-radius: 8px;
+            padding: 20px 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .chart-title {
+            font-size: 0.78rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #9A9A9A;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+    </style>
 </h:head>
 
 <h:body>
@@ -20,11 +71,11 @@
             <div class="sidebar-user-role">Administrador</div>
         </div>
         <nav class="sidebar-nav">
-            <a href="dashboard.xhtml" class="active">📊 Dashboard</a>
-            <a href="usuarios.xhtml">👥 Usuários</a>
-            <a href="concessionarias.xhtml">🏢 Concessionárias</a>
-            <a href="veiculos.xhtml">🚗 Veículos</a>
-            <a href="pedidos.xhtml">📦 Pedidos</a>
+            <a href="dashboard.xhtml" class="active">&#x1F4CA; Dashboard</a>
+            <a href="usuarios.xhtml">&#x1F465; Usuários</a>
+            <a href="concessionarias.xhtml">&#x1F3E2; Concessionárias</a>
+            <a href="veiculos.xhtml">&#x1F697; Veículos</a>
+            <a href="pedidos.xhtml">&#x1F4E6; Pedidos</a>
         </nav>
         <div class="sidebar-footer">
             <h:form>
@@ -36,27 +87,57 @@
     <main class="main-content">
         <div class="page-header">
             <h1>Dashboard</h1>
-            <p>Visão geral do sistema Vrum Motors</p>
+            <p>Visão executiva — Vrum Motors</p>
         </div>
 
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">#{adminBean.usuarios.size()}</div>
-                <div class="stat-label">Usuários</div>
+        <!-- KPIs -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Total de Pedidos</div>
+                <div class="kpi-value">#{adminBean.pedidos.size()}</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number">#{adminBean.concessionarias.size()}</div>
-                <div class="stat-label">Concessionárias</div>
+            <div class="kpi-card">
+                <div class="kpi-label">Pedidos Este Mês</div>
+                <div class="kpi-value">#{adminBean.pedidosEsteMes}</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number">#{adminBean.veiculos.size()}</div>
-                <div class="stat-label">Veículos</div>
+            <div class="kpi-card">
+                <div class="kpi-label">Em Aberto</div>
+                <div class="kpi-value">#{adminBean.pedidosEmAberto}</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number">#{adminBean.pedidos.size()}</div>
-                <div class="stat-label">Pedidos</div>
+            <div class="kpi-card accent">
+                <div class="kpi-label">Ticket Médio</div>
+                <div class="kpi-value sm">#{adminBean.ticketMedio}</div>
             </div>
+        </div>
+
+        <!-- Charts Row 1: Evolução Mensal + Funil de Status -->
+        <div class="charts-row col-3-2">
+            <div class="chart-card">
+                <div class="chart-title">Evolução Mensal de Pedidos — últimos 12 meses</div>
+                <canvas id="chartMensal" height="140"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Pedidos por Status</div>
+                <canvas id="chartStatus" height="140"></canvas>
+            </div>
+        </div>
+
+        <!-- Charts Row 2: Ranking Concessionárias + Tipo de Veículo -->
+        <div class="charts-row col-3-2">
+            <div class="chart-card">
+                <div class="chart-title">Ranking de Concessionárias</div>
+                <canvas id="chartConc" height="160"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Pedidos por Tipo de Veículo</div>
+                <canvas id="chartTipo" height="160"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart Row 3: Veículos Mais Pedidos -->
+        <div class="chart-card" style="margin-bottom:20px">
+            <div class="chart-title">Veículos Mais Pedidos — top 8</div>
+            <canvas id="chartVeic" height="100"></canvas>
         </div>
 
         <!-- Últimos pedidos -->
@@ -73,7 +154,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <ui:repeat value="#{adminBean.pedidos}" var="p">
+                    <ui:repeat value="#{adminBean.ultimosPedidos}" var="p">
                         <tr>
                             <td style="font-family:'Bebas Neue',cursive; letter-spacing:1px">#{p.numeroPedido}</td>
                             <td>#{p.cliente.nome}</td>
@@ -94,24 +175,161 @@
         <!-- Quick links -->
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:8px">
             <a href="usuarios.xhtml" class="card" style="text-align:center; text-decoration:none; transition:all 0.2s">
-                <div style="font-size:2.5rem; margin-bottom:8px">👥</div>
+                <div style="font-size:2.5rem; margin-bottom:8px">&#x1F465;</div>
                 <div style="font-family:'Bebas Neue',cursive; letter-spacing:2px; font-size:1.1rem">Usuários</div>
             </a>
             <a href="concessionarias.xhtml" class="card" style="text-align:center; text-decoration:none">
-                <div style="font-size:2.5rem; margin-bottom:8px">🏢</div>
+                <div style="font-size:2.5rem; margin-bottom:8px">&#x1F3E2;</div>
                 <div style="font-family:'Bebas Neue',cursive; letter-spacing:2px; font-size:1.1rem">Concessionárias</div>
             </a>
             <a href="veiculos.xhtml" class="card" style="text-align:center; text-decoration:none">
-                <div style="font-size:2.5rem; margin-bottom:8px">🚗</div>
+                <div style="font-size:2.5rem; margin-bottom:8px">&#x1F697;</div>
                 <div style="font-family:'Bebas Neue',cursive; letter-spacing:2px; font-size:1.1rem">Veículos</div>
             </a>
             <a href="pedidos.xhtml" class="card" style="text-align:center; text-decoration:none">
-                <div style="font-size:2.5rem; margin-bottom:8px">📦</div>
+                <div style="font-size:2.5rem; margin-bottom:8px">&#x1F4E6;</div>
                 <div style="font-family:'Bebas Neue',cursive; letter-spacing:2px; font-size:1.1rem">Pedidos</div>
             </a>
         </div>
     </main>
 </div>
+
+<script type="text/javascript">
+    var _mesLabels  = <h:outputText value="#{adminBean.mesLabelsJson}"    escape="false"/>;
+    var _mesData    = <h:outputText value="#{adminBean.mesDataJson}"      escape="false"/>;
+    var _stLabels   = <h:outputText value="#{adminBean.statusLabelsJson}" escape="false"/>;
+    var _stData     = <h:outputText value="#{adminBean.statusDataJson}"   escape="false"/>;
+    var _concLabels = <h:outputText value="#{adminBean.concLabelsJson}"   escape="false"/>;
+    var _concData   = <h:outputText value="#{adminBean.concDataJson}"     escape="false"/>;
+    var _tipoLabels = <h:outputText value="#{adminBean.tipoLabelsJson}"   escape="false"/>;
+    var _tipoData   = <h:outputText value="#{adminBean.tipoDataJson}"     escape="false"/>;
+    var _veicLabels = <h:outputText value="#{adminBean.veicLabelsJson}"   escape="false"/>;
+    var _veicData   = <h:outputText value="#{adminBean.veicDataJson}"     escape="false"/>;
+
+    Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+    Chart.defaults.font.size   = 12;
+    Chart.defaults.color       = '#9A9A9A';
+
+    /* 1. Evolução Mensal — linha */
+    new Chart(document.getElementById('chartMensal').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: _mesLabels,
+            datasets: [{
+                label: 'Pedidos',
+                data: _mesData,
+                borderColor: '#E30613',
+                backgroundColor: 'rgba(227,6,19,0.08)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#E30613',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    /* 2. Funil por Status — donut */
+    var _stColors = ['#FFC107','#17A2B8','#7B5EA7','#20C997','#4C9BE8','#1A9E5C','#34D058','#DC3545'];
+    new Chart(document.getElementById('chartStatus').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: _stLabels,
+            datasets: [{
+                data: _stData,
+                backgroundColor: _stColors.slice(0, _stData.length),
+                borderWidth: 2,
+                borderColor: 'rgba(255,255,255,0.6)'
+            }]
+        },
+        options: {
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 10, padding: 12, font: { size: 11 } }
+                }
+            }
+        }
+    });
+
+    /* 3. Ranking Concessionárias — barra horizontal */
+    new Chart(document.getElementById('chartConc').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: _concLabels,
+            datasets: [{
+                label: 'Pedidos',
+                data: _concData,
+                backgroundColor: 'rgba(23,162,184,0.75)',
+                borderColor: '#17A2B8',
+                borderWidth: 1,
+                borderRadius: 3
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    /* 4. Veículos Mais Pedidos — barra horizontal */
+    new Chart(document.getElementById('chartVeic').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: _veicLabels,
+            datasets: [{
+                label: 'Pedidos',
+                data: _veicData,
+                backgroundColor: 'rgba(227,6,19,0.75)',
+                borderColor: '#E30613',
+                borderWidth: 1,
+                borderRadius: 3
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    /* 5. Tipo de Veículo — donut */
+    new Chart(document.getElementById('chartTipo').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: _tipoLabels,
+            datasets: [{
+                data: _tipoData,
+                backgroundColor: ['#E30613','#FF6B35','#FFD700'],
+                borderWidth: 2,
+                borderColor: 'rgba(255,255,255,0.6)'
+            }]
+        },
+        options: {
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 10, padding: 12, font: { size: 11 } }
+                }
+            }
+        }
+    });
+</script>
 </h:body>
 </html>
-
