@@ -9,6 +9,9 @@ import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import java.beans.Introspector;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Roda ao subir a aplicação e insere dados iniciais se o banco estiver vazio.
@@ -23,6 +26,7 @@ public class DataInicializador implements ServletContextListener {
             UsuarioDAO usuarioDAO = new UsuarioDAO();
             ConcessionariaDAO concDAO = new ConcessionariaDAO();
             VeiculoDAO veiculoDAO = new VeiculoDAO();
+            PedidoDAO pedidoDAO = new PedidoDAO();
 
             System.out.println(">>> Vrum Motors: garantindo dados de exemplo...");
 
@@ -106,6 +110,11 @@ public class DataInicializador implements ServletContextListener {
             // ---- Veículos ----
             if (veiculoDAO.listarTodos().isEmpty()) {
                 criarVeiculos(veiculoDAO);
+            }
+
+            // ---- Pedidos de demonstração para popular os dashboards ----
+            if (pedidoDAO.listarTodos().isEmpty()) {
+                criarPedidosExemplo(pedidoDAO, usuarioDAO, veiculoDAO, recife);
             }
 
             // ---- Configurações de seletores ----
@@ -241,6 +250,85 @@ public class DataInicializador implements ServletContextListener {
         v5.setDestaqueHome(true);
         v5.setImagemPrincipal("cross-principal.jpg");
         dao.salvar(v5);
+    }
+
+    private void criarPedidosExemplo(
+            PedidoDAO pedidoDAO,
+            UsuarioDAO usuarioDAO,
+            VeiculoDAO veiculoDAO,
+            Concessionaria concessionaria) {
+
+        Usuario clienteUsuario = usuarioDAO.buscarPorEmail("cliente@email.com");
+        Usuario vendedorUsuario = usuarioDAO.buscarPorEmail("vendedor@vrummotors.com");
+        List<Veiculo> veiculos = veiculoDAO.listarTodos();
+
+        if (!(clienteUsuario instanceof Cliente)
+                || !(vendedorUsuario instanceof Vendedor)
+                || veiculos.isEmpty()
+                || concessionaria == null) {
+            throw new IllegalStateException("Não foi possível preparar os pedidos de demonstração.");
+        }
+
+        Cliente cliente = (Cliente) clienteUsuario;
+        Vendedor vendedor = (Vendedor) vendedorUsuario;
+        LocalDateTime agora = LocalDateTime.now().withHour(10).withMinute(0).withSecond(0).withNano(0);
+
+        criarPedidoExemplo(pedidoDAO, "DEMO-001", cliente, veiculos.get(0), concessionaria, vendedor,
+                StatusPedido.FINALIZADO, agora.minusMonths(5), "Prata", "Financiamento", LocalDate.now().minusMonths(4));
+        criarPedidoExemplo(pedidoDAO, "DEMO-002", cliente, veiculos.get(1 % veiculos.size()), concessionaria, vendedor,
+                StatusPedido.CANCELADO, agora.minusMonths(4), "Branco", "Pix", null);
+        criarPedidoExemplo(pedidoDAO, "DEMO-003", cliente, veiculos.get(2 % veiculos.size()), concessionaria, vendedor,
+                StatusPedido.FINALIZADO, agora.minusMonths(3), "Cinza", "Financiamento", LocalDate.now().minusMonths(2));
+        criarPedidoExemplo(pedidoDAO, "DEMO-004", cliente, veiculos.get(3 % veiculos.size()), concessionaria, vendedor,
+                StatusPedido.PRONTO_ENTREGA, agora.minusMonths(2), "Preto", "Cartão", null);
+        criarPedidoExemplo(pedidoDAO, "DEMO-005", cliente, veiculos.get(4 % veiculos.size()), concessionaria, vendedor,
+                StatusPedido.ENVIADO_CIDADE, agora.minusMonths(1), "Vermelho", "Financiamento", null);
+        criarPedidoExemplo(pedidoDAO, "DEMO-006", cliente, veiculos.get(0), concessionaria, vendedor,
+                StatusPedido.EM_FABRICACAO, agora.minusDays(18), "Azul", "Pix", null);
+        criarPedidoExemplo(pedidoDAO, "DEMO-007", cliente, veiculos.get(1 % veiculos.size()), concessionaria, vendedor,
+                StatusPedido.EM_NEGOCIACAO, agora.minusDays(10), "Branco", null, null);
+        criarPedidoExemplo(pedidoDAO, "DEMO-008", cliente, veiculos.get(2 % veiculos.size()), concessionaria, null,
+                StatusPedido.AGUARDANDO_ATENDIMENTO, agora.minusDays(3), "Prata", null, null);
+
+        System.out.println(">>> 8 pedidos de demonstração criados para a unidade Recife.");
+    }
+
+    private void criarPedidoExemplo(
+            PedidoDAO pedidoDAO,
+            String numero,
+            Cliente cliente,
+            Veiculo veiculo,
+            Concessionaria concessionaria,
+            Vendedor vendedor,
+            StatusPedido status,
+            LocalDateTime dataPedido,
+            String cor,
+            String formaPagamento,
+            LocalDate dataRetirada) {
+
+        Pedido pedido = new Pedido();
+        pedido.setNumeroPedido(numero);
+        pedido.setCliente(cliente);
+        pedido.setVeiculo(veiculo);
+        pedido.setConcessionaria(concessionaria);
+        pedido.setVendedor(vendedor);
+        pedido.setStatus(status);
+        pedido.setDataPedido(dataPedido);
+        pedido.setCorEscolhida(cor);
+        pedido.setFormaPagamento(formaPagamento);
+        pedido.setDataRetirada(dataRetirada);
+
+        if (status == StatusPedido.AGUARDANDO_FABRICACAO
+                || status == StatusPedido.EM_FABRICACAO
+                || status == StatusPedido.ENVIADO_CIDADE
+                || status == StatusPedido.PRONTO_ENTREGA) {
+            pedido.setPrazoFabricacao(dataPedido.toLocalDate().plusDays(30));
+        }
+        if (status == StatusPedido.ENVIADO_CIDADE || status == StatusPedido.PRONTO_ENTREGA) {
+            pedido.setPrazoEntrega(dataPedido.toLocalDate().plusDays(45));
+        }
+
+        pedidoDAO.salvar(pedido);
     }
 
     @Override

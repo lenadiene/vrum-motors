@@ -8,9 +8,18 @@ import jakarta.faces.application.FacesMessage;
 import jakarta.inject.Named;
 import jakarta.faces.view.ViewScoped;
 import jakarta.faces.context.FacesContext;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.io.Serializable;
+import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.OptionalDouble;
+import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 
 @Named("gerenteBean")
@@ -162,8 +171,210 @@ public class GerenteBean implements Serializable {
     public List<Vendedor> getVendedores() { return vendedores; }
     public List<Pedido> getPedidos() { return pedidos; }
     public List<Pedido> getPedidosRecentes() {
-        if (pedidos == null) return Collections.emptyList();
-        return pedidos.subList(0, Math.min(5, pedidos.size()));
+        return pedidosSeguros().stream()
+                .filter(p -> p.getDataPedido() != null)
+                .sorted(Comparator.comparing(Pedido::getDataPedido).reversed())
+                .limit(5)
+                .collect(Collectors.toList());
+    }
+
+    // Indicadores do dashboard da unidade
+    public int getPedidosEsteMes() {
+        YearMonth atual = YearMonth.now();
+        return (int) pedidosSeguros().stream()
+                .filter(p -> p.getDataPedido() != null && YearMonth.from(p.getDataPedido()).equals(atual))
+                .count();
+    }
+
+    public int getPedidosEmAberto() {
+        return (int) pedidosSeguros().stream()
+                .filter(p -> p.getStatus() != StatusPedido.FINALIZADO
+                        && p.getStatus() != StatusPedido.CANCELADO)
+                .count();
+    }
+
+    public int getPedidosSemVendedor() {
+        return (int) pedidosSeguros().stream()
+                .filter(p -> p.getVendedor() == null)
+                .count();
+    }
+
+    public int getPedidosComVendedor() {
+        return (int) pedidosSeguros().stream()
+                .filter(p -> p.getVendedor() != null)
+                .count();
+    }
+
+    public int getPedidosConcluidos() {
+        return (int) pedidosSeguros().stream()
+                .filter(p -> p.getStatus() == StatusPedido.FINALIZADO)
+                .count();
+    }
+
+    public int getVendedoresAtivos() {
+        return (int) vendedoresSeguros().stream().filter(Vendedor::isAtivo).count();
+    }
+
+    public StatusPedido[] getStatusPedidoValues() {
+        return StatusPedido.values();
+    }
+
+    public int quantidadeStatus(StatusPedido status) {
+        return (int) pedidosSeguros().stream().filter(p -> p.getStatus() == status).count();
+    }
+
+    public String getTicketMedio() {
+        OptionalDouble media = pedidosSeguros().stream()
+                .filter(p -> p.getVeiculo() != null && p.getVeiculo().getPreco() != null)
+                .mapToDouble(p -> p.getVeiculo().getPreco().doubleValue())
+                .average();
+        if (!media.isPresent()) return "R$ 0,00";
+        BigDecimal valor = BigDecimal.valueOf(media.getAsDouble()).setScale(2, RoundingMode.HALF_UP);
+        return "R$ " + String.format(new Locale("pt", "BR"), "%,.2f", valor);
+    }
+
+    public String getMesLabelsJson() {
+        String[] meses = {"Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"};
+        YearMonth atual = YearMonth.now();
+        List<String> labels = new java.util.ArrayList<>();
+        for (int i = 11; i >= 0; i--) {
+            YearMonth mes = atual.minusMonths(i);
+            labels.add(meses[mes.getMonthValue() - 1] + "/" + String.format("%02d", mes.getYear() % 100));
+        }
+        return paraJsonTextos(labels);
+    }
+
+    public String getMesDataJson() {
+        YearMonth atual = YearMonth.now();
+        List<Long> dados = new java.util.ArrayList<>();
+        for (int i = 11; i >= 0; i--) {
+            YearMonth mes = atual.minusMonths(i);
+            dados.add(pedidosSeguros().stream()
+                    .filter(p -> p.getDataPedido() != null && YearMonth.from(p.getDataPedido()).equals(mes))
+                    .count());
+        }
+        return paraJsonNumeros(dados);
+    }
+
+    public String getStatusLabelsJson() {
+        Map<StatusPedido, Long> contagem = pedidosSeguros().stream()
+                .filter(p -> p.getStatus() != null)
+                .collect(Collectors.groupingBy(Pedido::getStatus, Collectors.counting()));
+        List<String> labels = new java.util.ArrayList<>();
+        for (StatusPedido status : StatusPedido.values()) {
+            if (contagem.getOrDefault(status, 0L) > 0) labels.add(status.getDescricao());
+        }
+        return paraJsonTextos(labels);
+    }
+
+    public String getStatusDataJson() {
+        Map<StatusPedido, Long> contagem = pedidosSeguros().stream()
+                .filter(p -> p.getStatus() != null)
+                .collect(Collectors.groupingBy(Pedido::getStatus, Collectors.counting()));
+        List<Long> dados = new java.util.ArrayList<>();
+        for (StatusPedido status : StatusPedido.values()) {
+            long quantidade = contagem.getOrDefault(status, 0L);
+            if (quantidade > 0) dados.add(quantidade);
+        }
+        return paraJsonNumeros(dados);
+    }
+
+    public String getVendedorLabelsJson() {
+        return paraJsonTextos(new java.util.ArrayList<>(pedidosPorVendedor().keySet()));
+    }
+
+    public String getVendedorDataJson() {
+        return paraJsonNumeros(new java.util.ArrayList<>(pedidosPorVendedor().values()));
+    }
+
+    public String getTipoLabelsJson() {
+        return paraJsonTextos(new java.util.ArrayList<>(pedidosPorTipo().keySet()));
+    }
+
+    public String getTipoDataJson() {
+        return paraJsonNumeros(new java.util.ArrayList<>(pedidosPorTipo().values()));
+    }
+
+    public String getVeiculoLabelsJson() {
+        return paraJsonTextos(new java.util.ArrayList<>(pedidosPorVeiculo().keySet()));
+    }
+
+    public String getVeiculoDataJson() {
+        return paraJsonNumeros(new java.util.ArrayList<>(pedidosPorVeiculo().values()));
+    }
+
+    public String classeStatus(StatusPedido status) {
+        if (status == null) return "badge-aguardando";
+        switch (status) {
+            case AGUARDANDO_ATENDIMENTO: return "badge-aguardando";
+            case EM_NEGOCIACAO:
+            case AGUARDANDO_FABRICACAO: return "badge-negociacao";
+            case EM_FABRICACAO: return "badge-fabricacao";
+            case FABRICADO: return "badge-fabricado";
+            case ENVIADO_CIDADE: return "badge-enviado";
+            case PRONTO_ENTREGA: return "badge-pronto";
+            case FINALIZADO: return "badge-finalizado";
+            case CANCELADO: return "badge-cancelado";
+            default: return "badge-aguardando";
+        }
+    }
+
+    private List<Pedido> pedidosSeguros() {
+        return pedidos == null ? Collections.emptyList() : pedidos;
+    }
+
+    private List<Vendedor> vendedoresSeguros() {
+        return vendedores == null ? Collections.emptyList() : vendedores;
+    }
+
+    private Map<String, Long> pedidosPorVendedor() {
+        Map<String, Long> contagem = new LinkedHashMap<>();
+        pedidosSeguros().stream()
+                .filter(p -> p.getVendedor() != null)
+                .collect(Collectors.groupingBy(p -> p.getVendedor().getNome(), Collectors.counting()))
+                .entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                .forEach(e -> contagem.put(e.getKey(), e.getValue()));
+        return contagem;
+    }
+
+    private Map<String, Long> pedidosPorTipo() {
+        Map<String, Long> contagem = new LinkedHashMap<>();
+        pedidosSeguros().stream()
+                .filter(p -> p.getVeiculo() != null && p.getVeiculo().getTipo() != null)
+                .collect(Collectors.groupingBy(p -> p.getVeiculo().getTipo().getDescricao(), Collectors.counting()))
+                .entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                .forEach(e -> contagem.put(e.getKey(), e.getValue()));
+        return contagem;
+    }
+
+    private Map<String, Long> pedidosPorVeiculo() {
+        Map<String, Long> contagem = new LinkedHashMap<>();
+        pedidosSeguros().stream()
+                .filter(p -> p.getVeiculo() != null)
+                .collect(Collectors.groupingBy(
+                        p -> p.getVeiculo().getNome() + " " + p.getVeiculo().getModelo(), Collectors.counting()))
+                .entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                .limit(8)
+                .forEach(e -> contagem.put(e.getKey(), e.getValue()));
+        return contagem;
+    }
+
+    private String paraJsonTextos(List<String> valores) {
+        return valores.stream().map(this::escaparJson).collect(Collectors.joining(",", "[", "]"));
+    }
+
+    private String paraJsonNumeros(List<Long> valores) {
+        return valores.stream().map(String::valueOf).collect(Collectors.joining(",", "[", "]"));
+    }
+
+    private String escaparJson(String valor) {
+        if (valor == null) return "null";
+        return "\"" + valor.replace("\\", "\\\\").replace("\"", "\\\"")
+                .replace("<", "\\u003c").replace(">", "\\u003e")
+                .replace("\n", "\\n").replace("\r", "\\r") + "\"";
     }
     public Vendedor getVendedorEdicao() { return vendedorEdicao; }
     public void setVendedorEdicao(Vendedor v) { this.vendedorEdicao = v; }

@@ -1,10 +1,62 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
-<h:head><meta charset="UTF-8"/><title>Gerente — Vrum Motors</title>
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Central da Unidade — Vrum Motors</title>
     <h:outputStylesheet library="css" name="vrum-style.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" type="text/javascript"></script>
+    <style>
+        .unit-hero { align-items:center; background:linear-gradient(115deg, #191919, #331012 65%, #71171c); border-radius:10px; color:#fff; display:flex; justify-content:space-between; margin-bottom:22px; min-height:158px; overflow:hidden; padding:28px 34px; position:relative; }
+        .unit-hero:after { border:1px solid rgba(255,255,255,.16); border-radius:50%; content:''; height:270px; position:absolute; right:-80px; top:-125px; width:270px; }
+        .unit-hero-kicker { color:#ffb6b6; font-size:.72rem; font-weight:700; letter-spacing:1.5px; margin-bottom:9px; text-transform:uppercase; }
+        .unit-hero h1 { color:#fff; font-family:'Bebas Neue',sans-serif; font-size:2.5rem; letter-spacing:2px; line-height:1; margin:0 0 7px; }
+        .unit-hero p { color:rgba(255,255,255,.72); font-size:.87rem; margin:0; }
+        .unit-team-chip { align-items:center; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); border-radius:8px; display:flex; gap:13px; padding:13px 17px; position:relative; z-index:1; }
+        .unit-team-chip strong { display:block; font-family:'Bebas Neue',sans-serif; font-size:1.55rem; letter-spacing:1px; line-height:1; }
+        .unit-team-chip span { color:rgba(255,255,255,.68); font-size:.72rem; text-transform:uppercase; letter-spacing:.8px; }
+        .unit-team-icon { align-items:center; background:var(--red); border-radius:50%; display:flex; font-size:1.1rem; height:38px; justify-content:center; width:38px; }
+        .unit-summary { display:grid; gap:14px; grid-template-columns:repeat(4, 1fr); margin-bottom:22px; }
+        .unit-summary-card { background:var(--bg-card); border:1px solid var(--bdr); border-radius:8px; box-shadow:var(--shadow-sm); padding:17px 19px; position:relative; overflow:hidden; }
+        .unit-summary-card:before { background:var(--red); content:''; height:100%; left:0; position:absolute; top:0; width:3px; }
+        .unit-summary-card.blue:before { background:var(--info); }
+        .unit-summary-card.gold:before { background:var(--warn); }
+        .unit-summary-label { color:var(--txt-muted); font-size:.7rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+        .unit-summary-value { font-family:'Bebas Neue',sans-serif; font-size:2.15rem; letter-spacing:1px; line-height:1.05; margin-top:7px; }
+        .unit-summary-value.money { font-size:1.5rem; padding-top:5px; }
+        .operations-grid { display:grid; gap:20px; grid-template-columns:minmax(0, 1.65fr) minmax(290px, .85fr); margin-bottom:20px; }
+        .unit-card { background:var(--bg-card); border:1px solid var(--bdr); border-radius:8px; box-shadow:var(--shadow-sm); min-width:0; padding:21px 23px; }
+        .unit-card-title { align-items:center; display:flex; font-family:'Bebas Neue',sans-serif; font-size:1.2rem; justify-content:space-between; letter-spacing:1.5px; margin-bottom:17px; }
+        .unit-card-subtitle { color:var(--txt-muted); font-family:'DM Sans',sans-serif; font-size:.73rem; font-weight:400; letter-spacing:0; }
+        .chart-box canvas { max-height:265px; }
+        .priority-list { display:flex; flex-direction:column; gap:11px; }
+        .priority-item { align-items:center; background:var(--bg-alt); border-radius:6px; display:flex; gap:12px; padding:12px; }
+        .priority-count { align-items:center; background:#242424; border-radius:5px; color:#fff; display:flex; font-family:'Bebas Neue',sans-serif; font-size:1.45rem; height:36px; justify-content:center; min-width:40px; }
+        .priority-item.danger .priority-count { background:var(--red); }
+        .priority-item.warn .priority-count { background:#bd7900; }
+        .priority-text strong { display:block; font-size:.82rem; }
+        .priority-text span { color:var(--txt-muted); font-size:.73rem; }
+        .priority-footer { border-top:1px solid var(--bdr); color:var(--txt-muted); font-size:.76rem; margin-top:15px; padding-top:14px; }
+        .pipeline-section { background:var(--bg-card); border:1px solid var(--bdr); border-radius:8px; box-shadow:var(--shadow-sm); margin-bottom:20px; padding:21px 23px; }
+        .pipeline-head { align-items:center; display:flex; justify-content:space-between; margin-bottom:16px; }
+        .pipeline-head h2 { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:1.5px; margin:0; }
+        .pipeline-head span { color:var(--txt-muted); font-size:.76rem; }
+        .pipeline { display:grid; gap:9px; grid-template-columns:repeat(5, minmax(130px, 1fr)); overflow-x:auto; padding-bottom:4px; }
+        .pipeline-step { background:var(--bg-alt); border:1px solid var(--bdr); border-radius:7px; min-width:130px; padding:13px; }
+        .pipeline-step-name { color:var(--txt-muted); display:block; font-size:.67rem; font-weight:700; line-height:1.2; min-height:29px; text-transform:uppercase; }
+        .pipeline-step-value { font-family:'Bebas Neue',sans-serif; font-size:1.85rem; letter-spacing:1px; line-height:1; margin-top:7px; }
+        .pipeline-step .badge { margin-top:9px; padding:3px 8px; font-size:.61rem; }
+        .performance-grid { display:grid; gap:20px; grid-template-columns:1fr 1fr; margin-bottom:20px; }
+        .recent-header { align-items:center; display:flex; justify-content:space-between; margin-bottom:17px; }
+        .recent-header h2 { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:1.5px; margin:0; }
+        .table-wrap { overflow-x:auto; }
+        .empty-table { color:var(--txt-muted); padding:24px; text-align:center; }
+        @media (max-width:1100px) { .unit-summary { grid-template-columns:repeat(2, 1fr); } .operations-grid { grid-template-columns:1fr; } .pipeline { grid-template-columns:repeat(5, minmax(145px, 1fr)); } }
+        @media (max-width:680px) { .unit-hero { align-items:flex-start; flex-direction:column; padding:25px; } .unit-hero h1 { font-size:2.1rem; } .unit-summary, .performance-grid { grid-template-columns:1fr; } .unit-card, .pipeline-section { padding:18px; } }
+    </style>
 </h:head>
 <h:body>
 <div class="app-layout">
@@ -15,75 +67,120 @@
             <div class="sidebar-user-role">Gerente — #{gerenteBean.concessionaria.cidade}</div>
         </div>
         <nav class="sidebar-nav">
-            <a href="dashboard.xhtml" class="active">📊 Dashboard</a>
-            <a href="vendedores.xhtml">👥 Vendedores</a>
-            <a href="pedidos.xhtml">📦 Pedidos</a>
+            <a href="dashboard.xhtml" class="active">&#x1F4CA; Dashboard</a>
+            <a href="vendedores.xhtml">&#x1F465; Vendedores</a>
+            <a href="pedidos.xhtml">&#x1F4E6; Pedidos</a>
         </nav>
-        <div class="sidebar-footer">
-            <h:form><h:commandLink action="#{loginBean.logout}" styleClass="btn btn-ghost btn-sm w-100">Sair</h:commandLink></h:form>
-        </div>
+        <div class="sidebar-footer"><h:form><h:commandLink action="#{loginBean.logout}" styleClass="btn btn-ghost btn-sm w-100">Sair</h:commandLink></h:form></div>
     </aside>
+
     <main class="main-content">
-        <div class="page-header">
-            <h1>Dashboard — #{gerenteBean.concessionaria.nome}</h1>
-            <p>Gerencie sua unidade em #{gerenteBean.concessionaria.cidade}/#{gerenteBean.concessionaria.estado}</p>
-        </div>
+        <section class="unit-hero">
+            <div>
+                <div class="unit-hero-kicker">Central operacional da unidade</div>
+                <h1>Vrum Motors #{gerenteBean.concessionaria.cidade}</h1>
+                <p>Olá, #{loginBean.usuarioLogado.nome}. Acompanhe o que precisa de atenção hoje.</p>
+            </div>
+            <div class="unit-team-chip">
+                <div class="unit-team-icon">&#x1F465;</div>
+                <div><strong>#{gerenteBean.vendedoresAtivos}</strong><span>vendedores ativos</span></div>
+            </div>
+        </section>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">#{gerenteBean.vendedores.size()}</div>
-                <div class="stat-label">Vendedores</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">#{gerenteBean.pedidos.size()}</div>
-                <div class="stat-label">Pedidos</div>
-            </div>
-        </div>
+        <section class="unit-summary">
+            <div class="unit-summary-card"><div class="unit-summary-label">Pedidos na unidade</div><div class="unit-summary-value">#{gerenteBean.pedidos.size()}</div></div>
+            <div class="unit-summary-card blue"><div class="unit-summary-label">Atendidos pela equipe</div><div class="unit-summary-value">#{gerenteBean.pedidosComVendedor}</div></div>
+            <div class="unit-summary-card gold"><div class="unit-summary-label">Finalizados</div><div class="unit-summary-value">#{gerenteBean.pedidosConcluidos}</div></div>
+            <div class="unit-summary-card"><div class="unit-summary-label">Ticket médio</div><div class="unit-summary-value money">#{gerenteBean.ticketMedio}</div></div>
+        </section>
 
-        <!-- Vendedores -->
-        <div class="card">
-            <div class="card-header">
-                Equipe de Vendedores
-                <a href="vendedores.xhtml" class="btn btn-ghost btn-sm">Gerenciar</a>
+        <section class="operations-grid">
+            <div class="unit-card chart-box">
+                <div class="unit-card-title">Ritmo de entradas <span class="unit-card-subtitle">pedidos registrados por mês</span></div>
+                <canvas id="chartMensal" height="160"></canvas>
             </div>
-            <table class="vrum-table">
-                <thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Status</th></tr></thead>
-                <tbody>
-                    <ui:repeat value="#{gerenteBean.vendedores}" var="v">
-                        <tr>
-                            <td>#{v.nome}</td>
-                            <td style="color:#9A9A9A">#{v.email}</td>
-                            <td style="color:#9A9A9A">#{v.telefone}</td>
-                            <td><span class="badge #{v.ativo ? 'badge-pronto' : 'badge-cancelado'}">#{v.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                        </tr>
-                    </ui:repeat>
-                </tbody>
-            </table>
-        </div>
+            <aside class="unit-card">
+                <div class="unit-card-title">Prioridades da equipe</div>
+                <div class="priority-list">
+                    <div class="priority-item danger"><div class="priority-count">#{gerenteBean.pedidosSemVendedor}</div><div class="priority-text"><strong>Pedidos sem responsável</strong><span>Distribua para a equipe.</span></div></div>
+                    <div class="priority-item warn"><div class="priority-count">#{gerenteBean.quantidadeStatus(gerenteBean.statusPedidoValues[1])}</div><div class="priority-text"><strong>Em negociação</strong><span>Acompanhe os retornos comerciais.</span></div></div>
+                    <div class="priority-item"><div class="priority-count">#{gerenteBean.quantidadeStatus(gerenteBean.statusPedidoValues[6])}</div><div class="priority-text"><strong>Prontos para entrega</strong><span>Organize a retirada do cliente.</span></div></div>
+                </div>
+                <div class="priority-footer">#{gerenteBean.pedidosEmAberto} pedido(s) seguem em andamento na unidade.</div>
+            </aside>
+        </section>
 
-        <!-- Pedidos recentes -->
-        <div class="card">
-            <div class="card-header">
-                Pedidos Recentes da Unidade
-                <a href="pedidos.xhtml" class="btn btn-ghost btn-sm">Ver todos</a>
+        <section class="pipeline-section">
+            <div class="pipeline-head"><h2>Fluxo de pedidos</h2><span>Visão rápida de cada etapa</span></div>
+            <div class="pipeline">
+                <ui:repeat value="#{gerenteBean.statusPedidoValues}" var="s">
+                    <div class="pipeline-step">
+                        <span class="pipeline-step-name">#{s.descricao}</span>
+                        <div class="pipeline-step-value">#{gerenteBean.quantidadeStatus(s)}</div>
+                        <span class="badge #{gerenteBean.classeStatus(s)}">#{gerenteBean.quantidadeStatus(s)} pedido(s)</span>
+                    </div>
+                </ui:repeat>
             </div>
-            <table class="vrum-table">
-                <thead><tr><th>Pedido</th><th>Cliente</th><th>Veículo</th><th>Vendedor</th><th>Status</th></tr></thead>
-                <tbody>
-                    <ui:repeat value="#{gerenteBean.pedidosRecentes}" var="p">
-                        <tr>
-                            <td style="font-family:'Bebas Neue',cursive; letter-spacing:1px">#{p.numeroPedido}</td>
-                            <td>#{p.cliente.nome}</td>
-                            <td>#{p.veiculo.nome}</td>
-                            <td style="color:#9A9A9A">#{p.vendedor != null ? p.vendedor.nome : '— sem vendedor'}</td>
-                            <td><span class="badge badge-negociacao">#{p.status.descricao}</span></td>
-                        </tr>
-                    </ui:repeat>
-                </tbody>
-            </table>
-        </div>
+        </section>
+
+        <section class="performance-grid">
+            <div class="unit-card chart-box"><div class="unit-card-title">Distribuição por vendedor <span class="unit-card-subtitle">carteira atual</span></div><canvas id="chartVendedores" height="190"></canvas></div>
+            <div class="unit-card chart-box"><div class="unit-card-title">Modelos mais solicitados <span class="unit-card-subtitle">preferência dos clientes</span></div><canvas id="chartVeiculos" height="190"></canvas></div>
+        </section>
+
+        <section class="unit-card">
+            <div class="recent-header"><h2>Últimas movimentações</h2><a href="pedidos.xhtml" class="btn btn-ghost btn-sm">Abrir pedidos</a></div>
+            <div class="table-wrap">
+                <table class="vrum-table">
+                    <thead><tr><th>Pedido</th><th>Cliente</th><th>Veículo</th><th>Responsável</th><th>Etapa</th><th>Entrada</th></tr></thead>
+                    <tbody>
+                        <ui:repeat value="#{gerenteBean.pedidosRecentes}" var="p">
+                            <tr>
+                                <td style="font-family:'Bebas Neue',sans-serif; letter-spacing:1px">#{p.numeroPedido}</td>
+                                <td>#{p.cliente.nome}</td>
+                                <td>#{p.veiculo.nome}</td>
+                                <td style="color:var(--txt-muted)">#{p.vendedor != null ? p.vendedor.nome : 'Aguardando distribuição'}</td>
+                                <td><span class="badge #{gerenteBean.classeStatus(p.status)}">#{p.status.descricao}</span></td>
+                                <td style="color:var(--txt-muted); font-size:.82rem"><h:outputText value="#{p.dataPedido}"><f:convertDateTime pattern="dd/MM/yyyy" type="localDateTime"/></h:outputText></td>
+                            </tr>
+                        </ui:repeat>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </div>
+
+<script type="text/javascript">
+    const mesLabels = <h:outputText value="#{gerenteBean.mesLabelsJson}" escape="false"/>;
+    const mesData = <h:outputText value="#{gerenteBean.mesDataJson}" escape="false"/>;
+    const vendedorLabels = <h:outputText value="#{gerenteBean.vendedorLabelsJson}" escape="false"/>;
+    const vendedorData = <h:outputText value="#{gerenteBean.vendedorDataJson}" escape="false"/>;
+    const veiculoLabels = <h:outputText value="#{gerenteBean.veiculoLabelsJson}" escape="false"/>;
+    const veiculoData = <h:outputText value="#{gerenteBean.veiculoDataJson}" escape="false"/>;
+
+    Chart.defaults.font.family = "'DM Sans', Arial, sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = '#878787';
+    const baseOptions = { responsive:true, maintainAspectRatio:true };
+
+    new Chart(document.getElementById('chartMensal'), {
+        type:'line',
+        data:{ labels:mesLabels, datasets:[{ label:'Pedidos', data:mesData, borderColor:'#E5353D', backgroundColor:'rgba(229,53,61,.12)', fill:true, tension:.36, pointRadius:3, pointBackgroundColor:'#E5353D', borderWidth:2 }] },
+        options:{ ...baseOptions, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 }, grid:{ color:'rgba(128,128,128,.12)' } }, x:{ grid:{ display:false } } } }
+    });
+
+    new Chart(document.getElementById('chartVendedores'), {
+        type:'bar',
+        data:{ labels:vendedorLabels, datasets:[{ label:'Pedidos', data:vendedorData, backgroundColor:'rgba(52,152,219,.74)', borderColor:'#3498DB', borderWidth:1, borderRadius:5 }] },
+        options:{ ...baseOptions, indexAxis:'y', plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true, ticks:{ precision:0 }, grid:{ color:'rgba(128,128,128,.12)' } }, y:{ grid:{ display:false } } } }
+    });
+
+    new Chart(document.getElementById('chartVeiculos'), {
+        type:'bar',
+        data:{ labels:veiculoLabels, datasets:[{ label:'Pedidos', data:veiculoData, backgroundColor:'rgba(229,53,61,.74)', borderColor:'#E5353D', borderWidth:1, borderRadius:5 }] },
+        options:{ ...baseOptions, indexAxis:'y', plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true, ticks:{ precision:0 }, grid:{ color:'rgba(128,128,128,.12)' } }, y:{ grid:{ display:false } } } }
+    });
+</script>
 </h:body>
 </html>
-

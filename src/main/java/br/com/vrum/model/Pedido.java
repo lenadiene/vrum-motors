@@ -71,10 +71,10 @@ public class Pedido implements Serializable {
 
     @PrePersist
     public void prePersist() {
-        this.dataPedido = LocalDateTime.now();
+        if (this.dataPedido == null) this.dataPedido = LocalDateTime.now();
         this.dataAtualizacao = LocalDateTime.now();
-        this.status = StatusPedido.AGUARDANDO_ATENDIMENTO;
-        this.numeroPedido = gerarNumeroPedido();
+        if (this.status == null) this.status = StatusPedido.AGUARDANDO_ATENDIMENTO;
+        if (this.numeroPedido == null) this.numeroPedido = gerarNumeroPedido();
     }
 
     @PreUpdate
