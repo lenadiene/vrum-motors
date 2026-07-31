@@ -209,16 +209,60 @@ public class VendedorBean implements Serializable {
         }
     }
 
-    public String gerarLinkWhatsapp(Pedido pedido) {
+  public String gerarLinkWhatsapp(Pedido pedido) {
         String tel = pedido.getCliente().getTelefone();
         if (tel == null) return "#";
         tel = tel.replaceAll("[^0-9]", "");
-        String msg = "Olá " + pedido.getCliente().getNome() + "! Sou " + vendedor.getNome() +
-                " da Vrum Motors. Estou em contato sobre seu pedido do " +
-                pedido.getVeiculo().getNome() + " (Pedido: " + pedido.getNumeroPedido() + ").";
+        
+        // Saudação padrão inicial com os nomes
+        String saudacao = "Olá, " + pedido.getCliente().getNome() + "! Sou " + vendedor.getNome() + " da Vrum Motors. ";
+        String msgStatus = "";
+
+        // Define o texto de acordo com o status atual daquele pedido
+        if (pedido.getStatus() != null) {
+            switch (pedido.getStatus()) {
+                case AGUARDANDO_ATENDIMENTO:
+                    msgStatus = "Recebemos o seu pedido para o " + pedido.getVeiculo().getNome() + " e serei o responsável por te atender!";
+                    break;
+                case EM_NEGOCIACAO:
+                    msgStatus = "Estou entrando em contato para definirmos os detalhes de pagamento e prazos do seu " + pedido.getVeiculo().getNome() + ".";
+                    break;
+                case AGUARDANDO_FABRICACAO:
+                    msgStatus = "O seu contrato foi aprovado! O pedido do seu " + pedido.getVeiculo().getNome() + " já foi enviado para a fábrica e entrará na fila de montagem.";
+                    break;
+                case EM_FABRICACAO:
+                    msgStatus = "Ótima notícia: seu " + pedido.getVeiculo().getNome() + " já está na linha de produção sendo montado. Falta pouco!";
+                    break;
+                case FABRICADO:
+                    msgStatus = "O seu " + pedido.getVeiculo().getNome() + " acabou de sair da linha de produção e está prontinho no pátio da fábrica!";
+                    break;
+                case ENVIADO_CIDADE:
+                    msgStatus = "O caminhão cegonha já está na estrada! Seu " + pedido.getVeiculo().getNome() + " está a caminho da nossa concessionária.";
+                    break;
+                case PRONTO_ENTREGA:
+                    msgStatus = "Tudo pronto! Seu " + pedido.getVeiculo().getNome() + " já está aqui na loja, lavado e preparado. Podemos agendar a retirada?";
+                    break;
+                case FINALIZADO:
+                    msgStatus = "Parabéns novamente pela conquista do seu " + pedido.getVeiculo().getNome() + "! Caso necessários, estamos a disposição.";
+                    break;
+                case CANCELADO:
+                    msgStatus = "Vi que o seu pedido (Nº " + pedido.getNumeroPedido() + ") foi cancelado. Posso ajudar em algo ou tirar alguma dúvida?";
+                    break;
+                default:
+                    msgStatus = "Estou em contato sobre o seu pedido do " + pedido.getVeiculo().getNome() + " (Pedido: " + pedido.getNumeroPedido() + ").";
+                    break;
+            }
+        } else {
+            msgStatus = "Estou em contato sobre o seu pedido do " + pedido.getVeiculo().getNome() + " (Pedido: " + pedido.getNumeroPedido() + ").";
+        }
+
+        // Concatena a saudação com a mensagem específica
+        String msgFinal = saudacao + msgStatus;
+
+   
         try {
             return "https://wa.me/55" + tel + "?text=" +
-                    java.net.URLEncoder.encode(msg, "UTF-8");
+                    java.net.URLEncoder.encode(msgFinal, "UTF-8");
         } catch (Exception e) {
             return "https://wa.me/55" + tel;
         }
